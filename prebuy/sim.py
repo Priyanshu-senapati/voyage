@@ -35,6 +35,9 @@ WORST_SHARE = 0.05          # "worst case" = average of the worst 5% of seasons
 @dataclass(frozen=True)
 class World:
     labels: tuple[str, ...]
+    city: tuple[str, ...]
+    week: tuple[str, ...]
+    hotel: tuple[str, ...]
     cost: np.ndarray                   # INR per room-night TBO pays
     price: np.ndarray                  # INR per room-night TBO sells at
     cap: np.ndarray                    # most room-nights the hotel will sell TBO
@@ -64,6 +67,9 @@ def make_world(seed: int) -> World:
 
     return World(
         labels=tuple(f"{c} {WEEKS[w]} {h}" for c, w, h in items),
+        city=tuple(c for c, _, _ in items),
+        week=tuple(WEEKS[w] for _, w, _ in items),
+        hotel=tuple(h for _, _, h in items),
         cost=cost, price=price, cap=np.ceil(base * 3),
         true_mean=base * lift_now, event_lift_now=lift_now,
         event_lift_hist=lift_hist, alloc_hist=alloc_hist,

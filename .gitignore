@@ -1,7 +1,14 @@
 __pycache__/
 .pytest_cache/
+.pytest_tmp/
 .ruff_cache/
 .coverage
 .venv/
+*.db
+*.db-*
+*.sqlite*
+.env*
+*.egg-info/
+build/
 # TBO's problem-statement pack: their material, not ours to publish
 *.zip

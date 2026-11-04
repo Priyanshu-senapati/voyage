@@ -1,0 +1,7 @@
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.coverage
+.venv/
+# TBO's problem-statement pack: their material, not ours to publish
+*.zip

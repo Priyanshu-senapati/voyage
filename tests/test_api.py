@@ -6,10 +6,10 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import event, text
 
-from prebuy.api import service
-from prebuy.api.app import create_app
-from prebuy.api.auth import Principal, create_api_key, revoke_api_key
-from prebuy.api.db import User, make_sessions
+from voyance.api import service
+from voyance.api.app import create_app
+from voyance.api.auth import Principal, create_api_key, revoke_api_key
+from voyance.api.db import User, make_sessions
 
 
 @pytest.fixture
@@ -228,7 +228,7 @@ def test_busy_planner_asks_the_caller_to_retry(api, monkeypatch):
 
 
 def test_file_database_uses_wal_and_foreign_keys(tmp_path):
-    sessions = make_sessions(f"sqlite:///{tmp_path / 'prebuy.db'}")
+    sessions = make_sessions(f"sqlite:///{tmp_path / 'voyance.db'}")
     with sessions() as session:
         assert session.execute(text("PRAGMA foreign_keys")).scalar() == 1
         assert session.execute(text("PRAGMA journal_mode")).scalar() == "wal"

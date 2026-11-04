@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from prebuy.sim import World, make_world
+from voyance.sim import World, make_world
 
 
 class DataSource(Protocol):

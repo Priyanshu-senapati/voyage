@@ -2,7 +2,7 @@ from dataclasses import replace
 
 import numpy as np
 
-from prebuy.sim import hidden_demand_mean, make_world, repeat_past_bookings, run
+from voyance.sim import hidden_demand_mean, make_world, repeat_past_bookings, run
 
 FAST = {"n_scenarios": 60, "n_test_seasons": 100}
 

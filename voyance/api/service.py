@@ -9,11 +9,11 @@ from collections import defaultdict, deque
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session, selectinload
 
-from prebuy.api.auth import Principal
-from prebuy.api.db import AuditEvent, Plan, PlanLineRow, utcnow
-from prebuy.api.planner import PlanRequestError, build_plan
-from prebuy.api.schemas import MarketItem, PlanCreate
-from prebuy.sim import World
+from voyance.api.auth import Principal
+from voyance.api.db import AuditEvent, Plan, PlanLineRow, utcnow
+from voyance.api.planner import PlanRequestError, build_plan
+from voyance.api.schemas import MarketItem, PlanCreate
+from voyance.sim import World
 
 CSV_COLUMNS = ("city", "week", "hotel", "rooms", "unit_cost", "unit_price", "expected_sold",
                "expected_profit", "decision", "decided_by", "reason")

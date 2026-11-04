@@ -17,7 +17,7 @@ import numpy as np  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from prebuy.sim import run  # noqa: E402
+from voyance.sim import run  # noqa: E402
 
 BUDGETS_LAKH = (40, 60, 80, 100, 120, 160, 200, 240)
 HEADLINE_BUDGETS_LAKH = (60, 120, 200)

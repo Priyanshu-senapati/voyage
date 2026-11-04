@@ -5,9 +5,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Path, Query, Request, Response
 from sqlalchemy.orm import Session
 
-from prebuy.api import service
-from prebuy.api.auth import Principal, get_principal, get_session, require_role
-from prebuy.api.schemas import (AuditOut, ErrorOut, LineDecision, MarketItem, PlanCreate, PlanLineOut,
+from voyance.api import service
+from voyance.api.auth import Principal, get_principal, get_session, require_role
+from voyance.api.schemas import (AuditOut, ErrorOut, LineDecision, MarketItem, PlanCreate, PlanLineOut,
                                 PlanOut, PlanSummary)
 
 MAX_ID = 2**31 - 1

@@ -1,7 +1,7 @@
 import pytest
 
-from prebuy.api.planner import build_plan
-from prebuy.sim import make_world
+from voyance.api.planner import build_plan
+from voyance.sim import make_world
 
 WORLD = make_world(seed=7)
 

@@ -14,8 +14,8 @@ from itertools import product
 
 import numpy as np
 
-from prebuy.demand import scenarios, unconstrain
-from prebuy.optimizer import cvar, optimize, profits
+from voyance.demand import scenarios, unconstrain
+from voyance.optimizer import cvar, optimize, profits
 
 CITIES = ("Goa", "Jaipur", "Udaipur", "Manali", "Kochi")
 WEEKS = ("1-7 Dec", "8-14 Dec", "15-21 Dec", "22-28 Dec")

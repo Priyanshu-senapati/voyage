@@ -4,9 +4,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from prebuy.demand import scenarios
-from prebuy.optimizer import cvar, optimize, profits
-from prebuy.sim import DEMAND_CV, WORST_SHARE, World, hidden_demand_mean
+from voyance.demand import scenarios
+from voyance.optimizer import cvar, optimize, profits
+from voyance.sim import DEMAND_CV, WORST_SHARE, World, hidden_demand_mean
 
 N_SCENARIOS = 200
 PLAN_SEED = 0  # fixed, so the same request always gives the same plan (auditable)

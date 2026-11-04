@@ -11,7 +11,7 @@ from fastapi.security import APIKeyHeader
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from prebuy.api.db import ApiKey, Tenant, User, utcnow
+from voyance.api.db import ApiKey, Tenant, User, utcnow
 
 ROLES = ("buyer", "approver", "admin")
 _key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
@@ -54,7 +54,7 @@ def create_api_key(session: Session, tenant_name: str, role: str, name: str) -> 
         session.flush()
     elif user.role != role:
         raise ValueError(f"{user_name} is already a {user.role} at {tenant_name}")
-    key = f"pb_{secrets.token_urlsafe(32)}"
+    key = f"vy_{secrets.token_urlsafe(32)}"
     session.add(ApiKey(user_id=user.id, key_hash=hash_key(key)))
     session.commit()
     return key

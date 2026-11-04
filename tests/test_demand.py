@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from prebuy.demand import scenarios, unconstrain
+from voyance.demand import scenarios, unconstrain
 
 
 def test_unconstrain_returns_bookings_when_nothing_sold_out():

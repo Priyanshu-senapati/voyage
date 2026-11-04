@@ -1,4 +1,4 @@
-# PreBuy: inventory pre-buy planner (TBO VoyageHack 4.0)
+# Voyance: inventory pre-buy planner (TBO VoyageHack 4.0)
 
 Decides what hotel inventory a travel distributor should buy ahead, within a maximum budget:
 which hotel, which week, how many room-nights, the expected profit and the worst case.
@@ -19,7 +19,7 @@ python scripts/proof_chart.py      # about 3.5 min; writes out/proof_chart.png a
 
 ```bash
 python scripts/seed_demo.py                                   # prints demo API keys once; copy them
-uvicorn prebuy.api.app:create_app --factory --reload          # http://127.0.0.1:8000/docs
+uvicorn voyance.api.app:create_app --factory --reload          # http://127.0.0.1:8000/docs
 ```
 
 Send the key in the `X-API-Key` header. Demo users: **asha** (buyer), **ravi** (approver),
@@ -34,13 +34,13 @@ Send the key in the `X-API-Key` header. Demo users: **asha** (buyer), **ravi** (
 | `GET /v1/plans/{id}/export.csv` | anyone | Plan as a spreadsheet |
 | `GET /v1/audit` | admin | Who did what |
 
-Settings: `PREBUY_DATABASE_URL` (default `sqlite:///prebuy.db`, any SQLAlchemy URL works) and
-`PREBUY_CORS_ORIGINS` (comma-separated dashboard origins, e.g. `http://localhost:5173`; `*` is refused).
+Settings: `VOYANCE_DATABASE_URL` (default `sqlite:///voyance.db`, any SQLAlchemy URL works) and
+`VOYANCE_CORS_ORIGINS` (comma-separated dashboard origins, e.g. `http://localhost:5173`; `*` is refused).
 
 ### Security model
 
 - Keys belong to a person at a company; only SHA-256 hashes are stored, and keys can be revoked
-  (`prebuy.api.auth.revoke_api_key`). The seed keys are for demos only.
+  (`voyance.api.auth.revoke_api_key`). The seed keys are for demos only.
 - A company never sees another company's plans, lines or audit log (it gets 404).
 - Nobody approves their own plan, even with a second key. A decision is final, and two approvers
   clicking at once can't both win.
@@ -52,10 +52,10 @@ Settings: `PREBUY_DATABASE_URL` (default `sqlite:///prebuy.db`, any SQLAlchemy U
 
 | Path | What it does |
 |---|---|
-| `prebuy/demand.py` | Hidden demand: bookings + sold-out searches ÷ searches-per-booking; demand scenarios |
-| `prebuy/optimizer.py` | Budget + risk (CVaR) linear program, solved with scipy's built-in HiGHS |
-| `prebuy/sim.py` | Simulated December seasons and the strategies we compare |
-| `prebuy/api/` | Buy Desk API: planner, storage, API-key auth, approvals, audit log |
+| `voyance/demand.py` | Hidden demand: bookings + sold-out searches ÷ searches-per-booking; demand scenarios |
+| `voyance/optimizer.py` | Budget + risk (CVaR) linear program, solved with scipy's built-in HiGHS |
+| `voyance/sim.py` | Simulated December seasons and the strategies we compare |
+| `voyance/api/` | Buy Desk API: planner, storage, API-key auth, approvals, audit log |
 | `scripts/proof_chart.py` | Round 1 chart: expected profit by budget |
 | `scripts/seed_demo.py` | Demo companies and API keys |
 | `PLAN.md` | Team plan, timeline and product shape |

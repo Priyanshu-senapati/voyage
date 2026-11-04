@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from prebuy.optimizer import cvar, optimize, plan_relaxed, profits
+from voyance.optimizer import cvar, optimize, plan_relaxed, profits
 
 
 def small_instance(seed=0, n_items=4, n_scenarios=40):

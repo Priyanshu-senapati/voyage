@@ -14,7 +14,7 @@ What makes it different:
 4. **Plain-language reasons**, plus a replay of last December showing what the plan would have caught.
 
 ## Product shape: B2B SaaS
-Working name: **PreBuy** (research team picks the final name).
+Name: **Voyance** (French for "foresight": it sees demand before it sells out).
 
 | Module | User | What it does | How it makes money |
 |---|---|---|---|
@@ -97,7 +97,7 @@ sold-out demand.
    SHAP explains the drivers.
 4. **Optimizer**: linear program (scipy's built-in HiGHS solver, no extra dependency). Maximize
    profit within budget, with a risk term that limits the loss in the worst 5% of outcomes.
-   Selling price chosen from a few tiers. First version done: `prebuy/optimizer.py`.
+   Selling price chosen from a few tiers. First version done: `voyance/optimizer.py`.
 5. **App**: FastAPI backend + dashboard with budget and risk sliders, buy list, "why" panel, December
    replay. Optional: small LLM rewrites reasons in plain English, with templates as fallback.
 

@@ -59,16 +59,17 @@ live one city at a time.
 | 26 Nov – 23 Dec (deadline 24 Dec) | Round 2: 10-slide PPT + GitHub code + docs + video |
 | 8 Jan 2027 | Grand Finale |
 
-## Phase 0: Webinar (5 Nov)
-Ask:
-1. Will TBO provide data (bookings, searches incl. sold-out results, cancellations, procurement
-   prices)? Size, date range, when?
-2. Is "pre-buy" a non-refundable prepaid purchase, or an allotment you can release back before a
-   cut-off? Typical windows and penalties?
-3. Are flights in scope, or is hotels-only acceptable?
-4. Can teams get TBO Hotel API sandbox credentials, or should we build against a mock?
+## Phase 0: Decisions (locked 12 Nov)
+The webinar (5 Nov) gave no clear answers and no restrictions, so we chose what gives the strongest entry:
 
-Also note what they say about judging, video length and slide templates.
+| Question | Decision | Why |
+|---|---|---|
+| Will TBO give data? | No. We generate data tuned on the public Kaggle "Hotel booking demand" set (~119k real bookings, CC BY 4.0), Indian holidays, and a hand-built event list for 5 cities. Labelled "simulated" everywhere. | Real-data calibration makes the numbers credible. `DataSource` lets TBO's data plug in later. |
+| Prepaid or releasable? | Both. Default is non-refundable prepaid, the riskier case. A releasable allotment is a "release value" per unsold room (refund minus penalty), which the optimizer already supports (`salvage`). | One tool covers hard and soft allotments. |
+| Flights? | Hotels only. Flights (seat blocks, same engine) go on the "next steps" slide. | Depth beats breadth with judges. |
+| TBO API access? | We build against a mock adapter shaped like TBO's Hotel API (search, availability re-check, book), then swap in real credentials. | The demo runs with no outside dependency. |
+| Go collector? | Yes, in Round 2: a small Go service for search/booking events, per-supplier rate limits, measured events/sec. | Shows concurrency at TBO scale, which the top teams' slides stress. |
+| Chart risk setting | Keep 0.3. Tested 12 Nov on the chart's 20 seeds: 0.3 has a better worst 5% at every budget, and equal or higher expected profit at every budget except ₹40L (0.4 points lower) (e.g. at ₹2 cr: ₹25.1L vs ₹24.7L profit, ₹17.0L vs ₹15.0L worst case). The current chart stands. | Caution also protects against our own forecast being off. Pitch line: "the risk slider pays for itself". |
 
 ## Phase 1: Round 1 (6–19 Nov)
 | # | Task | Owner | Dates |

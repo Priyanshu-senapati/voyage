@@ -17,6 +17,7 @@ cover and small wherever hidden demand is explained.
     Use it for shapes, big numbers and the ghost bar only, never for small text (4.4:1 on white).
   - `EB6834` = **status quo / sold out**. It matches "Repeat past bookings" in the chart. Use it
     only for the sold-out line and baseline mentions.
+  - `1BAF7A` = **our optimizer without hidden demand**. Chart lines only.
 - **Text:** ink `12141C` on white, `FFFFFF` on ink.
 - **Ground pattern:** sandwich. Dark cover and close, light content.
 

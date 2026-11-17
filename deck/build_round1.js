@@ -1,7 +1,9 @@
 // Builds deck/voyance_round1.pptx: cover, 2 content slides, thank-you (TBO VoyageHack 4.0, Round 1).
 // Run from deck/:  npm install  then  node build_round1.js
-// Every number here comes from docs/numbers.md. Change it there first, then here.
-// If deck/assets/buy_desk_mockup.png exists it is placed on slide 1; otherwise a vector sketch is drawn.
+// Impact numbers and the chart are read from out/proof_results.csv (lane A's simulation), and the Buy Desk rows
+// from docs/sample_plan_round1.json (real API output), so the slide can't drift from the data.
+// Every other figure comes from docs/numbers.md. Change it there first, then here.
+// If deck/assets/buy_desk_mockup.png exists it is placed on slide 2; otherwise a sketch with the real rows is drawn.
 
 const path = require("path");
 const fs = require("fs");
@@ -10,32 +12,90 @@ const JSZip = require("jszip");
 
 const ROOT = path.resolve(__dirname, "..");
 const OUT = path.join(__dirname, "voyance_round1.pptx");
-const CHART = path.join(ROOT, "out", "proof_chart.png");
-const CHART_ASPECT = 2000 / 1120; // out/proof_chart.png is 2000 x 1120 px
+const RESULTS_CSV = path.join(ROOT, "out", "proof_results.csv");
+const SAMPLE_PLAN = path.join(ROOT, "docs", "sample_plan_round1.json");
 const MOCKUP = path.join(__dirname, "assets", "buy_desk_mockup.png");
 const REPO = "https://github.com/Priyanshu-senapati/voyage";
 const TEAM = "Priyanshu Senapati  ·  Gourab Dash  ·  Vinochan R";
 
 // Palette (deck/brief.md). Blue = Voyance / our planner, orange = sold out / status quo,
-// both matching the lines in out/proof_chart.png.
+// green = our optimizer without hidden demand; all three match out/proof_chart.png.
 const INK = "12141C";
 const WHITE = "FFFFFF";
 const CARD = "F3F4F7";
 const MUTED = "5B6070";
 const HAIR = "D9DCE3";
+const GRID = "E6E7EB";
 const BAR = "C9CDD6";
-const BLUE = "2A78D6"; // shapes and big numbers only
+const BLUE = "2A78D6"; // shapes, lines and big numbers only
 const BLUE_TEXT = "1F5FAF"; // small blue text on white (6.3:1)
 const BLUE_TINT = "E6EFFA";
 const BLUE_ON_INK = "6FA8EE"; // blue text on ink (7.5:1)
 const ORANGE = "EB6834";
 const ORANGE_TEXT = "B8471A"; // small orange text on white (5.3:1)
+const GREEN = "1BAF7A";
 const ON_INK_MUTED = "A9AEBB";
 const BAR_ON_INK = "3A3F4F";
 
 const W = 13.333;
 const M = 0.5; // side margin
 const CW = W - 2 * M; // content width
+
+// ---------- data ----------
+
+function splitCsv(line) {
+  const cells = [];
+  let cur = "";
+  let quoted = false;
+  for (const ch of line) {
+    if (ch === '"') quoted = !quoted;
+    else if (ch === "," && !quoted) { cells.push(cur); cur = ""; }
+    else cur += ch;
+  }
+  cells.push(cur);
+  return cells;
+}
+
+const RESULTS = (() => {
+  const lines = fs.readFileSync(RESULTS_CSV, "utf8").trim().split(/\r?\n/);
+  const header = splitCsv(lines[0]);
+  return lines.slice(1).map((line) => {
+    const cells = splitCsv(line);
+    return Object.fromEntries(header.map((h, i) => [h, h === "strategy" ? cells[i] : Number(cells[i])]));
+  });
+})();
+
+const OURS = "Optimizer + hidden demand + events";
+const BASE = "Repeat past bookings";
+const RAW = "Optimizer, bookings only";
+const EVEN = "Even split";
+
+function result(budgetLakh, strategy) {
+  const row = RESULTS.find((r) => r.budget_lakh === budgetLakh && r.strategy === strategy);
+  if (!row) throw new Error(`no result for ${strategy} at ${budgetLakh} lakh`);
+  return row;
+}
+const gainPct = (a, b) => Math.round(100 * (a / b - 1));
+const lakh = (rupees) => (rupees / 1e5).toFixed(1);
+const signed = (n) => `${n >= 0 ? "+" : "−"}${Math.abs(n)}%`;
+const budgetLabel = (l) => (l < 100 ? `₹${l}L` : `₹${l / 100} cr`);
+
+const BUDGETS = [...new Set(RESULTS.map((r) => r.budget_lakh))].sort((a, b) => a - b);
+const TIGHT = 60;
+const LOOSE = 200;
+const S = {
+  tightGain: gainPct(result(TIGHT, OURS).mean_profit, result(TIGHT, BASE).mean_profit),
+  looseWorstGain: gainPct(result(LOOSE, OURS).worst_5pct_profit, result(LOOSE, BASE).worst_5pct_profit),
+  looseWorstOurs: lakh(result(LOOSE, OURS).worst_5pct_profit),
+  looseWorstBase: lakh(result(LOOSE, BASE).worst_5pct_profit),
+  looseVsRaw: gainPct(result(LOOSE, OURS).mean_profit, result(LOOSE, RAW).mean_profit),
+  evenLoss: lakh(-result(LOOSE, EVEN).mean_profit),
+  perRupeeOurs: (100 * result(LOOSE, OURS).mean_profit / result(LOOSE, OURS).spend).toFixed(1),
+  perRupeeBase: (100 * result(LOOSE, BASE).mean_profit / result(LOOSE, BASE).spend).toFixed(1),
+};
+const PLAN = JSON.parse(fs.readFileSync(SAMPLE_PLAN, "utf8"));
+
+// ---------- presentation ----------
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE"; // 13.333 x 7.5 in
@@ -89,6 +149,20 @@ function card(slide, x, y, w, h, name, fill = CARD) {
   });
 }
 
+function pill(slide, value, x, y, w, h, look, fontSize = 10) {
+  slide.addText(value, {
+    shape: pres.shapes.ROUNDED_RECTANGLE, rectRadius: h / 2, x, y, w, h,
+    fill: { color: look.fill }, line: { color: look.line, width: 1 }, color: look.color,
+    bold: true, fontSize, align: "center", valign: "middle", margin: 0, objectName: `pill ${value}`,
+  });
+}
+
+const STATUS = {
+  built: { fill: BLUE, line: BLUE, color: WHITE },
+  part: { fill: BLUE_TINT, line: BLUE, color: BLUE_TEXT },
+  planned: { fill: WHITE, line: BAR, color: MUTED },
+};
+
 // The motif: bookings as solid bars, capped at the sold-out line; the demand that hit "sold out"
 // drawn as a dashed ghost on top. demand[] is in units of the cap (1 = sold out).
 function ghostBars(slide, { x, y, w, h, demand, onInk = false, weeks = null, weekColor = MUTED, name = "ghost" }) {
@@ -133,48 +207,51 @@ function sourceNote(slide, value) {
   text(slide, value, { x: M, y: 7.06, w: CW, h: 0.3, fontSize: 9.5, color: MUTED, valign: "bottom" });
 }
 
-// A stand-in for the Buy Desk screen until lane B's mockup PNG lands in deck/assets/.
+const rupeesL = (inr) => `₹${(inr / 1e5).toFixed(2)}L`;
+const dash = (s) => s.replace(/(\d)-(\d)/g, "$1–$2");
+
+// The Buy Desk screen as a sketch, filled with real rows from today's API (docs/sample_plan_round1.json).
+// Lane B's mockup PNG replaces it when it lands in deck/assets/.
 function buyDeskSketch(slide, x, y, w, h) {
   slide.addShape(pres.shapes.ROUNDED_RECTANGLE, {
     x, y, w, h, rectRadius: 0.06, fill: { color: WHITE }, line: { color: HAIR, width: 1 }, objectName: "sketch frame",
   });
-  text(slide, "Buy Desk", { x: x + 0.14, y: y + 0.1, w: 1.2, h: 0.2, fontSize: 10, bold: true });
-  text(slide, "December · 5 cities", { x: x + w - 1.55, y: y + 0.11, w: 1.4, h: 0.2, fontSize: 8.5, color: MUTED, align: "right" });
-  const lx = x + 0.14;
-  const lw = w * 0.32;
-  [["Budget", 0.7], ["Risk", 0.3]].forEach(([name, pos], i) => {
-    const sy = y + 0.42 + i * 0.42;
-    text(slide, name, { x: lx, y: sy, w: lw, h: 0.18, fontSize: 8.5, color: MUTED });
-    slide.addShape(pres.shapes.LINE, { x: lx, y: sy + 0.27, w: lw, h: 0, line: { color: HAIR, width: 2 } });
-    slide.addShape(pres.shapes.LINE, { x: lx, y: sy + 0.27, w: lw * pos, h: 0, line: { color: BLUE, width: 2 } });
-    slide.addShape(pres.shapes.OVAL, {
-      x: lx + lw * pos - 0.06, y: sy + 0.21, w: 0.12, h: 0.12, fill: { color: BLUE }, line: { color: WHITE, width: 1 },
-    });
+  text(slide, "Buy Desk", { x: x + 0.12, y: y + 0.08, w: 1.0, h: 0.22, fontSize: 10.5, bold: true, valign: "middle" });
+  const budgetCr = PLAN.request.budget_inr / 1e7;
+  pill(slide, `₹${budgetCr} cr budget`, x + w - 1.95, y + 0.09, 0.95, 0.2, STATUS.part, 8);
+  pill(slide, "Risk: cautious", x + w - 0.95, y + 0.09, 0.83, 0.2, STATUS.part, 8);
+  const sum = PLAN.summary;
+  text(slide, `Spend ₹${(sum.spend_inr / 1e7).toFixed(2)} cr  ·  expected ${"+" + rupeesL(sum.expected_profit_inr)}  ·  worst 5% ${"+" + rupeesL(sum.worst_5pct_profit_inr)}`, {
+    x: x + 0.12, y: y + 0.36, w: w - 0.24, h: 0.18, fontSize: 8.5, color: MUTED,
   });
-  slide.addText("Plan", {
-    shape: pres.shapes.ROUNDED_RECTANGLE, rectRadius: 0.05, x: lx, y: y + 1.33, w: lw, h: 0.26,
-    fill: { color: BLUE }, line: { color: BLUE, width: 0.5 }, color: WHITE, bold: true, fontSize: 9,
-    align: "center", valign: "middle", margin: 0,
-  });
-  const rx = x + 0.14 + lw + 0.2;
-  const rw = x + w - 0.14 - rx;
-  for (let i = 0; i < 4; i++) {
-    const ry = y + 0.42 + i * 0.27;
+  PLAN.top_lines.slice(0, 3).forEach((line, i) => {
+    const ry = y + 0.6 + i * 0.235;
     const hot = i === 0;
     slide.addShape(pres.shapes.RECTANGLE, {
-      x: rx, y: ry, w: rw, h: 0.22, fill: { color: hot ? BLUE_TINT : CARD }, line: { color: hot ? BLUE_TINT : CARD, width: 0.5 },
+      x: x + 0.1, y: ry, w: w - 0.2, h: 0.205, fill: { color: hot ? BLUE_TINT : CARD }, line: { color: hot ? BLUE_TINT : CARD, width: 0.5 },
+      objectName: `sketch row ${i + 1}`,
     });
-    text(slide, String(i + 1), { x: rx + 0.05, y: ry + 0.02, w: 0.14, h: 0.18, fontSize: 8, bold: true, color: hot ? BLUE_TEXT : MUTED });
-    slide.addShape(pres.shapes.RECTANGLE, {
-      x: rx + 0.24, y: ry + 0.08, w: rw * (0.55 - i * 0.07), h: 0.06, fill: { color: hot ? BLUE : BAR }, line: { color: hot ? BLUE : BAR, width: 0.5 },
+    text(slide, `${line.rank}   ${line.city} · ${dash(line.week)} · ${line.hotel}`, {
+      x: x + 0.17, y: ry + 0.02, w: 1.95, h: 0.17, fontSize: 8.5, bold: hot, color: INK, valign: "middle",
     });
-  }
-  text(slide, "Why: last year's sold-out searches + a festival that week", {
-    x: rx, y: y + 1.53, w: rw, h: 0.3, fontSize: 8.5, color: BLUE_TEXT, italic: true,
+    text(slide, `${line.rooms} rooms`, { x: x + w - 1.33, y: ry + 0.02, w: 0.55, h: 0.17, fontSize: 8.5, color: MUTED, align: "right", valign: "middle" });
+    text(slide, `+${rupeesL(line.expected_profit_inr)}`, { x: x + w - 0.76, y: ry + 0.02, w: 0.42, h: 0.17, fontSize: 8.5, bold: true, color: INK, align: "right", valign: "middle" });
+    slide.addText(hot ? "✓" : "", {
+      shape: pres.shapes.OVAL, x: x + w - 0.27, y: ry + 0.03, w: 0.15, h: 0.15,
+      fill: { color: hot ? BLUE : WHITE }, line: { color: BLUE, width: 0.75 }, color: WHITE, fontSize: 7, bold: true,
+      align: "center", valign: "middle", margin: 0, objectName: `sketch approve ${i + 1}`,
+    });
+  });
+  const parts = PLAN.top_lines[0].reason.split("; ");
+  const searches = parts.find((p) => /sold-out searches/.test(p));
+  const why = [searches && searches.replace(/ in past Decembers$/, ""), parts.some((p) => /event week/.test(p)) && "an event week"]
+    .filter(Boolean).join(" + ");
+  text(slide, `Why #1: ${why}`, {
+    x: x + 0.12, y: y + 1.32, w: w - 0.24, h: 0.24, fontSize: 8.5, color: BLUE_TEXT, italic: true,
   });
 }
 
-// ---------- slide 0: cover ----------
+// ---------- slide 1: cover ----------
 {
   const s = pres.addSlide({ masterName: "DARK" });
   label(s, "TBO VoyageHack 4.0  ·  Problem 1: Inventory optimization", 0.8, 1.55, 6.6, true);
@@ -199,17 +276,17 @@ function buyDeskSketch(slide, x, y, w, h) {
     { text: "searches that hit sold out", options: { color: ON_INK_MUTED } },
   ], { x: bar3x - 2.55, y: ghost3Top - 0.04, w: 2.4, h: 0.56, fontSize: 13, color: BLUE_ON_INK, align: "right" });
   s.addNotes(
-    "Voyance, French for foresight. It's a pre-buy planner for TBO's hotel buyers: give it a budget and a risk level, " +
-    "and it returns a ranked list of rooms to buy ahead, each with a reason. The picture is the idea in one glance: " +
-    "booking history stops at the sold-out line, and the dashed part above it is demand nobody counted."
+    "Voyance, from the French for clairvoyance. It's a pre-buy planner for TBO's hotel buyers: give it a budget and a " +
+    "risk level, and it returns a ranked list of rooms to buy ahead, each with a reason. The picture is the idea in one " +
+    "glance: booking history stops at the sold-out line, and the dashed part above it is demand nobody counted."
   );
 }
 
-// ---------- slide 1: problem, innovation, impact, money ----------
+// ---------- slide 2: problem, innovation, impact, money ----------
 {
   const s = pres.addSlide({ masterName: "CONTENT" });
   s.addText("Sold-out dates hide demand. Voyance buys ahead for it", { placeholder: "title" });
-  text(s, "Hotels are 67% of TBO's GTV (₹7,889 cr of ₹11,695 cr in Q2 FY27) and growing 39% a year, twice as fast as air.", {
+  text(s, "Hotels + ancillaries are 67% of TBO's GTV (₹7,889 cr of ₹11,695 cr, Q2 FY27), up 39% year on year, twice air's 18%.", {
     x: M, y: 0.92, w: CW, h: 0.3, fontSize: 13.5, color: MUTED,
   });
 
@@ -224,14 +301,14 @@ function buyDeskSketch(slide, x, y, w, h) {
   const tx = lx + 2.2;
   text(s, "hidden demand", { x: tx, y: g.top - 0.02, w: 1.85, h: 0.22, fontSize: 11, bold: true, color: BLUE_TEXT });
   text(s, "sold-out line", { x: tx, y: g.capY - 0.11, w: 1.85, h: 0.22, fontSize: 11, bold: true, color: ORANGE_TEXT });
-  text(s, "bookings: all history shows", { x: tx, y: g.base - 0.24, w: 1.85, h: 0.22, fontSize: 11, color: MUTED });
+  text(s, "bookings: what history sees", { x: tx, y: g.base - 0.24, w: 2.1, h: 0.22, fontSize: 11, color: MUTED });
 
   label(s, "What's new", lx, 4.02, lw);
   const ideas = [
     ["Hidden demand", "Counts sold-out searches back in, the way airlines correct for sold-out flights."],
     ["Event signals", "Festivals, matches, concerts and long weekends flag spikes before bookings do."],
-    ["Budget as a portfolio", "Best mix of buys for the risk level you pick, with the worst 5% of outcomes capped."],
-    ["Reasons and approval", "Every line says why in plain words. A buyer approves each one."],
+    ["Budget as a portfolio", "Best mix of buys for the risk you pick; the slider trades a little profit for a better worst case."],
+    ["Reasons and approval", "Every line says why in plain words. A second person approves each one."],
   ];
   ideas.forEach(([head, body], i) => {
     const y = 4.3 + i * 0.68;
@@ -244,82 +321,109 @@ function buyDeskSketch(slide, x, y, w, h) {
 
   // Right zone: impact (chart + stats), then Buy Desk + money
   const rx = 4.95;
-  label(s, "Impact (simulated)", rx, 1.4, 5.4);
   const chartW = 5.2;
-  const chartH = chartW / CHART_ASPECT;
-  s.addImage({ path: CHART, x: rx, y: 1.66, w: chartW, h: chartH, altText: "Line chart of expected profit by budget for four buying strategies on simulated December seasons. Our planner leads or ties re-buying past bookings at every budget, while an even split of the budget turns into a loss above ₹1.2 cr.", objectName: "proof chart" });
+  label(s, "Impact (simulated)", rx, 1.4, chartW);
+  const series = [
+    [OURS, "Voyance"],
+    [BASE, "Re-buy past bookings"],
+    [RAW, "Our optimizer, raw bookings"],
+  ].map(([strategy, name]) => ({
+    name,
+    labels: BUDGETS.map(budgetLabel),
+    values: BUDGETS.map((b) => Number((result(b, strategy).mean_profit / 1e5).toFixed(2))),
+  }));
+  s.addChart(pres.charts.LINE, series, {
+    x: rx - 0.08, y: 1.62, w: chartW + 0.08, h: 2.72,
+    chartColors: [BLUE, ORANGE, GREEN],
+    lineSize: 2.25, lineDataSymbol: "circle", lineDataSymbolSize: 6,
+    showLegend: true, legendPos: "t", legendFontSize: 10.5, legendFontFace: "+mn-lt", legendColor: INK,
+    catAxisLabelColor: MUTED, catAxisLabelFontSize: 10, catAxisLabelFontFace: "+mn-lt",
+    catAxisLineShow: true, catAxisLineColor: BAR,
+    valAxisLabelColor: MUTED, valAxisLabelFontSize: 10, valAxisLabelFontFace: "+mn-lt",
+    valAxisMinVal: 6, valAxisMaxVal: 26, valAxisMajorUnit: 4, valAxisLineShow: false,
+    showValAxisTitle: true, valAxisTitle: "Expected profit, ₹ lakh", valAxisTitleFontSize: 10,
+    valAxisTitleColor: MUTED, valAxisTitleFontFace: "+mn-lt",
+    valGridLine: { color: GRID, size: 0.75 }, catGridLine: { style: "none" },
+    altText: `Line chart of simulated expected profit by maximum budget. Voyance leads re-buying past bookings by ${signed(S.tightGain)} at ₹60L, is about even at ₹1.2 cr, and ends ${signed(S.looseVsRaw)} above the same optimizer on raw bookings at ₹2 cr.`,
+    objectName: "impact chart",
+  });
+  text(s, `An even split of the budget (not shown) loses ₹${S.evenLoss}L at ₹2 cr.`, {
+    x: rx, y: 4.38, w: chartW, h: 0.4, fontSize: 9.5, color: MUTED, italic: true,
+  });
 
   const sx = rx + chartW + 0.3;
   const sw = M + CW - sx;
   const stats = [
-    ["+14%", "more expected profit", "at a tight ₹60L budget"],
-    ["+16%", "better worst case at ₹2 cr", "(₹17.0L vs ₹14.7L)"],
-    ["−32%", "unsold room-nights at ₹2 cr", "(101 vs 148)"],
+    [signed(S.tightGain), "more expected profit", "at a tight ₹60L budget"],
+    [signed(S.looseWorstGain), "better worst case at ₹2 cr", `(₹${S.looseWorstOurs}L vs ₹${S.looseWorstBase}L)`],
+    [signed(S.looseVsRaw), "more profit than our optimizer", "on raw bookings, at ₹2 cr"],
   ];
   stats.forEach(([big, line1, line2], i) => {
-    const y = 1.62 + i * 0.86;
+    const y = 1.58 + i * 0.86;
     text(s, big, { x: sx, y, w: sw, h: 0.46, fontSize: 30, bold: true, color: BLUE, valign: "middle" });
     text(s, [
       { text: line1, options: { breakLine: true } },
       { text: line2, options: { color: MUTED } },
     ], { x: sx, y: y + 0.45, w: sw, h: 0.38, fontSize: 11, color: INK });
   });
-  text(s, "All vs re-buying last year's bookings. About even at ₹1.2 cr. Simulated data, not TBO's.", {
-    x: sx, y: 4.2, w: sw, h: 0.5, fontSize: 9.5, color: MUTED, italic: true,
+  text(s, "First two vs re-buying past bookings (about even with it at ₹1.2 cr). The third is what hidden demand + events add.", {
+    x: sx, y: 4.18, w: sw, h: 0.62, fontSize: 9.5, color: MUTED, italic: true,
   });
 
   const by = 4.92;
   label(s, "The Buy Desk", rx, by, 3.6);
   const mw = 3.55;
-  const mh = 1.88;
+  const mh = 1.58;
   if (fs.existsSync(MOCKUP)) {
-    s.addImage({ path: MOCKUP, x: rx, y: by + 0.26, w: mw, h: mh, sizing: { type: "contain", w: mw, h: mh }, altText: "Buy Desk screen: budget and risk sliders, a ranked buy list and a why panel.", objectName: "buy desk mockup" });
+    s.addImage({ path: MOCKUP, x: rx, y: by + 0.26, w: mw, h: mh, sizing: { type: "contain", w: mw, h: mh }, altText: "Buy Desk screen design: budget and risk in, a ranked buy list with a reason and an approval for every line.", objectName: "buy desk mockup" });
   } else {
     buyDeskSketch(s, rx, by + 0.26, mw, mh);
   }
+  text(s, "Screen design (Round 2). Rows are real output from today's API, on simulated data.", {
+    x: rx, y: by + 0.26 + mh + 0.04, w: mw, h: 0.2, fontSize: 9, color: MUTED, italic: true,
+  });
 
   const mx = rx + mw + 0.35;
   const mwid = M + CW - mx;
   label(s, "How it makes money", mx, by, mwid);
   const money = [
-    ["Buy Desk", "TBO's buying team", "Higher margin and fewer unsold rooms."],
-    ["Peak Access", "TBO's 34,529 monthly buyers", "Agencies pay extra for rooms on sold-out dates."],
-    ["White-label", "bedbanks, DMCs", "Platform fee + success fee: a share of the profit uplift, measured against a holdout."],
+    ["Buy Desk", "TBO's buying team", `${S.perRupeeOurs}% profit per rupee pre-bought vs ${S.perRupeeBase}% for re-buying, with fewer unsold rooms (simulated, ₹2 cr).`],
+    ["Peak Access", "TBO's 34,529 monthly buyers (Q2 FY27)", "Agencies pay extra for rooms on sold-out dates."],
+    ["White-label", "DMCs and tour operators", "Platform fee + success fee: a share of the profit uplift, measured against a holdout."],
   ];
   money.forEach(([name, who, body], i) => {
-    const y = by + 0.28 + i * 0.62;
+    const y = by + 0.28 + i * 0.6;
     text(s, [
       { text: name, options: { bold: true, fontSize: 12.5 } },
       { text: `  ·  ${who}`, options: { fontSize: 11, color: MUTED, breakLine: true } },
       { text: body, options: { fontSize: 11, color: INK } },
-    ], { x: mx, y, w: mwid, h: 0.6 });
+    ], { x: mx, y, w: mwid, h: 0.58 });
   });
 
-  sourceNote(s, "Sources: TBO Tek press releases of 28 May 2026 (FY26) and 2 Nov 2026 (Q2 FY27). Impact: 20 simulated December seasons, 40 hotel-weeks in 5 Indian cities; not TBO data. Every figure: docs/numbers.md in our repo.");
+  sourceNote(s, "Sources: TBO Tek press releases, 28 May 2026 (FY26) and 2 Nov 2026 (Q2 FY27). Impact: 20 simulated markets (40 hotel-weeks, 5 Indian cities), each scored on 500 unseen Decembers; not TBO data.");
   s.addNotes(
     "Problem: TBO pre-buys hotel rooms using booking history, but a search that hits sold out never becomes a booking, " +
     "so the busiest dates are undercounted. What's new: we count those sold-out searches back in, add event signals, " +
-    "treat the budget as a portfolio with a risk slider, and explain every line for a buyer to approve. " +
-    "Impact on simulated seasons: +14% expected profit at a tight budget; at a generous budget a 16% better worst case " +
-    "and a third fewer unsold rooms, while splitting the budget evenly loses money. The risk slider pays for itself. " +
-    "Money: margin for TBO, Peak Access for its agencies, and a white-label success fee measured against a holdout."
+    "pick the best mix of buys for the chosen risk level, and explain every line for a second person to approve. " +
+    `Impact, all simulated: ${signed(S.tightGain)} expected profit on a tight budget versus re-buying past bookings; ` +
+    `at a generous budget a ${S.looseWorstGain}% better worst case, and ${S.looseVsRaw}% more profit than the same optimizer ` +
+    "without hidden demand, which is the part our idea adds. Money: margin for TBO, Peak Access for its agencies, " +
+    "and a white-label success fee measured against a holdout."
   );
 }
 
-// ---------- slide 2: architecture, stack, scale, adoption ----------
+// ---------- slide 3: architecture, stack, scale, adoption ----------
 {
   const s = pres.addSlide({ masterName: "CONTENT" });
-  s.addText("Built for TBO's scale, with a buyer approving every buy", { placeholder: "title" });
+  s.addText("Designed for TBO's scale, with a buyer approving every buy", { placeholder: "title" });
   text(s, "The busy path is collecting search events, not the optimizer, so each layer scales on its own.", {
     x: M, y: 0.92, w: CW, h: 0.3, fontSize: 13.5, color: MUTED,
   });
 
   label(s, "Architecture", M, 1.4, 4);
-  // legend
-  const legend = [["Built", "built"], ["Part built", "part"], ["Round 2", "planned"]];
   let lgx = M + CW - 3.9;
-  legend.forEach(([name, kind]) => {
-    statusPill(s, name, kind, lgx, 1.36, 1.2);
+  [["Built", "built"], ["Part built", "part"], ["Round 2", "planned"]].forEach(([name, kind]) => {
+    pill(s, name, lgx, 1.36, 1.2, 0.26, STATUS[kind]);
     lgx += 1.35;
   });
 
@@ -330,14 +434,13 @@ function buyDeskSketch(slide, x, y, w, h) {
       "Event + holiday calendars",
       "Per-supplier rate limits",
     ], "Round 2", "planned"],
-    ["Store", "ClickHouse · Postgres · Redis", [
-      "Look-to-book per hotel-week",
+    ["Store", "SQLite today → Postgres", [
       "Tenants, plans, approvals, audit log",
-      "Rate and availability cache, short TTL",
+      "Next: ClickHouse for search events, Redis rate cache",
     ], "Part built", "part"],
     ["Decision engine", "Python · HiGHS solver", [
-      "Hidden demand → event lift → demand range → budget optimizer → price tiers → reasons",
-      "One job per city-month, run in parallel",
+      "Hidden demand → event lift → budget optimizer → reasons",
+      "Next: demand-range forecast, price tiers",
     ], "Part built", "part"],
     ["Buy Desk API", "FastAPI · REST", [
       "Multi-tenant, API keys",
@@ -365,7 +468,7 @@ function buyDeskSketch(slide, x, y, w, h) {
     text(s, bullets.map((b, j) => ({
       text: b, options: { bullet: { indent: 10 }, breakLine: j < bullets.length - 1, paraSpaceAfter: 3 },
     })), { x: x + 0.16, y: cy + 0.9, w: cw - 0.28, h: ch - 1.38, fontSize: 11, color: INK });
-    statusPill(s, status, kind, x + 0.16, cy + ch - 0.4, 1.1);
+    pill(s, status, x + 0.16, cy + ch - 0.4, 1.1, 0.26, STATUS[kind]);
     if (i < stages.length - 1) {
       s.addShape(pres.shapes.CHEVRON, {
         x: x + cw + 0.08, y: cy + ch / 2 - 0.14, w: 0.14, h: 0.28,
@@ -375,9 +478,9 @@ function buyDeskSketch(slide, x, y, w, h) {
   });
 
   const bottom = [
-    ["Scale", "< 1 s", "to plan a whole December across 5 cities on a laptop (measured). Each city-month is its own job, so cities run in parallel. Ingest grows by adding Go workers and Kafka partitions."],
-    ["Real today", "72 tests", "Budget never exceeded. More caution never worsens the worst case. Companies never see each other's plans. Nobody approves their own plan."],
-    ["Adoption risk: shadow mode", "1 season", "beside TBO's buyers, comparing plans before any money moves. Then live one city at a time. TBO's own data plugs in through one DataSource interface."],
+    ["Scale", "0.2 s", "for one buy plan over 40 hotel-weeks in 5 cities, on a laptop (measured). Round 2: solve cities in parallel and load-test at TBO's catalogue size."],
+    ["Real today", "72 tests", "Budget never exceeded. More caution never lowers the planned worst case. No company sees another's plans. Nobody approves their own plan."],
+    ["Adoption risk: shadow mode", "1 season", "beside TBO's buyers before any money moves, logging sold-out searches if TBO doesn't yet. Then live city by city, a buyer approving every line."],
   ];
   const bw = (CW - 0.3 * 2) / 3;
   const by = 4.66;
@@ -390,17 +493,18 @@ function buyDeskSketch(slide, x, y, w, h) {
     text(s, body, { x: x + 0.22, y: by + 1.1, w: bw - 0.44, h: bh - 1.25, fontSize: 12, color: INK });
   });
 
-  sourceNote(s, "Built = in our repo today (Python, FastAPI, 72 automated tests). Round 2 = planned for 26 Nov – 23 Dec. Solve time measured on the prototype; data is simulated until TBO's plugs in.");
+  sourceNote(s, "Built = in our repo today (Python, FastAPI, SQLite, 72 automated tests). Round 2 = planned for 26 Nov – 23 Dec. Timing measured on a laptop; all data is simulated until TBO's plugs in.");
   s.addNotes(
-    "Architecture: a Go service ingests TBO's search and booking events, including sold-out results, into Kafka. " +
-    "ClickHouse holds the events, Postgres the plans and audit log, Redis the rate cache. The Python decision engine runs " +
-    "one job per city-month: hidden demand, event lift, a demand range, then a budget optimizer with a cap on the worst 5% of outcomes. " +
-    "The FastAPI Buy Desk API is built today, with roles, approvals and an audit log, and 72 tests. " +
-    "Adoption: shadow mode for one season beside TBO's buyers, then live one city at a time, with a buyer approving every line."
+    "Today: a Python engine counts hidden demand, adds event weeks and runs a budget optimizer that weighs expected profit " +
+    "against the worst five percent of outcomes. One plan over 40 hotel-weeks takes 0.2 seconds on a laptop. The Buy Desk API " +
+    "is built: API keys, buyer, approver and admin roles, approvals, an audit log, SQLite storage and 72 tests. " +
+    "Round 2: a Go collector streams TBO's search and booking events, sold-outs included, through Kafka into ClickHouse; " +
+    "Postgres and Redis replace SQLite; a React dashboard on top. Adoption: shadow mode for one season beside TBO's buyers, " +
+    "then live one city at a time."
   );
 }
 
-// ---------- slide 3: thank you ----------
+// ---------- slide 4: thank you ----------
 {
   const s = pres.addSlide({ masterName: "DARK" });
   text(s, "Thank you", { x: 0.8, y: 2.0, w: 6.5, h: 1.1, fontSize: 60, bold: true, color: WHITE, valign: "middle" });
@@ -417,19 +521,6 @@ function buyDeskSketch(slide, x, y, w, h) {
   s.addNotes("Thank you. The code, the tests and every number on these slides are in our repo.");
 }
 
-function statusPill(slide, value, kind, x, y, w) {
-  const look = {
-    built: { fill: BLUE, line: BLUE, color: WHITE },
-    part: { fill: BLUE_TINT, line: BLUE, color: BLUE_TEXT },
-    planned: { fill: WHITE, line: BAR, color: MUTED },
-  }[kind];
-  slide.addText(value, {
-    shape: pres.shapes.ROUNDED_RECTANGLE, rectRadius: 0.13, x, y, w, h: 0.26,
-    fill: { color: look.fill }, line: { color: look.line, width: 1 }, color: look.color,
-    bold: true, fontSize: 10, align: "center", valign: "middle", margin: 0, objectName: `status ${value}`,
-  });
-}
-
 // Write, then drop the ZIP's folder entries: cloud viewers can fail to open a .pptx that has them.
 async function main() {
   const raw = await pres.write({ outputType: "nodebuffer" });
@@ -442,6 +533,7 @@ async function main() {
   const buf = await clean.generateAsync({ type: "nodebuffer", compression: "DEFLATE", compressionOptions: { level: 9 } });
   fs.writeFileSync(OUT, buf);
   console.log(`wrote ${OUT} (${names.length} parts)`);
+  console.log("stats", JSON.stringify(S));
 }
 
 main().catch((err) => {

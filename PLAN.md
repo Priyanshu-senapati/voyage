@@ -59,6 +59,50 @@ live one city at a time.
 | 26 Nov – 23 Dec (deadline 24 Dec) | Round 2: 10-slide PPT + GitHub code + docs + video |
 | 8 Jan 2027 | Grand Finale |
 
+## Work split: 3 parallel lanes (from 18 Nov)
+Each lane owns its folders, so no two lanes edit the same files.
+
+| Lane | Driver | Owns (edits only these) | Delivers |
+|---|---|---|---|
+| **A. Engine** | Priyanshu | `voyance/`, `tests/`, `scripts/`, `out/`, `pyproject.toml` | Real-data calibration, forecast + SHAP, release value + price tiers, mock TBO Hotel API adapter, webhooks, the API contract |
+| **B. Product** | Gourab | `web/`, `e2e/`, `Dockerfile`, deploy config | Dashboard, end-to-end tests, live URL |
+| **C. Pitch, research, collector** | Research + QA pair | `deck/`, `docs/`, `data/events/`, `collector/` | Both decks and videos, event calendar, TBO numbers with sources, Go collector + load test, bug bashes |
+
+Shared files (`README.md`, `PLAN.md`): pull first, keep edits small.
+
+### Round 1 (submit 19 Nov; hard deadline 20 Nov, 11:59 PM IST)
+| Lane | Task | Due |
+|---|---|---|
+| C | Deck in `deck/`: cover, 2 slides, thank-you. Slide 1: problem, innovation, impact, money model (success fee). Slide 2: architecture, stack, scale, adoption risk (shadow mode). Use `out/proof_chart.png` and the line "the risk slider pays for itself". | Draft 18 Nov night |
+| C | TBO scale numbers checked against TBO's filings, with links | 19 Nov noon |
+| C | Video script (check the length rule on the submission page), then record with everyone | 19 Nov |
+| B | One Buy Desk screen mockup PNG (budget + risk sliders, ranked buy list, "why" panel) for slide 1 and the video | 19 Nov noon |
+| A | Sim numbers for the deck, architecture diagram check, tech review of both slides | 19 Nov noon |
+| A | Submit | 19 Nov |
+
+### Round 2
+| Week | A. Engine | B. Product | C. Pitch, research, collector |
+|---|---|---|---|
+| 21–25 Nov | Get the public hotel-bookings data; calibrate the simulator on it | Pick the stack (React + Vite + TypeScript recommended over Streamlit: it looks like real SaaS); scaffold against the current API | Install Go; collector skeleton; start the event calendar |
+| 26 Nov – 2 Dec | Forecast v1 (LightGBM low/likely/high + SHAP). **Freeze API contract v2 by 2 Dec** | API-key login, create plan, buy list | Event calendar for 5 cities by 2 Dec |
+| 3 – 9 Dec | Release value + price tiers in planner and API | Approvals, audit log, "why" panel | Collector: worker pool, per-supplier rate limits, load test (events/sec). Bug bash 1 |
+| 10 – 16 Dec | Mock TBO Hotel API adapter (search, availability re-check, book); webhooks | December replay view; live URL; end-to-end tests | 10-slide deck draft, docs, video script. Bug bash 2 |
+| 17 – 23 Dec | Fixes from bug bashes; README | Polish | Record video; judge Q&A bank. **Submit 23 Dec** |
+
+### Hand-offs
+- **A → B:** the OpenAPI page at `/docs` is the contract. Run `python scripts/seed_demo.py`, then
+  `uvicorn voyance.api.app:create_app --factory` with `VOYANCE_CORS_ORIGINS=http://localhost:5173`.
+  A announces a contract change before merging it.
+- **C → A:** `data/events/events.csv` with columns `city, start, end, name, kind, impact, source_url`
+  (kind: festival / match / concert / long_weekend; impact: low / medium / high).
+- **C → A:** the collector writes per hotel-week counts `city, week, hotel, searches, soldout_searches, bookings`,
+  the inputs `voyance/demand.py` already takes.
+
+### Git rules
+- One branch per lane (`engine/...`, `web/...`, `pitch/...`). Merge to `main` only with `python -m pytest` passing. Pull `main` every morning.
+- On one computer, give each lane its own folder: `git worktree add ../voyage-web -b web/dashboard`. Never run two lanes in the same folder.
+- Commit and push every finished, tested piece. No AI co-author lines and no assistant config files in the repo (it goes public for Round 2).
+
 ## Phase 0: Decisions (locked 12 Nov)
 The webinar (5 Nov) gave no clear answers and no restrictions, so we chose what gives the strongest entry:
 

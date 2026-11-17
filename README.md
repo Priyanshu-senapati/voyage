@@ -3,7 +3,10 @@
 Decides what hotel inventory a travel distributor should buy ahead, within a maximum budget:
 which hotel, which week, how many room-nights, the expected profit and the worst case.
 
-**Status:** Round 1 prototype. Runs on simulated data only; no TBO data yet.
+**Status:** Round 1 prototype. Runs on simulated data; no TBO data yet. Compared with 119,390 real hotel
+bookings (`out/calibration.json`): the Christmas-week peak matches (1.45× vs our 1.47×); real demand swings
+less from year to year (about 22%) than we simulate (35%), so our test is the harder one; real early December
+is busier than ours (only 4 hotel-years of December data, so that shape is rough).
 
 ## Run
 
@@ -11,8 +14,9 @@ Needs Python 3.11+.
 
 ```bash
 python -m pip install -e ".[test]"
-python -m pytest                   # 72 tests, about 12 s
+python -m pytest                   # 89 tests, about 12 s
 python scripts/proof_chart.py      # about 3.5 min; writes out/proof_chart.png and out/proof_results.csv
+python scripts/calibrate.py        # downloads 16 MB once; writes out/calibration.json
 ```
 
 ## Buy Desk API
@@ -56,6 +60,13 @@ Settings: `VOYANCE_DATABASE_URL` (default `sqlite:///voyance.db`, any SQLAlchemy
 | `voyance/optimizer.py` | Budget + risk (CVaR) linear program, solved with scipy's built-in HiGHS |
 | `voyance/sim.py` | Simulated December seasons and the strategies we compare |
 | `voyance/api/` | Buy Desk API: planner, storage, API-key auth, approvals, audit log |
+| `voyance/calibrate.py` | Demand facts measured on real bookings (December shape, year-to-year swing) |
 | `scripts/proof_chart.py` | Round 1 chart: expected profit by budget |
+| `scripts/calibrate.py` | Checks the simulator against the real bookings dataset |
 | `scripts/seed_demo.py` | Demo companies and API keys |
 | `PLAN.md` | Team plan, timeline and product shape |
+
+## Data credit
+
+`scripts/calibrate.py` downloads the "Hotel booking demand" dataset: N. Antonio, A. de Almeida, L. Nunes (2019),
+*Data in Brief* 22: 41–49, licence CC BY 4.0. It is checked by SHA-256 and kept out of this repo.

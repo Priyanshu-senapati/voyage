@@ -20,6 +20,17 @@ Source: `out/proof_results.csv` and `out/proof_chart.png`: 20 simulated December
    laptop; cities run in parallel. The working API already has plans, four-eyes approvals, an audit log and
    CSV export, with 72 automated tests.
 
+## Checked against real bookings (`out/calibration.json`, `python scripts/calibrate.py`)
+Public dataset of 119,390 real bookings at two hotels, 2015–17 (Portugal, CC BY 4.0).
+7. **The channel is TBO's:** 82% of the bookings came through travel agents and tour operators.
+8. **Our peak is realistic:** Christmas week runs 1.45× an average December week in the real data; we simulate 1.47×.
+9. **Our test is harder than reality:** a week's real agent demand swings about 22% from one year to the next;
+   we simulate 35%.
+10. **Why pre-buying is risky:** 41% of agent bookings were cancelled, and they arrive a median of 59 days ahead,
+    so the buy decision is made about two months out.
+- Be upfront: the data is from Portugal, not India; real early December is busier than in our simulation, and
+  there are only 4 hotel-years of December data.
+
 ## Table for a slide (our planner vs re-buying past bookings)
 | Budget | Expected profit | Worst 5% of seasons | Money spent | Unsold rooms |
 |---|---|---|---|---|

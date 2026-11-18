@@ -1233,6 +1233,60 @@ td.c-soldout {
   padding: 8px 0 2px;
 }
 
+/* ---------- pages: plans, markets, audit ---------- */
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  grid-row: 1 / -1;
+}
+
+.page-head {
+  padding: 18px 24px 10px;
+}
+
+.page-head h1 {
+  font-size: 21px;
+  font-weight: 680;
+}
+
+.page-head p {
+  max-width: 72ch;
+  margin-top: 4px;
+  color: var(--ink-2);
+}
+
+.page-table {
+  flex: 1;
+}
+
+.page .table td {
+  height: 44px;
+}
+
+.row-static {
+  cursor: default;
+}
+
+.c-open {
+  width: 90px;
+  padding-right: 24px;
+  text-align: right;
+}
+
+.muted {
+  color: var(--ink-2);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* ---------- plan switcher, states, toast ---------- */
 .plan-switch {
   height: 30px;

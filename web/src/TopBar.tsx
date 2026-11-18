@@ -1,9 +1,9 @@
 import { LogOut } from 'lucide-react'
-
-const NAV = ['Buy Desk', 'Plans', 'Markets', 'Audit log']
+import { ROUTES, type Route } from './route'
 
 interface Props {
   viewer: { name: string; detail: string; company: string | null }
+  active: Route
   onSignOut: () => void
 }
 
@@ -18,17 +18,17 @@ export function BrandMark() {
   )
 }
 
-export function TopBar({ viewer, onSignOut }: Props) {
+export function TopBar({ viewer, active, onSignOut }: Props) {
   return (
     <header className="topbar">
-      <a className="brand" href="/" aria-label="Voyance home">
+      <a className="brand" href="#/" aria-label="Voyance home">
         <BrandMark />
         <span>Voyance</span>
       </a>
       <nav className="nav" aria-label="Main">
-        {NAV.map((item, i) => (
-          <a key={item} href="#" aria-current={i === 0 ? 'page' : undefined}>
-            {item}
+        {ROUTES.map((r) => (
+          <a key={r.route} href={r.hash} aria-current={r.route === active ? 'page' : undefined}>
+            {r.label}
           </a>
         ))}
       </nav>

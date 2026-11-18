@@ -21,3 +21,11 @@ export const sum = (values: number[]) => values.reduce((a, b) => a + b, 0)
 function trim(fixed: string): string {
   return fixed.replace(/\.?0+$/, '')
 }
+
+// Fixed size ramp: the dot reads before the number does
+export function rampSize(searches: number): number {
+  if (searches >= 3000) return 13
+  if (searches >= 1500) return 10
+  if (searches >= 500) return 7
+  return searches > 0 ? 4 : 0
+}

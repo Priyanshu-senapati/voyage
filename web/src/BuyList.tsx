@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Download } from 'lucide-react'
 import type { PlanLine } from './types'
 import { CITIES, CITY_INK, WEEKS, WEEK_STARTS } from './cities'
-import { count, inr, sum, weekLabel } from './format'
+import { count, inr, rampSize, sum, weekLabel } from './format'
 import { StatusChip } from './StatusChip'
 
 interface Props {
@@ -11,14 +11,6 @@ interface Props {
   onSelect: (id: number) => void
   onExport: () => void
   unsaved: boolean
-}
-
-// Fixed size ramp: the dot reads before the number does
-function rampSize(searches: number): number {
-  if (searches >= 3000) return 13
-  if (searches >= 1500) return 10
-  if (searches >= 500) return 7
-  return searches > 0 ? 4 : 0
 }
 
 export function BuyList({ lines, selectedId, onSelect, onExport, unsaved }: Props) {

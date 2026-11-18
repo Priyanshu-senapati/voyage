@@ -11,6 +11,8 @@ export type PlanPreview = Schemas['PlanPreview']
 export type PlanLineOut = Schemas['PlanLineOut']
 export type LineWhy = Schemas['LineWhy']
 export type FrontierPoint = Schemas['FrontierPoint']
+export type MarketItem = Schemas['MarketItem']
+export type AuditEvent = Schemas['AuditOut']
 
 export interface PlanLine extends PlanLineOut {
   rank: number

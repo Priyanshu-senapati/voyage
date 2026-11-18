@@ -1,4 +1,4 @@
-import type { Decision, FrontierPoint, Me, PlanCreate, PlanLineOut, PlanOut, PlanPreview, PlanSummary } from '../types'
+import type { AuditEvent, Decision, FrontierPoint, MarketItem, Me, PlanCreate, PlanLineOut, PlanOut, PlanPreview, PlanSummary } from '../types'
 
 // Same origin by default: Vite proxies /v1 to the API in dev and preview.
 const BASE = import.meta.env.VITE_API_URL ?? ''
@@ -48,6 +48,8 @@ async function errorText(res: Response): Promise<string> {
 export function apiFor(key: string) {
   return {
     me: () => request<Me>(key, '/v1/me'),
+    markets: () => request<MarketItem[]>(key, '/v1/markets'),
+    audit: () => request<AuditEvent[]>(key, '/v1/audit?limit=200'),
     preview: (body: PlanCreate, signal?: AbortSignal) =>
       request<PlanPreview>(key, '/v1/plans/preview', { method: 'POST', body: JSON.stringify(body), signal }),
     frontier: (budget: number, cities?: string[] | null) => {

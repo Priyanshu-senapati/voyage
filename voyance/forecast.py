@@ -38,33 +38,37 @@ def agent_bookings(raw: pd.DataFrame) -> pd.DataFrame:
         "cancelled_on": pd.to_datetime(rows["reservation_status_date"]).where(~kept),
         "nights": rows["stays_in_weekend_nights"].astype(int) + rows["stays_in_week_nights"].astype(int),
         "kept": kept,
+        "rate": rows["adr"].astype(float),  # average daily rate the guest paid
     }).reset_index(drop=True)
 
 
 def booking_curves(bookings: pd.DataFrame, leads: tuple[int, ...] = LEADS) -> pd.DataFrame:
     """Per hotel, arrival week and lead: room-nights on the books `lead` days before the week, and the final.
 
-    On the books = booked by then and not yet cancelled. Final = room-nights of bookings that were kept.
-    Weeks the data covers only in part are left out.
+    On the books = booked by then and not yet cancelled. Final = room-nights of bookings that were kept, and
+    rate = what they paid per room-night on average. Weeks the data covers only in part are left out.
     """
-    final = bookings[bookings["kept"]].groupby(["hotel", "week"])["nights"].sum()
-    full = ((final.index.get_level_values("week") >= bookings["arrival"].min())
-            & (final.index.get_level_values("week") + pd.Timedelta(days=6) <= bookings["arrival"].max()))
-    final = final[full]
+    kept = bookings[bookings["kept"]].assign(revenue=lambda b: b["rate"] * b["nights"])
+    totals = kept.groupby(["hotel", "week"])[["nights", "revenue"]].sum()
+    weeks = totals.index.get_level_values("week")
+    totals = totals[(weeks >= bookings["arrival"].min())
+                    & (weeks + pd.Timedelta(days=6) <= bookings["arrival"].max())]
+    final, rate = totals["nights"], totals["revenue"] / totals["nights"].where(totals["nights"] > 0)
+    columns = [*KEYS, "on_books", "final", "rate"]
+    if final.empty:
+        return pd.DataFrame(columns=columns)
     parts = []
     for lead in leads:
         as_of = bookings["week"] - pd.Timedelta(days=lead)
         held = (bookings["booked"] <= as_of) & (bookings["cancelled_on"].isna() | (bookings["cancelled_on"] > as_of))
         on_books = bookings[held].groupby(["hotel", "week"])["nights"].sum().reindex(final.index, fill_value=0)
-        parts.append(pd.DataFrame({"lead": lead, "on_books": on_books, "final": final}))
-    if not parts or final.empty:
-        return pd.DataFrame(columns=[*KEYS, "on_books", "final"])
-    return pd.concat(parts).reset_index()[[*KEYS, "on_books", "final"]]
+        parts.append(pd.DataFrame({"lead": lead, "on_books": on_books, "final": final, "rate": rate}))
+    return pd.concat(parts).reset_index()[columns]
 
 
 def with_history(curves: pd.DataFrame) -> pd.DataFrame:
     """Adds the season, last year (same hotel, 52 weeks earlier) and the pace of the week 4 weeks earlier."""
-    last_year = (curves.assign(week=curves["week"] + pd.Timedelta(weeks=52))
+    last_year = (curves.assign(week=curves["week"] + pd.Timedelta(weeks=52))[[*KEYS, "on_books", "final"]]
                  .rename(columns={"on_books": "on_books_last_year", "final": "final_last_year"}))
     # the week 4 weeks earlier, at the same lead, was forecast 4 weeks earlier: known by now
     earlier = (curves.assign(week=curves["week"] + pd.Timedelta(weeks=4))[[*KEYS, "on_books"]]
@@ -100,6 +104,24 @@ def fit(frame: pd.DataFrame) -> Forecaster:
     return Forecaster(models, hotels)
 
 
+def walk_forward(frame: pd.DataFrame, test: pd.DataFrame) -> tuple[np.ndarray, pd.DataFrame]:
+    """Low / likely / high for each row of `test`, as a buyer would have had them on the day of the decision.
+
+    A row is decided `lead` days before its week. For each month of decisions, a model is learned afresh from
+    the weeks of `frame` that had finished before that month began. Also returns the SHAP values behind each
+    likely forecast.
+    """
+    month = (test["week"] - pd.to_timedelta(test["lead"], unit="D")).dt.to_period("M").dt.start_time
+    ranges = np.empty((len(test), len(QUANTILES)))
+    explanations = []
+    for start in sorted(month.unique()):
+        at = (month == start).to_numpy()
+        model = fit(frame[frame["week"] + pd.Timedelta(days=6) < start])
+        ranges[at] = model.predict(test[at])
+        explanations.append(model.explain(test[at]))
+    return ranges, pd.concat(explanations).loc[test.index]
+
+
 def _design(frame: pd.DataFrame, hotels: tuple[str, ...]) -> pd.DataFrame:
     unknown = set(frame["hotel"]) - set(hotels)
     if unknown:
@@ -109,19 +131,34 @@ def _design(frame: pd.DataFrame, hotels: tuple[str, ...]) -> pd.DataFrame:
     return x
 
 
+def scenarios_from_range(low: np.ndarray, likely: np.ndarray, high: np.ndarray, n: int) -> np.ndarray:
+    """n demand scenarios per item (n x items) that keep the range: 10% below low, half below likely, 10% above high.
+
+    Straight lines between the three quantiles, carried on past them at the same slope, never below zero. The
+    scenarios are evenly spaced quantiles, not random draws, so the same range always gives the same scenarios.
+    """
+    knots = np.array(QUANTILES)
+    values = np.column_stack([low, likely, high])
+    u = (np.arange(n) + 0.5) / n
+    lower = values[:, [0]] + (u - knots[0]) * (values[:, [1]] - values[:, [0]]) / (knots[1] - knots[0])
+    upper = values[:, [1]] + (u - knots[1]) * (values[:, [2]] - values[:, [1]]) / (knots[2] - knots[1])
+    return np.clip(np.where(u <= knots[1], lower, upper), 0, None).T
+
+
 def wape(forecast: np.ndarray, actual: np.ndarray) -> float:
     """Weighted absolute percentage error: total miss / total demand."""
     return float(np.abs(np.asarray(forecast) - np.asarray(actual)).sum() / np.asarray(actual).sum())
 
 
 def backtest(frame: pd.DataFrame, test_from: pd.Timestamp) -> dict:
-    """Learn on weeks before `test_from`, score the weeks from it on, against re-buying last year's demand."""
-    train, test = frame[frame["week"] < test_from], frame[frame["week"] >= test_from]
-    test = test[test["final_last_year"].notna()]  # score both on the same weeks
+    """Score the weeks from `test_from` on against re-buying last year's demand, each forecast made walk-forward:
+    only from what was known on the day it would have been made."""
+    test = frame[(frame["week"] >= test_from) & frame["final_last_year"].notna()]  # both scored on the same weeks
     if test.empty:
         raise ValueError("no test weeks with a last year to compare against")
-    model = fit(train)
-    low, likely, high = model.predict(test).T
+    ranges, explanations = walk_forward(frame, test)
+    low, likely, high = ranges.T
+    decided = test["week"] - pd.to_timedelta(test["lead"], unit="D")
     by_lead = []
     for lead in sorted(test["lead"].unique()):
         at = (test["lead"] == lead).to_numpy()
@@ -134,9 +171,10 @@ def backtest(frame: pd.DataFrame, test_from: pd.Timestamp) -> dict:
             "range_coverage": float(((low[at] <= actual) & (actual <= high[at])).mean()),
             "share_on_books": float(test["on_books"].to_numpy()[at].sum() / actual.sum()),
         })
-    shap = model.explain(test).drop(columns="base").abs().mean()
+    shap = explanations.drop(columns="base").abs().mean()
     return {
-        "train_weeks": [train["week"].min().date().isoformat(), train["week"].max().date().isoformat()],
+        "models_trained_monthly": [decided.min().replace(day=1).date().isoformat(),
+                                   decided.max().replace(day=1).date().isoformat()],
         "test_weeks": [test["week"].min().date().isoformat(), test["week"].max().date().isoformat()],
         "by_lead": by_lead,
         "mean_abs_shap": {feature: float(shap[feature]) for feature in FEATURES},

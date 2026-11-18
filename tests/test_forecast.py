@@ -2,12 +2,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from voyance.forecast import FEATURES, agent_bookings, backtest, booking_curves, fit, with_history
+from voyance import forecast
+from voyance.forecast import (FEATURES, agent_bookings, backtest, booking_curves, fit, scenarios_from_range,
+                              with_history)
 
 WEEK = pd.Timestamp("2016-05-02")  # a Monday
 
 
-def raw(arrival, lead, nights=1, hotel="City Hotel", canceled_days_before=None, channel="TA/TO"):
+def raw(arrival, lead, nights=1, hotel="City Hotel", canceled_days_before=None, channel="TA/TO", adr=100.0):
     """One row of the public hotel-bookings dataset."""
     arrival = pd.Timestamp(arrival)
     status = arrival if canceled_days_before is None else arrival - pd.Timedelta(days=canceled_days_before)
@@ -15,7 +17,7 @@ def raw(arrival, lead, nights=1, hotel="City Hotel", canceled_days_before=None, 
         "hotel": hotel, "arrival_date_year": arrival.year, "arrival_date_month": arrival.month_name(),
         "arrival_date_day_of_month": arrival.day, "lead_time": lead,
         "is_canceled": int(canceled_days_before is not None), "reservation_status_date": status.date().isoformat(),
-        "stays_in_weekend_nights": 0, "stays_in_week_nights": nights, "distribution_channel": channel,
+        "stays_in_weekend_nights": 0, "stays_in_week_nights": nights, "distribution_channel": channel, "adr": adr,
     }
 
 
@@ -39,6 +41,21 @@ def test_booking_curve_counts_what_was_on_the_books_at_each_lead():
     week = curves[curves.week == WEEK].set_index("lead")
     assert week.loc[30, "on_books"] == 3 + 4 and week.loc[7, "on_books"] == 3 + 2
     assert (week.final == 5).all()
+
+
+def test_booking_curve_carries_the_weeks_room_rate_weighted_by_nights():
+    rows = [raw(WEEK, lead=9, nights=3, adr=100), raw(WEEK, lead=9, nights=1, adr=200),
+            raw(WEEK, lead=9, nights=6, adr=999, canceled_days_before=2),  # cancelled: not a price paid
+            raw("2016-04-01", lead=5), raw("2016-06-30", lead=5)]
+    curves = booking_curves(agent_bookings(pd.DataFrame(rows)), leads=(7,))
+    assert curves[curves.week == WEEK].rate.item() == pytest.approx((3 * 100 + 200) / 4)
+
+
+def test_scenarios_from_a_range_keep_its_quantiles():
+    s = scenarios_from_range(np.array([10.0, 0.0]), np.array([20.0, 5.0]), np.array([40.0, 30.0]), n=1000)
+    assert s.shape == (1000, 2) and (s >= 0).all()
+    assert np.quantile(s[:, 0], [0.1, 0.5, 0.9]) == pytest.approx([10, 20, 40], abs=0.3)
+    assert np.median(s[:, 1]) == pytest.approx(5, abs=0.2)
 
 
 def test_booking_curve_drops_weeks_the_data_only_partly_covers():
@@ -99,11 +116,32 @@ def test_forecast_refuses_a_hotel_it_never_learned():
         model.predict(frame[frame.hotel == "B"])
 
 
+def test_walk_forward_learns_only_from_weeks_finished_before_each_decision(monkeypatch):
+    frame = synthetic_history()
+    test = frame[frame.week >= WEEK + pd.Timedelta(weeks=100)]
+    latest_seen = []
+    real_fit = forecast.fit
+
+    def watched_fit(train):
+        latest_seen.append(train.week.max() + pd.Timedelta(days=6))
+        return real_fit(train)
+
+    monkeypatch.setattr(forecast, "fit", watched_fit)
+    ranges, shap = forecast.walk_forward(frame, test)
+    decided = test.week - pd.to_timedelta(test.lead, unit="D")
+    month_starts = sorted(decided.dt.to_period("M").dt.start_time.unique())
+    assert len(latest_seen) == len(month_starts)  # one model per decision month, oldest first
+    # every model only saw weeks that had finished before the first day of its decision month
+    assert all(seen < start for seen, start in zip(latest_seen, month_starts))
+    assert ranges.shape == (len(test), 3) and list(shap.index) == list(test.index)
+
+
 def test_backtest_trains_only_on_the_past_and_scores_each_lead():
     frame = synthetic_history()
     split = WEEK + pd.Timedelta(weeks=100)
     result = backtest(frame, test_from=split)
-    assert pd.Timestamp(result["train_weeks"][1]) < split <= pd.Timestamp(result["test_weeks"][0])
+    assert split <= pd.Timestamp(result["test_weeks"][0])
+    assert pd.Timestamp(result["models_trained_monthly"][0]) <= split - pd.Timedelta(days=90)
     by_lead = {row["lead"]: row for row in result["by_lead"]}
     assert set(by_lead) == {30, 90}
     for row in by_lead.values():

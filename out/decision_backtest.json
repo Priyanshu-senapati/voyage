@@ -1,0 +1,422 @@
+{
+  "test_weeks": [
+    "2017-01-02",
+    "2017-08-21"
+  ],
+  "results": [
+    {
+      "lead": 90,
+      "margin": 0.15,
+      "hotel_weeks": 68,
+      "strategies": {
+        "rebuy_last_year": {
+          "profit": 797984.6680758186,
+          "rooms_bought": 63616.0,
+          "unsold": 2487.0,
+          "turned_away": 8275.0
+        },
+        "likely_forecast": {
+          "profit": 898855.0531791737,
+          "rooms_bought": 66939.0,
+          "unsold": 2119.0,
+          "turned_away": 4584.0,
+          "vs_rebuy": 0.12640641999624314,
+          "vs_rebuy_95ci": [
+            0.03356290175479137,
+            0.22680836074596375
+          ]
+        },
+        "optimizer_risk_0": {
+          "profit": 957961.8855493963,
+          "rooms_bought": 57441.0,
+          "unsold": 202.0,
+          "turned_away": 12165.0,
+          "vs_rebuy": 0.2004765553445158,
+          "vs_rebuy_95ci": [
+            0.07492629798878553,
+            0.3550312850189645
+          ]
+        },
+        "optimizer_risk_0.3": {
+          "profit": 914548.5640809555,
+          "rooms_bought": 53890.0,
+          "unsold": 91.0,
+          "turned_away": 15605.0,
+          "vs_rebuy": 0.14607285160779937,
+          "vs_rebuy_95ci": [
+            0.020523648012223363,
+            0.2966794976092902
+          ]
+        }
+      }
+    },
+    {
+      "lead": 90,
+      "margin": 0.2,
+      "hotel_weeks": 68,
+      "strategies": {
+        "rebuy_last_year": {
+          "profit": 1160429.744587035,
+          "rooms_bought": 63616.0,
+          "unsold": 2487.0,
+          "turned_away": 8275.0
+        },
+        "likely_forecast": {
+          "profit": 1274212.391706002,
+          "rooms_bought": 66939.0,
+          "unsold": 2119.0,
+          "turned_away": 4584.0,
+          "vs_rebuy": 0.09805216356243829,
+          "vs_rebuy_95ci": [
+            0.032596657405888546,
+            0.16128234801766847
+          ]
+        },
+        "optimizer_risk_0": {
+          "profit": 1303761.820136235,
+          "rooms_bought": 58807.0,
+          "unsold": 296.0,
+          "turned_away": 10893.0,
+          "vs_rebuy": 0.12351637504794155,
+          "vs_rebuy_95ci": [
+            0.043740390642064114,
+            0.21584663323361045
+          ]
+        },
+        "optimizer_risk_0.3": {
+          "profit": 1224868.0664369715,
+          "rooms_bought": 54025.0,
+          "unsold": 92.0,
+          "turned_away": 15471.0,
+          "vs_rebuy": 0.05552970539622648,
+          "vs_rebuy_95ci": [
+            -0.034075333679364855,
+            0.14792593744479773
+          ]
+        }
+      }
+    },
+    {
+      "lead": 90,
+      "margin": 0.3,
+      "hotel_weeks": 68,
+      "strategies": {
+        "rebuy_last_year": {
+          "profit": 1885319.8976094695,
+          "rooms_bought": 63616.0,
+          "unsold": 2487.0,
+          "turned_away": 8275.0
+        },
+        "likely_forecast": {
+          "profit": 2024927.0687596584,
+          "rooms_bought": 66939.0,
+          "unsold": 2119.0,
+          "turned_away": 4584.0,
+          "vs_rebuy": 0.07404959303044856,
+          "vs_rebuy_95ci": [
+            0.036640721494161005,
+            0.1079724175241563
+          ]
+        },
+        "optimizer_risk_0": {
+          "profit": 2029720.7167698527,
+          "rooms_bought": 61540.0,
+          "unsold": 549.0,
+          "turned_away": 8413.0,
+          "vs_rebuy": 0.07659221087279566,
+          "vs_rebuy_95ci": [
+            0.030121118748530674,
+            0.12290628755812956
+          ]
+        },
+        "optimizer_risk_0.3": {
+          "profit": 1853382.1398136923,
+          "rooms_bought": 54435.0,
+          "unsold": 101.0,
+          "turned_away": 15070.0,
+          "vs_rebuy": -0.016940232708662628,
+          "vs_rebuy_95ci": [
+            -0.07521298271532988,
+            0.037416579274551214
+          ]
+        }
+      }
+    },
+    {
+      "lead": 120,
+      "margin": 0.15,
+      "hotel_weeks": 68,
+      "strategies": {
+        "rebuy_last_year": {
+          "profit": 797984.6680758186,
+          "rooms_bought": 63616.0,
+          "unsold": 2487.0,
+          "turned_away": 8275.0
+        },
+        "likely_forecast": {
+          "profit": 896946.6695073163,
+          "rooms_bought": 67121.0,
+          "unsold": 2171.0,
+          "turned_away": 4454.0,
+          "vs_rebuy": 0.1240149158130135,
+          "vs_rebuy_95ci": [
+            0.031164538201686826,
+            0.22630283313317232
+          ]
+        },
+        "optimizer_risk_0": {
+          "profit": 894011.8691420499,
+          "rooms_bought": 53513.0,
+          "unsold": 169.0,
+          "turned_away": 16060.0,
+          "vs_rebuy": 0.12033715045901938,
+          "vs_rebuy_95ci": [
+            -0.012686476363183097,
+            0.283166294412951
+          ]
+        },
+        "optimizer_risk_0.3": {
+          "profit": 816382.0481698634,
+          "rooms_bought": 48420.0,
+          "unsold": 101.0,
+          "turned_away": 21085.0,
+          "vs_rebuy": 0.023054803970615545,
+          "vs_rebuy_95ci": [
+            -0.10464225330565219,
+            0.1743955053280512
+          ]
+        }
+      }
+    },
+    {
+      "lead": 120,
+      "margin": 0.2,
+      "hotel_weeks": 68,
+      "strategies": {
+        "rebuy_last_year": {
+          "profit": 1160429.744587035,
+          "rooms_bought": 63616.0,
+          "unsold": 2487.0,
+          "turned_away": 8275.0
+        },
+        "likely_forecast": {
+          "profit": 1272142.1934620086,
+          "rooms_bought": 67121.0,
+          "unsold": 2171.0,
+          "turned_away": 4454.0,
+          "vs_rebuy": 0.09626817081867456,
+          "vs_rebuy_95ci": [
+            0.03356585923338118,
+            0.16354016079185058
+          ]
+        },
+        "optimizer_risk_0": {
+          "profit": 1233993.42760921,
+          "rooms_bought": 55471.0,
+          "unsold": 213.0,
+          "turned_away": 14146.0,
+          "vs_rebuy": 0.06339348277250068,
+          "vs_rebuy_95ci": [
+            -0.025967752568240764,
+            0.16138228255962384
+          ]
+        },
+        "optimizer_risk_0.3": {
+          "profit": 1095014.2146267314,
+          "rooms_bought": 48615.0,
+          "unsold": 104.0,
+          "turned_away": 20893.0,
+          "vs_rebuy": -0.05637181420542203,
+          "vs_rebuy_95ci": [
+            -0.1436865667783665,
+            0.04726441955225358
+          ]
+        }
+      }
+    },
+    {
+      "lead": 120,
+      "margin": 0.3,
+      "hotel_weeks": 68,
+      "strategies": {
+        "rebuy_last_year": {
+          "profit": 1885319.8976094695,
+          "rooms_bought": 63616.0,
+          "unsold": 2487.0,
+          "turned_away": 8275.0
+        },
+        "likely_forecast": {
+          "profit": 2022533.2413713979,
+          "rooms_bought": 67121.0,
+          "unsold": 2171.0,
+          "turned_away": 4454.0,
+          "vs_rebuy": 0.07277987355669002,
+          "vs_rebuy_95ci": [
+            0.03414394913331941,
+            0.11419160420223295
+          ]
+        },
+        "optimizer_risk_0": {
+          "profit": 1961160.8970243065,
+          "rooms_bought": 59385.0,
+          "unsold": 460.0,
+          "turned_away": 10479.0,
+          "vs_rebuy": 0.04022712512131266,
+          "vs_rebuy_95ci": [
+            -0.011213460880537584,
+            0.09683599620273514
+          ]
+        },
+        "optimizer_risk_0.3": {
+          "profit": 1664904.6114958185,
+          "rooms_bought": 49199.0,
+          "unsold": 111.0,
+          "turned_away": 20316.0,
+          "vs_rebuy": -0.11691134559876692,
+          "vs_rebuy_95ci": [
+            -0.1829449026167621,
+            -0.054454043791010036
+          ]
+        }
+      }
+    },
+    {
+      "lead": 150,
+      "margin": 0.15,
+      "hotel_weeks": 68,
+      "strategies": {
+        "rebuy_last_year": {
+          "profit": 797984.6680758186,
+          "rooms_bought": 63616.0,
+          "unsold": 2487.0,
+          "turned_away": 8275.0
+        },
+        "likely_forecast": {
+          "profit": 898924.2729878314,
+          "rooms_bought": 66026.0,
+          "unsold": 2033.0,
+          "turned_away": 5411.0,
+          "vs_rebuy": 0.12649316327769844,
+          "vs_rebuy_95ci": [
+            0.043352561069703636,
+            0.23312380114216488
+          ]
+        },
+        "optimizer_risk_0": {
+          "profit": 841257.4735571882,
+          "rooms_bought": 50407.0,
+          "unsold": 167.0,
+          "turned_away": 19164.0,
+          "vs_rebuy": 0.054227615156710485,
+          "vs_rebuy_95ci": [
+            -0.07159578543677182,
+            0.20477470915916143
+          ]
+        },
+        "optimizer_risk_0.3": {
+          "profit": 746987.9309604717,
+          "rooms_bought": 44565.0,
+          "unsold": 100.0,
+          "turned_away": 24939.0,
+          "vs_rebuy": -0.06390691344774146,
+          "vs_rebuy_95ci": [
+            -0.19116171090593131,
+            0.07703001255441462
+          ]
+        }
+      }
+    },
+    {
+      "lead": 150,
+      "margin": 0.2,
+      "hotel_weeks": 68,
+      "strategies": {
+        "rebuy_last_year": {
+          "profit": 1160429.744587035,
+          "rooms_bought": 63616.0,
+          "unsold": 2487.0,
+          "turned_away": 8275.0
+        },
+        "likely_forecast": {
+          "profit": 1269657.7902867952,
+          "rooms_bought": 66026.0,
+          "unsold": 2033.0,
+          "turned_away": 5411.0,
+          "vs_rebuy": 0.09412723709407533,
+          "vs_rebuy_95ci": [
+            0.03720778284638471,
+            0.16231943483122854
+          ]
+        },
+        "optimizer_risk_0": {
+          "profit": 1169856.585021764,
+          "rooms_bought": 52655.0,
+          "unsold": 237.0,
+          "turned_away": 16986.0,
+          "vs_rebuy": 0.008123577044366392,
+          "vs_rebuy_95ci": [
+            -0.07695216878011453,
+            0.10270870241698439
+          ]
+        },
+        "optimizer_risk_0.3": {
+          "profit": 1002773.3320684345,
+          "rooms_bought": 44788.0,
+          "unsold": 101.0,
+          "turned_away": 24717.0,
+          "vs_rebuy": -0.13586036832820547,
+          "vs_rebuy_95ci": [
+            -0.22178882769548797,
+            -0.04151514453228349
+          ]
+        }
+      }
+    },
+    {
+      "lead": 150,
+      "margin": 0.3,
+      "hotel_weeks": 68,
+      "strategies": {
+        "rebuy_last_year": {
+          "profit": 1885319.8976094695,
+          "rooms_bought": 63616.0,
+          "unsold": 2487.0,
+          "turned_away": 8275.0
+        },
+        "likely_forecast": {
+          "profit": 2011124.824884722,
+          "rooms_bought": 66026.0,
+          "unsold": 2033.0,
+          "turned_away": 5411.0,
+          "vs_rebuy": 0.06672869014683958,
+          "vs_rebuy_95ci": [
+            0.03224943000971389,
+            0.10562839379347294
+          ]
+        },
+        "optimizer_risk_0": {
+          "profit": 1898105.7830084134,
+          "rooms_bought": 57157.0,
+          "unsold": 412.0,
+          "turned_away": 12659.0,
+          "vs_rebuy": 0.006781812155674194,
+          "vs_rebuy_95ci": [
+            -0.044644291821699884,
+            0.05874831825459643
+          ]
+        },
+        "optimizer_risk_0.3": {
+          "profit": 1529266.0691295173,
+          "rooms_bought": 45463.0,
+          "unsold": 107.0,
+          "turned_away": 24048.0,
+          "vs_rebuy": -0.18885592250493866,
+          "vs_rebuy_95ci": [
+            -0.25391815314653454,
+            -0.12212312086482459
+          ]
+        }
+      }
+    }
+  ]
+}

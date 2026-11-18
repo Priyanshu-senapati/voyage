@@ -12,3 +12,9 @@ __pycache__/
 build/
 # TBO's problem-statement pack: their material, not ours to publish
 *.zip
+
+# downloaded datasets (re-fetched and hash-checked by scripts/calibrate.py)
+data/raw/
+
+# Git Bash crash dumps
+*.stackdump

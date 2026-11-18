@@ -1,0 +1,26 @@
+{
+  "real_agent_bookings": {
+    "bookings": 119390,
+    "agent_share": 0.8197503978557669,
+    "agent_cancel_rate": 0.4102585061816696,
+    "agent_median_lead_days": 59.0,
+    "december_shape": [
+      1.164,
+      0.681,
+      0.703,
+      1.452
+    ],
+    "december_hotel_years": 4,
+    "year_to_year_cv": 0.2241133245467749,
+    "year_to_year_week_pairs": 124
+  },
+  "simulator": {
+    "december_shape": [
+      0.653,
+      0.816,
+      1.061,
+      1.469
+    ],
+    "demand_cv": 0.35
+  }
+}

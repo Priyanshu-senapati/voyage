@@ -77,7 +77,7 @@ Shared files (`README.md`, `PLAN.md`): pull first, keep edits small.
 | C | TBO scale numbers checked against TBO's filings, with links | 19 Nov noon |
 | C | Video script (check the length rule on the submission page), then record with everyone | 19 Nov |
 | B | One Buy Desk screen mockup PNG (budget + risk sliders, ranked buy list, "why" panel) for slide 1 and the video | 19 Nov noon |
-| A | Sim numbers for the deck, architecture diagram check, tech review of both slides | 19 Nov noon |
+| A | Sim numbers for the deck (**done:** `out/deck_numbers.md`), architecture diagram check, tech review of both slides | 19 Nov noon |
 | A | Submit | 19 Nov |
 
 ### Round 2

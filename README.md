@@ -14,7 +14,7 @@ Needs Python 3.11+.
 
 ```bash
 python -m pip install -e ".[test]"
-python -m pytest                   # 107 tests, about 20 s
+python -m pytest                   # 116 tests, about 15 s
 python scripts/proof_chart.py      # about 3.5 min; writes out/proof_chart.png and out/proof_results.csv
 python scripts/calibrate.py        # downloads 16 MB once; writes out/calibration.json
 ```
@@ -33,7 +33,7 @@ Send the key in the `X-API-Key` header. Demo users: **asha** (buyer), **ravi** (
 |---|---|---|
 | `GET /v1/me` | anyone | Your name, role and company |
 | `GET /v1/markets` | anyone | Hotel-weeks that can be bought, with past bookings and sold-out searches |
-| `POST /v1/plans` | anyone | Budget + risk (+ cities) in, ranked buy plan out, each line with a reason and its numbers (`why`) |
+| `POST /v1/plans` | anyone | Budget + risk (+ cities) in, ranked buy plan out. Each line has a reason and its numbers (`why`), its own worst case, and a buy-by date (before 90% of that week's agent bookings, measured on real data) |
 | `POST /v1/plans/preview` | anyone | The same plan without saving it, for sliders (120 a minute) |
 | `GET /v1/frontier` | anyone | Expected profit and worst case at risk 0, 0.1 … 1 for one budget (10 a minute) |
 | `GET /v1/plans`, `GET /v1/plans/{id}` | anyone | Your company's plans |

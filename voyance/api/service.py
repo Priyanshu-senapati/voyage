@@ -20,8 +20,8 @@ from voyance.api.planner import PlanRequestError, PlanResult, build_plan
 from voyance.api.schemas import FrontierPoint, MarketItem, MeOut, PlanCreate, PlanPreview, PlanScope
 from voyance.sim import World
 
-CSV_COLUMNS = ("city", "week", "hotel", "rooms", "unit_cost", "unit_price", "expected_sold",
-               "expected_profit", "decision", "decided_by", "reason")
+CSV_COLUMNS = ("city", "week", "hotel", "buy_by", "rooms", "unit_cost", "unit_price", "expected_sold",
+               "expected_profit", "worst_case_profit", "decision", "decided_by", "reason")
 FORMULA_STARTS = ("=", "+", "-", "@", "\t", "\r")
 
 
@@ -132,7 +132,8 @@ def create_plan(session: Session, world: World, principal: Principal, request: P
         lines=[PlanLineRow(city=line.city, week=line.week, hotel=line.hotel, rooms=line.rooms,
                            unit_cost=line.unit_cost, unit_price=line.unit_price,
                            expected_sold=line.expected_sold, expected_profit=line.expected_profit,
-                           reason=line.reason, why=line.why)
+                           reason=line.reason, why=line.why, worst_case_profit=line.worst_case_profit,
+                           buy_by=line.buy_by)
                for line in result.lines],
     )
     session.add(plan)

@@ -30,6 +30,12 @@ EVENTS_PER_SEASON = 3       # city-weeks with a festival, match or concert
 EVENT_LIFT_RANGE = (1.5, 2.2)
 ASSUMED_EVENT_LIFT = 1.5    # planner's guess for any event week (low end, not tuned)
 WORST_SHARE = 0.05          # "worst case" = average of the worst 5% of seasons
+# shortcut: a fixed season, so buy-by dates pass after mid-2027; take dates from the data source with TBO data.
+SEASON_YEAR = 2027          # the December being planned, so every buy-by date is still ahead
+# buy this many days before each week starts: about 90% of its agent bookings come later
+# (real bookings, `python scripts/calibrate.py` -> december_buy_ahead_days); Christmas is booked earliest
+BUY_AHEAD_DAYS = np.array([93, 110, 111, 139])
+BUY_AHEAD_DAYS.flags.writeable = False
 
 
 @dataclass(frozen=True)
@@ -38,6 +44,8 @@ class World:
     city: tuple[str, ...]
     week: tuple[str, ...]
     hotel: tuple[str, ...]
+    first_night: np.ndarray            # date each hotel-week starts (datetime64[D])
+    buy_ahead_days: np.ndarray         # commit to buying at least this many days before first_night
     cost: np.ndarray                   # INR per room-night TBO pays
     price: np.ndarray                  # INR per room-night TBO sells at
     cap: np.ndarray                    # most room-nights the hotel will sell TBO
@@ -70,6 +78,8 @@ def make_world(seed: int) -> World:
         city=tuple(c for c, _, _ in items),
         week=tuple(WEEKS[w] for _, w, _ in items),
         hotel=tuple(h for _, _, h in items),
+        first_night=np.datetime64(f"{SEASON_YEAR}-12-01") + 7 * week,
+        buy_ahead_days=BUY_AHEAD_DAYS[week],
         cost=cost, price=price, cap=np.ceil(base * 3),
         true_mean=base * lift_now, event_lift_now=lift_now,
         event_lift_hist=lift_hist, alloc_hist=alloc_hist,

@@ -12,7 +12,13 @@
     ],
     "december_hotel_years": 4,
     "year_to_year_cv": 0.2241133245467749,
-    "year_to_year_week_pairs": 124
+    "year_to_year_week_pairs": 124,
+    "december_buy_ahead_days": [
+      93,
+      110,
+      111,
+      139
+    ]
   },
   "simulator": {
     "december_shape": [

@@ -19,6 +19,7 @@ MAD_TO_SIGMA = 1.4826  # median absolute deviation -> standard deviation, for no
 Row = Mapping[str, str]
 AGENT_CHANNEL = "TA/TO"  # travel agents and tour operators: the channel TBO sells through
 DECEMBER_WEEKS = 4  # days 1-7, 8-14, 15-21, 22-28, matching voyance.sim.WEEKS
+BUY_AHEAD_QUANTILE = 0.9  # buy before 90% of a week's agent bookings are made
 
 
 def fetch_verified(path: Path, url: str, sha256: str) -> bytes:
@@ -72,6 +73,23 @@ def december_shape(rows: Iterable[Row]) -> np.ndarray:
     return np.mean(shapes, axis=0)
 
 
+def december_buy_ahead_days(rows: Iterable[Row], quantile: float = BUY_AHEAD_QUANTILE) -> list[int]:
+    """Per December week, how many days ahead `quantile` of kept bookings are made at most.
+
+    Buying that many days before the week starts beats all but the earliest (1 - quantile) of its bookings.
+    """
+    leads: list[list[int]] = [[] for _ in range(DECEMBER_WEEKS)]
+    for r in rows:
+        day = int(r["arrival_date_day_of_month"])
+        if _stayed(r) and r["arrival_date_month"] == "December" and day <= 7 * DECEMBER_WEEKS:
+            leads[(day - 1) // 7].append(int(r["lead_time"]))
+    for week, week_leads in enumerate(leads, start=1):
+        if not week_leads:
+            raise ValueError(f"no December bookings in week {week}")
+    # round first so float noise (93.00000000000001) can't add a day
+    return [int(np.ceil(round(float(np.quantile(week_leads, quantile)), 9))) for week_leads in leads]
+
+
 def _log_ratio_groups(rows: Iterable[Row]) -> list[np.ndarray]:
     """Log change of each week's room-nights from one year to the next, grouped by (hotel, year)."""
     weekly: dict[tuple[str, int], dict[int, float]] = defaultdict(lambda: defaultdict(float))
@@ -119,4 +137,5 @@ def summary(rows: list[Row]) -> dict:
         "december_hotel_years": len(_december_weeks(agent)),
         "year_to_year_cv": year_to_year_cv(agent),
         "year_to_year_week_pairs": sum(g.size for g in _log_ratio_groups(agent)),
+        "december_buy_ahead_days": december_buy_ahead_days(agent),
     }

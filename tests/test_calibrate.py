@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 
 from voyance import calibrate
-from voyance.calibrate import december_shape, fetch_verified, room_nights, summary, year_to_year_cv
+from voyance.calibrate import (december_buy_ahead_days, december_shape, fetch_verified, room_nights, summary,
+                               year_to_year_cv)
 
 NEVER_FETCHED = "https://example.invalid/hotels.csv"  # the file already exists, so this must not be used
 
@@ -137,6 +138,19 @@ def test_year_to_year_cv_needs_repeated_weeks():
         year_to_year_cv([booking(year=2016, week=w) for w in (1, 2)])
 
 
+def test_buy_ahead_days_is_the_lead_time_most_bookings_come_after_per_december_week():
+    rows = [booking(day=1 + 7 * w, lead=lead) for w in range(4) for lead in range(10 * w, 10 * w + 11)]
+    rows += [booking(day=2, lead=900, canceled=True), booking(day=30, lead=900),
+             booking(day=2, lead=900, month="November")]
+    # 0..10 days ahead in week 1: 90% of bookings come at most 9 days ahead
+    assert december_buy_ahead_days(rows, quantile=0.9) == [9, 19, 29, 39]
+
+
+def test_buy_ahead_days_needs_bookings_in_every_week():
+    with pytest.raises(ValueError, match="week 4"):
+        december_buy_ahead_days([booking(day=d) for d in (1, 8, 15)], quantile=0.9)
+
+
 def test_summary_reports_agent_channel_facts():
     rows = [booking(day=d, week=49 + i, lead=lead, year=y)
             for y in (2015, 2016) for i, (d, lead) in enumerate(((1, 10), (8, 30), (15, 50), (22, 70)))]
@@ -150,3 +164,4 @@ def test_summary_reports_agent_channel_facts():
     assert out["december_hotel_years"] == 2
     assert out["year_to_year_cv"] == pytest.approx(0.0, abs=1e-9)
     assert out["year_to_year_week_pairs"] == 4
+    assert out["december_buy_ahead_days"] == [10, 30, 50, 70]  # one booking per week and year

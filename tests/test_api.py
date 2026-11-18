@@ -291,6 +291,17 @@ def test_saved_lines_keep_their_why(api):
             "event_week", "margin"} == created["lines"][0]["why"].keys()
 
 
+def test_lines_carry_a_buy_by_date_and_their_own_worst_case(api):
+    client, keys = api
+    created = new_plan(client, keys["buyer"]).json()
+    line = created["lines"][0]
+    assert line["buy_by"].startswith("2027-") and line["worst_case_profit"] <= line["expected_profit"]
+    fetched = client.get(f"/v1/plans/{created['id']}", headers=auth(keys["buyer"])).json()["lines"][0]
+    assert (fetched["buy_by"], fetched["worst_case_profit"]) == (line["buy_by"], line["worst_case_profit"])
+    header = client.get(f"/v1/plans/{created['id']}/export.csv", headers=auth(keys["buyer"])).text.splitlines()[0]
+    assert {"buy_by", "worst_case_profit"} <= set(header.split(","))
+
+
 def frontier(client, key, query: str):
     return client.get(f"/v1/frontier?{query}", headers=auth(key))
 

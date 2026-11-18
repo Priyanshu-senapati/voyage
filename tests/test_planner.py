@@ -44,6 +44,15 @@ def test_each_line_carries_the_numbers_behind_its_reason():
     assert ("event week" in line.reason) == why["event_week"]
 
 
+def test_each_line_has_its_own_worst_case_and_a_buy_by_date():
+    plan = build_plan(WORLD, budget=5_000_000, risk_aversion=0.3)
+    for line in plan.lines:
+        # a line that sells out in every scenario has worst == expected, up to rounding
+        assert -line.rooms * line.unit_cost <= line.worst_case_profit <= line.expected_profit + 1e-6
+        i = WORLD.labels.index(f"{line.city} {line.week} {line.hotel}")
+        assert line.buy_by == (WORLD.first_night[i] - WORLD.buy_ahead_days[i]).item()
+
+
 def test_reasons_mention_sold_out_searches_and_event_weeks():
     reasons = " ".join(line.reason for line in build_plan(WORLD, budget=2e7, risk_aversion=0.0).lines)
     assert "sold-out searches" in reasons

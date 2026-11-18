@@ -1,6 +1,6 @@
 """Request and response shapes. These are the API contract the dashboard builds against."""
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
@@ -64,6 +64,8 @@ class PreviewLine(BaseModel):
     expected_profit: float
     reason: str
     why: LineWhy
+    worst_case_profit: float = Field(description="This line alone, averaged over its worst 5% of scenarios")
+    buy_by: date = Field(description="Commit by this date: 90% of that week's agent bookings come later")
 
     @computed_field
     @property

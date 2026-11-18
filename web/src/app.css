@@ -89,7 +89,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #e6ecf6;
+  background: var(--rail-pale);
   color: var(--rail);
   font-weight: 760;
   font-size: 13px;
@@ -219,6 +219,7 @@ input[type='range']::-moz-range-track {
 
 input[type='range']::-webkit-slider-thumb {
   appearance: none;
+  box-sizing: border-box;
   width: 16px;
   height: 16px;
   margin-top: -6px;
@@ -230,11 +231,13 @@ input[type='range']::-webkit-slider-thumb {
 }
 
 input[type='range']::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
   border: 2px solid var(--rail);
   border-radius: 50%;
   background: var(--surface);
+  box-shadow: 0 1px 3px rgb(21 23 28 / 0.25);
 }
 
 input[type='range']:active::-webkit-slider-thumb {
@@ -655,7 +658,7 @@ td.c-soldout {
 }
 
 .chip-rejected {
-  background: #ebecea;
+  background: var(--neutral-tint);
   color: var(--ink-2);
 }
 
@@ -953,7 +956,7 @@ td.c-soldout {
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #eef2f9;
+  background: var(--rail-wash);
 }
 
 .btn-ghost {
@@ -1108,7 +1111,7 @@ td.c-soldout {
 
   .table .row {
     display: grid;
-    grid-template-columns: 34px repeat(4, minmax(0, 1fr)) auto;
+    grid-template-columns: 34px minmax(0, 1.35fr) repeat(3, minmax(0, 1fr)) auto;
     gap: 8px 10px;
     padding: 10px 16px 11px 0;
     border-bottom: 1px solid var(--seam);

@@ -17,6 +17,10 @@
   --go-tint: #e3f1e8;
   --demand: var(--rail);
   --booked: #8b8f98;
+  --rail-wash: #eef2f9;
+  --rail-pale: #e6ecf6;
+  --rail-select: #c9d6ee;
+  --neutral-tint: #ebecea;
 
   --city-goa: #0d8a87;
   --city-jaipur: #c94f7c;
@@ -59,7 +63,7 @@ body {
 }
 
 ::selection {
-  background: #c9d6ee;
+  background: var(--rail-select);
   color: var(--ink);
 }
 

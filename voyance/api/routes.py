@@ -1,5 +1,6 @@
 """HTTP routes. Thin: check who is calling, then hand over to the service."""
 
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Query, Request, Response
@@ -7,8 +8,9 @@ from sqlalchemy.orm import Session
 
 from voyance.api import service
 from voyance.api.auth import Principal, get_principal, get_session, require_role
+from voyance.api.db import utcnow
 from voyance.api.schemas import (AuditOut, ErrorOut, FrontierPoint, FrontierQuery, LineDecision, MarketItem, MeOut,
-                                PlanCreate, PlanLineOut, PlanOut, PlanPreview, PlanSummary, PreviewRequest)
+                                PlanCreate, PlanLineOut, PlanOut, PlanPreview, PlanSummary, PreviewRequest, QueueOut)
 
 MAX_ID = 2**31 - 1
 Id = Annotated[int, Path(ge=1, le=MAX_ID)]
@@ -82,6 +84,15 @@ def export_plan(plan_id: Id, principal: Principal = Depends(get_principal),
     plan = service.get_plan(session, principal, plan_id)
     return Response(service.plan_csv(plan), media_type="text/csv",
                     headers={"Content-Disposition": f'attachment; filename="plan-{plan_id}.csv"'})
+
+
+@router.get("/plans/{plan_id}/queue", response_model=QueueOut, responses=_errors(404),
+            summary="What to do about a plan today", description="Buys due within two weeks first, then later "
+            "buys by date, then hotels to ask for more rooms and close calls to watch, then skips with their reasons.")
+def plan_queue(plan_id: Id, as_of: date | None = Query(None, description="The day to plan for; default today (UTC)"),
+               principal: Principal = Depends(get_principal), session: Session = Depends(get_session)) -> QueueOut:
+    plan = service.get_plan(session, principal, plan_id)
+    return service.action_queue(plan, as_of or utcnow().date())
 
 
 @router.patch("/plans/{plan_id}/lines/{line_id}", response_model=PlanLineOut, responses=_errors(403, 404, 409),

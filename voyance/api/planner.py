@@ -32,6 +32,7 @@ class PlanLine:
     why: dict  # the numbers behind `reason`, for the dashboard's charts (schemas.LineWhy)
     worst_case_profit: float  # this line alone, in its worst WORST_SHARE of scenarios
     buy_by: date
+    first_night: date
     limited_by: str  # what stopped it buying more: "hotel" (allotment), "budget" or "demand"
     extra_room_value: float  # risk-adjusted rupees one more room of allotment would add (hotel-limited lines)
 
@@ -46,9 +47,9 @@ class Passed:
     unit_cost: float
     unit_price: float
     expected_demand: float
-    earns_here: float        # what one room here makes: price x chance it sells - cost
+    earns_here: float        # what one whole room here makes: price x expected sales of it - cost
     earns_elsewhere: float   # what the same money makes in the rest of the plan: hurdle rate x cost
-    forced_room_cost: float  # risk-adjusted rupees the plan would lose with one room forced in
+    forced_room_cost: float  # about what the plan would lose with one whole room forced in (risk-adjusted)
     reason: str
 
 
@@ -91,10 +92,11 @@ def build_plan(world: World, budget: float, risk_aversion: float, cities: list[s
                                   solution.forced_room_cost[j], hurdle))
             continue
         why = _why(world, i, mean[j], cost[j], price[j])
-        at_cap = solution.buy[j] >= cap[j] - 1e-6
+        at_cap = buy[j] >= np.floor(cap[j])  # whole rooms bought, after rounding and the budget trim
         lines.append(PlanLine(world.city[i], world.week[i], world.hotel[i], int(buy[j]), float(cost[j]),
                               float(price[j]), float(sold[j]), float(line_profit[j]), _reason(why), why,
                               cvar(line_scenarios[:, j], WORST_SHARE), buy_by[j].item(),
+                              world.first_night[i].item(),
                               "hotel" if at_cap else "budget" if hurdle > HURDLE_EPS else "demand",
                               float(solution.extra_room_value[j]) if at_cap else 0.0))
     return PlanResult(
@@ -109,18 +111,21 @@ def build_plan(world: World, budget: float, risk_aversion: float, cities: list[s
 
 def _passed(world: World, i: int, cost: float, price: float, mean: float, demand: np.ndarray,
             fractional_buy: float, shadow_cost: float, hurdle: float) -> Passed:
-    earns_here = float(price * (demand >= 1).mean() - cost)
+    earns_here = float(price * np.minimum(demand, 1).mean() - cost)
     earns_elsewhere = float(hurdle * cost)
-    # the LP's own shadow price can be a degenerate 0; the money comparison is the cost of moving rupees
-    # out of the rest of the plan, and equals the shadow price whenever that one is unique
+    # The LP's shadow price is the rate for a first sliver of a room and can be a degenerate 0. The money
+    # comparison approximates one whole room: what it makes vs what its cost makes in the rest of the plan
+    # (tests: within 5% of re-solving with the room forced in). Report the larger.
     forced = max(float(shadow_cost), earns_elsewhere - earns_here)
-    if fractional_buy > 1e-6:
+    if earns_here <= 0:
+        reason = f"a room here would lose about ₹{-earns_here:,.0f}: demand is too thin for its price"
+    elif fractional_buy > 1e-6:
         reason = "worth less than one whole room"
     elif hurdle > HURDLE_EPS:
         reason = (f"the money earns more elsewhere: a room here makes about ₹{earns_here:,.0f}; "
                   f"the same ₹{cost:,.0f} makes ₹{earns_elsewhere:,.0f} in the rest of the plan")
     else:
-        reason = f"one room here would lose ₹{forced:,.0f} of risk-adjusted profit"
+        reason = f"too risky: one room here would lower risk-adjusted profit by about ₹{forced:,.0f}"
     return Passed(world.city[i], world.week[i], world.hotel[i], float(cost), float(price), float(mean),
                   earns_here, earns_elsewhere, forced, reason)
 

@@ -10,6 +10,7 @@ from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import asdict
+from datetime import date
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session, selectinload
@@ -18,7 +19,7 @@ from voyance.api.auth import Principal
 from voyance.api.db import AuditEvent, Plan, PlanLineRow, Tenant, utcnow
 from voyance.api.planner import PlanRequestError, PlanResult, build_plan
 from voyance.api.schemas import (WHAT_IF_FIELDS, FrontierPoint, FrontierQuery, MarketItem, MeOut, PlanCreate,
-                                 PlanPreview, PreviewRequest)
+                                 PlanPreview, PreviewRequest, QueueItem, QueueOut)
 from voyance.sim import World
 
 CSV_COLUMNS = ("city", "week", "hotel", "buy_by", "rooms", "unit_cost", "unit_price", "expected_sold",
@@ -84,6 +85,8 @@ FRONTIER_RATE = RateLimiter(limit=10, window_s=60)  # each call is one solve per
 PLANNER_SLOTS = threading.BoundedSemaphore(min(8, os.cpu_count() or 1))
 PLANNER_WAIT_S = 5.0
 RISK_STEPS = tuple(step / 10 for step in range(11))  # 0, 0.1 ... 1
+URGENT_DAYS = 14         # a buy due within two weeks goes to the top of the queue
+CLOSE_CALL_SHARE = 0.05  # a passed hotel-week whose forced room costs < 5% of its price is worth watching
 
 
 def market_items(world: World) -> list[MarketItem]:
@@ -132,12 +135,14 @@ def create_plan(session: Session, world: World, principal: Principal, request: P
         tenant_id=principal.tenant_id, created_by_user_id=principal.user_id, created_by=principal.label,
         budget_inr=request.budget_inr, risk_aversion=request.risk_aversion, cities=request.cities,
         spend=result.spend, expected_profit=result.expected_profit,
-        worst_case_profit=result.worst_case_profit,
+        worst_case_profit=result.worst_case_profit, hurdle_rate=result.hurdle_rate,
+        passed=[asdict(p) for p in result.passed],
         lines=[PlanLineRow(city=line.city, week=line.week, hotel=line.hotel, rooms=line.rooms,
                            unit_cost=line.unit_cost, unit_price=line.unit_price,
                            expected_sold=line.expected_sold, expected_profit=line.expected_profit,
                            reason=line.reason, why=line.why, worst_case_profit=line.worst_case_profit,
-                           buy_by=line.buy_by)
+                           buy_by=line.buy_by, first_night=line.first_night, limited_by=line.limited_by,
+                           extra_room_value=line.extra_room_value)
                for line in result.lines],
     )
     session.add(plan)
@@ -216,6 +221,47 @@ def decide_line(session: Session, principal: Principal, plan_id: int, line_id: i
     session.commit()
     session.refresh(line)
     return line
+
+
+def action_queue(plan: Plan, as_of: date) -> QueueOut:
+    """What to do about a saved plan on `as_of`: buys due within URGENT_DAYS first, then later buys by date,
+    then things to watch (hotels to ask for more rooms, close calls) and skips. Rejected lines are left out."""
+    buys, watch, skip = [], [], []
+    for line in plan.lines:
+        if line.decision == "rejected":
+            continue
+        days = (line.buy_by - as_of).days
+        place = {"city": line.city, "week": line.week, "hotel": line.hotel, "line_id": line.id}
+        if line.first_night <= as_of:
+            skip.append(QueueItem(action="skip", rooms=line.rooms, buy_by=line.buy_by, decision=line.decision,
+                                  reason=f"too late: the week began on {line.first_night:%d %b %Y}", **place))
+            continue
+        buys.append(QueueItem(action="buy_now" if days <= URGENT_DAYS else "scheduled", rooms=line.rooms,
+                              buy_by=line.buy_by, decision=line.decision, reason=_when(line.rooms, line.buy_by, days),
+                              **place))
+        if line.limited_by == "hotel" and line.extra_room_value > 0:
+            watch.append(QueueItem(action="watch", reason=f"ask the hotel for more rooms: each extra room is worth "
+                                   f"about ₹{line.extra_room_value:,.0f}", **place))
+    for passed in plan.passed:
+        place = {key: passed[key] for key in ("city", "week", "hotel")}
+        if passed["forced_room_cost"] <= CLOSE_CALL_SHARE * passed["unit_price"]:
+            watch.append(QueueItem(action="watch", reason=f"close call, re-check if demand or rates move: "
+                                   f"{passed['reason']}", **place))
+        else:
+            skip.append(QueueItem(action="skip", reason=passed["reason"], **place))
+    buys.sort(key=lambda item: (item.action != "buy_now", item.buy_by))
+    return QueueOut(plan_id=plan.id, as_of=as_of, hurdle_rate=plan.hurdle_rate, items=[*buys, *watch, *skip])
+
+
+def _when(rooms: int, buy_by: date, days: int) -> str:
+    what = f"buy {rooms} room{'s' if rooms != 1 else ''}"
+    if days < 0:
+        return f"{what} now: the buy-by date, {buy_by:%d %b %Y}, passed {-days} day{'s' if days != -1 else ''} ago"
+    if days == 0:
+        return f"{what} today ({buy_by:%d %b %Y})"
+    if days <= URGENT_DAYS:
+        return f"{what} by {buy_by:%d %b %Y}: {days} day{'s' if days != 1 else ''} left"
+    return f"{what} by {buy_by:%d %b %Y}"
 
 
 def list_audit(session: Session, principal: Principal, limit: int, offset: int) -> list[AuditEvent]:

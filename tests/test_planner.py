@@ -138,6 +138,20 @@ def test_every_hotel_week_not_bought_is_passed_with_its_cost_and_a_reason():
     assert all(p.reason for p in plan.passed)
 
 
+def test_a_hotel_week_that_loses_money_on_its_own_says_so():
+    plan = build_plan(WORLD, 4e6, 0.3, demand_change=-0.5, cost_change=0.3)  # thin demand, dear rooms
+    losers = [p for p in plan.passed if p.earns_here <= 0]
+    assert losers
+    for p in losers:
+        assert p.reason.startswith("a room here would lose about ₹") and "₹-" not in p.reason
+
+
+def test_lines_know_the_first_night_of_their_week():
+    line = build_plan(WORLD, 4e6, 0.3).lines[0]
+    i = WORLD.labels.index(f"{line.city} {line.week} {line.hotel}")
+    assert line.first_night == WORLD.first_night[i].item() and line.buy_by < line.first_night
+
+
 def test_reasons_mention_sold_out_searches_and_event_weeks():
     reasons = " ".join(line.reason for line in build_plan(WORLD, budget=2e7, risk_aversion=0.0).lines)
     assert "sold-out searches" in reasons

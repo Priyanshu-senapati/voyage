@@ -1,6 +1,7 @@
 import csv
 import io
 import threading
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -242,6 +243,8 @@ def test_api_contract_gives_the_dashboard_fixed_value_lists(api):
         "empty", "pending", "approved", "rejected", "mixed"}
     assert schemas["MeOut"]["properties"]["role"]["enum"] == ["buyer", "approver", "admin"]
     assert "sell_through" in schemas["PreviewLine"]["required"]  # a computed field the dashboard reads
+    assert schemas["PreviewLine"]["properties"]["limited_by"]["enum"] == ["hotel", "budget", "demand"]
+    assert schemas["QueueItem"]["properties"]["action"]["enum"] == ["buy_now", "scheduled", "watch", "skip"]
 
 
 def test_me_says_who_is_calling(api):
@@ -308,6 +311,70 @@ def test_frontier_takes_the_same_what_ifs(api):
 def test_frontier_refuses_a_misspelt_what_if(api):
     client, keys = api
     assert frontier(client, keys["buyer"], "budget_inr=1000000&demand_chnage=0.4").status_code == 422
+
+
+def test_plans_carry_their_hurdle_what_limits_each_line_and_what_they_passed(api):
+    client, keys = api
+    shown = preview(client, keys["buyer"]).json()
+    assert shown["hurdle_rate"] > 0 and shown["passed"]
+    assert {line["limited_by"] for line in shown["lines"]} <= {"hotel", "budget", "demand"}
+    assert {"earns_here", "earns_elsewhere", "forced_room_cost", "reason"} <= shown["passed"][0].keys()
+    saved = new_plan(client, keys["buyer"]).json()
+    fetched = client.get(f"/v1/plans/{saved['id']}", headers=auth(keys["buyer"])).json()
+    assert fetched["passed"] == saved["passed"] == shown["passed"]
+    assert fetched["hurdle_rate"] == pytest.approx(shown["hurdle_rate"])
+    assert client.get("/v1/plans", headers=auth(keys["buyer"])).json()[0]["hurdle_rate"] == fetched["hurdle_rate"]
+
+
+def queue(client, key, plan_id, as_of=None):
+    return client.get(f"/v1/plans/{plan_id}/queue" + (f"?as_of={as_of}" if as_of else ""), headers=auth(key))
+
+
+def test_queue_says_what_to_buy_now_what_can_wait_and_what_to_watch_or_skip(api):
+    client, keys = api
+    plan = new_plan(client, keys["buyer"]).json()
+    as_of = date(2027, 8, 10)
+    rejected = plan["lines"][-1]
+    decide(client, keys["approver"], plan, rejected["id"], "rejected")
+    body = queue(client, keys["buyer"], plan["id"], as_of.isoformat()).json()
+    assert body["as_of"] == as_of.isoformat() and body["hurdle_rate"] == pytest.approx(plan["hurdle_rate"])
+    items = body["items"]
+    order = {"buy_now": 0, "scheduled": 1, "watch": 2, "skip": 3}
+    assert [order[item["action"]] for item in items] == sorted(order[item["action"]] for item in items)
+
+    buys = [item for item in items if item["action"] in ("buy_now", "scheduled")]
+    assert sorted(item["line_id"] for item in buys) == sorted(line["id"] for line in plan["lines"][:-1])
+    for item in buys:
+        urgent = date.fromisoformat(item["buy_by"]) <= as_of + timedelta(days=14)
+        assert (item["action"] == "buy_now") == urgent and item["reason"].startswith(f"buy {item['rooms']} rooms")
+    assert {item["action"] for item in buys} == {"buy_now", "scheduled"}  # this date splits the plan
+
+    for passed in plan["passed"]:
+        (item,) = [i for i in items if i["line_id"] is None and (i["city"], i["week"], i["hotel"]) ==
+                   (passed["city"], passed["week"], passed["hotel"])]
+        close = passed["forced_room_cost"] <= 0.05 * passed["unit_price"]
+        assert item["action"] == ("watch" if close else "skip") and passed["reason"] in item["reason"]
+
+
+def test_queue_never_says_buy_for_a_week_that_has_already_started(api):
+    client, keys = api
+    plan = new_plan(client, keys["buyer"]).json()
+    items = queue(client, keys["buyer"], plan["id"], "2028-01-15").json()["items"]
+    lines = [item for item in items if item["line_id"] is not None]
+    assert lines and all(item["action"] == "skip" and item["reason"].startswith("too late") for item in lines)
+
+
+def test_queue_reasons_count_rooms_properly():
+    assert service._when(1, date(2027, 8, 30), 20) == "buy 1 room by 30 Aug 2027"
+    assert service._when(2, date(2027, 8, 30), 0) == "buy 2 rooms today (30 Aug 2027)"
+
+
+def test_queue_defaults_to_today_and_stays_inside_the_company(api):
+    client, keys = api
+    plan = new_plan(client, keys["buyer"]).json()
+    # UTC like every other date the API keeps (in India it is the previous day until 05:30)
+    assert queue(client, keys["buyer"], plan["id"]).json()["as_of"] == datetime.now(UTC).date().isoformat()
+    assert queue(client, keys["other"], plan["id"]).status_code == 404
 
 
 def test_preview_rejects_an_unknown_city(api):

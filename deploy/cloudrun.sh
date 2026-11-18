@@ -28,7 +28,7 @@ PROJECT="$(gcloud config get-value project 2>/dev/null)"
 [ -n "$PROJECT" ] || { echo "No gcloud project set: run gcloud config set project <id>" >&2; exit 1; }
 
 current() {  # a key already on the service, so redeploys don't sign everyone out
-  gcloud run services describe "$SERVICE" --region "$REGION" --format=json 2>/dev/null |
+  { gcloud run services describe "$SERVICE" --region "$REGION" --format=json 2>/dev/null || true; } |
     python3 -c "import json,sys
 try: env = json.load(sys.stdin)['spec']['template']['spec']['containers'][0].get('env', [])
 except Exception: env = []

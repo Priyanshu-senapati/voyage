@@ -6,11 +6,12 @@ from datetime import date
 import numpy as np
 
 from voyance.demand import scenarios
-from voyance.optimizer import cvar, optimize, profits
+from voyance.optimizer import cvar, profits, solve_relaxed, whole_rooms
 from voyance.sim import ASSUMED_EVENT_LIFT, DEMAND_CV, WORST_SHARE, World, hidden_demand_mean
 
 N_SCENARIOS = 200
 PLAN_SEED = 0  # fixed, so the same request always gives the same plan (auditable)
+HURDLE_EPS = 1e-9  # a budget worth less than this per rupee isn't what limits the plan
 
 
 class PlanRequestError(ValueError):
@@ -31,6 +32,24 @@ class PlanLine:
     why: dict  # the numbers behind `reason`, for the dashboard's charts (schemas.LineWhy)
     worst_case_profit: float  # this line alone, in its worst WORST_SHARE of scenarios
     buy_by: date
+    limited_by: str  # what stopped it buying more: "hotel" (allotment), "budget" or "demand"
+    extra_room_value: float  # risk-adjusted rupees one more room of allotment would add (hotel-limited lines)
+
+
+@dataclass(frozen=True)
+class Passed:
+    """A hotel-week the plan buys none of, and what forcing one room in would cost."""
+
+    city: str
+    week: str
+    hotel: str
+    unit_cost: float
+    unit_price: float
+    expected_demand: float
+    earns_here: float        # what one room here makes: price x chance it sells - cost
+    earns_elsewhere: float   # what the same money makes in the rest of the plan: hurdle rate x cost
+    forced_room_cost: float  # risk-adjusted rupees the plan would lose with one room forced in
+    reason: str
 
 
 @dataclass(frozen=True)
@@ -39,6 +58,8 @@ class PlanResult:
     spend: float
     expected_profit: float
     worst_case_profit: float
+    hurdle_rate: float  # risk-adjusted rupees one more rupee of budget would earn: what every purchase must beat
+    passed: tuple[Passed, ...]  # closest calls first
 
 
 def build_plan(world: World, budget: float, risk_aversion: float, cities: list[str] | None = None,
@@ -54,27 +75,54 @@ def build_plan(world: World, budget: float, risk_aversion: float, cities: list[s
     mean = hidden_demand_mean(world, lift)[idx] * (1 + demand_change)
     demand = scenarios(mean, DEMAND_CV, N_SCENARIOS, np.random.default_rng(PLAN_SEED))
     cost, price, cap = world.cost[idx] * (1 + cost_change), world.price[idx], world.cap[idx]
-    buy = optimize(cost, price, cap, demand, budget, risk_aversion, WORST_SHARE)
+    solution = solve_relaxed(cost, price, cap, demand, budget, risk_aversion, WORST_SHARE)
+    buy = whole_rooms(solution.buy, cost, cap, budget)
 
     per_scenario = profits(buy, cost, price, demand)
     sold = np.minimum(buy, demand).mean(axis=0)
     line_profit = price * sold - cost * buy
     line_scenarios = price * np.minimum(buy, demand) - cost * buy  # scenarios x lines
     buy_by = world.first_night[idx] - world.buy_ahead_days[idx]
-    lines = []
+    hurdle = solution.budget_value
+    lines, passed = [], []
     for j, i in enumerate(idx):
         if buy[j] == 0:
+            passed.append(_passed(world, i, cost[j], price[j], mean[j], demand[:, j], solution.buy[j],
+                                  solution.forced_room_cost[j], hurdle))
             continue
         why = _why(world, i, mean[j], cost[j], price[j])
+        at_cap = solution.buy[j] >= cap[j] - 1e-6
         lines.append(PlanLine(world.city[i], world.week[i], world.hotel[i], int(buy[j]), float(cost[j]),
                               float(price[j]), float(sold[j]), float(line_profit[j]), _reason(why), why,
-                              cvar(line_scenarios[:, j], WORST_SHARE), buy_by[j].item()))
+                              cvar(line_scenarios[:, j], WORST_SHARE), buy_by[j].item(),
+                              "hotel" if at_cap else "budget" if hurdle > HURDLE_EPS else "demand",
+                              float(solution.extra_room_value[j]) if at_cap else 0.0))
     return PlanResult(
         lines=tuple(sorted(lines, key=lambda line: -line.expected_profit)),
         spend=float(cost @ buy),
         expected_profit=float(per_scenario.mean()),
         worst_case_profit=cvar(per_scenario, WORST_SHARE),
+        hurdle_rate=hurdle,
+        passed=tuple(sorted(passed, key=lambda p: p.forced_room_cost)),
     )
+
+
+def _passed(world: World, i: int, cost: float, price: float, mean: float, demand: np.ndarray,
+            fractional_buy: float, shadow_cost: float, hurdle: float) -> Passed:
+    earns_here = float(price * (demand >= 1).mean() - cost)
+    earns_elsewhere = float(hurdle * cost)
+    # the LP's own shadow price can be a degenerate 0; the money comparison is the cost of moving rupees
+    # out of the rest of the plan, and equals the shadow price whenever that one is unique
+    forced = max(float(shadow_cost), earns_elsewhere - earns_here)
+    if fractional_buy > 1e-6:
+        reason = "worth less than one whole room"
+    elif hurdle > HURDLE_EPS:
+        reason = (f"the money earns more elsewhere: a room here makes about ₹{earns_here:,.0f}; "
+                  f"the same ₹{cost:,.0f} makes ₹{earns_elsewhere:,.0f} in the rest of the plan")
+    else:
+        reason = f"one room here would lose ₹{forced:,.0f} of risk-adjusted profit"
+    return Passed(world.city[i], world.week[i], world.hotel[i], float(cost), float(price), float(mean),
+                  earns_here, earns_elsewhere, forced, reason)
 
 
 def _select(world: World, cities: list[str] | None) -> np.ndarray:

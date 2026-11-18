@@ -1,46 +1,31 @@
-// Mirrors voyance/api/schemas.py (the API contract). Replace with types generated from /openapi.json.
+import type { components } from './api/schema'
+
+type Schemas = components['schemas']
 
 export type Decision = 'pending' | 'approved' | 'rejected'
-export type PlanStatus = 'empty' | 'pending' | 'approved' | 'rejected' | 'mixed'
+export type PlanSummary = Schemas['PlanSummary']
+export type PlanCreate = Schemas['PlanCreate']
+export type MarketItem = Schemas['MarketItem']
+export type PlanLineOut = Schemas['PlanLineOut']
 
-// Not in the API yet: requested from lane A as structured fields instead of the reason text.
+// The facts behind a line's reason. Not in the API yet (requested from lane A), so for live plans
+// they are rebuilt from the reason text and /v1/markets; the demo fixture carries them in full.
 export interface LineWhy {
   expected_demand: number
   booked_last_december: number
-  bookings_past_decembers: number[]
-  soldout_searches_past: number[]
+  soldout_searches_total: number
   event_week: boolean
   margin: number
+  booked_avg?: number
+  bookings_past_decembers?: number[]
+  soldout_searches_past?: number[]
 }
 
-export interface PlanLine {
-  id: number
-  city: string
-  week: string
-  hotel: string
-  rooms: number
-  unit_cost: number
-  unit_price: number
-  expected_sold: number
-  sell_through: number
-  expected_profit: number
-  reason: string
-  decision: Decision
-  decided_by: string | null
-  decided_at: string | null
+export interface PlanLine extends PlanLineOut {
+  rank: number
   why: LineWhy
 }
 
-export interface Plan {
-  id: number
-  created_at: string
-  created_by: string
-  budget_inr: number
-  risk_aversion: number
-  cities: string[] | null
-  spend: number
-  expected_profit: number
-  worst_case_profit: number
-  status: PlanStatus
+export interface Plan extends Omit<Schemas['PlanOut'], 'lines'> {
   lines: PlanLine[]
 }

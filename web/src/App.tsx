@@ -1,49 +1,24 @@
-import { useMemo, useState } from 'react'
-import demoPlan from './demo/plan-2cr.json'
-import type { Decision, Plan } from './types'
-import { TopBar } from './TopBar'
-import { PlanStrip } from './PlanStrip'
-import { BuyList } from './BuyList'
-import { WhyPanel } from './WhyPanel'
-import { MobileDecide } from './MobileDecide'
-
-const plan = demoPlan as Plan
-const VIEWER = { name: 'Ravi', role: 'Approver', company: 'TBO Demo' }
+import { useCallback, useState } from 'react'
+import { loadSession, saveSession, type Session } from './session'
+import { SignIn } from './SignIn'
+import { Desk } from './Desk'
 
 export default function App() {
-  const [decisions, setDecisions] = useState<Record<number, Decision>>(() =>
-    Object.fromEntries(plan.lines.map((line) => [line.id, line.decision])),
-  )
-  const [selectedId, setSelectedId] = useState(plan.lines[0].id)
+  const [session, setSession] = useState<Session | null>(loadSession)
+  const [signInError, setSignInError] = useState<string | null>(null)
 
-  const lines = useMemo(
-    () =>
-      plan.lines.map((line) => {
-        const decision = decisions[line.id]
-        const changed = decision !== line.decision
-        return changed ? { ...line, decision, decided_by: 'ravi', decided_at: new Date().toISOString() } : line
-      }),
-    [decisions],
-  )
-  const selected = lines.find((line) => line.id === selectedId) ?? lines[0]
+  const start = useCallback((next: Session) => {
+    saveSession(next)
+    setSignInError(null)
+    setSession(next)
+  }, [])
 
-  function decide(id: number, decision: Decision) {
-    setDecisions((current) => ({ ...current, [id]: decision }))
-    const next = lines.find((line) => line.id > id && decisions[line.id] === 'pending')
-    if (next) setSelectedId(next.id)
-  }
+  const signOut = useCallback((reason?: string) => {
+    saveSession(null)
+    setSignInError(reason ?? null)
+    setSession(null)
+  }, [])
 
-  return (
-    <div className="app">
-      <TopBar viewer={VIEWER} />
-      <main className="desk">
-        <PlanStrip plan={plan} lines={lines} />
-        <div className="work">
-          <BuyList lines={lines} selectedId={selected.id} onSelect={setSelectedId} />
-          <WhyPanel key={selected.id} line={selected} creator={plan.created_by} onDecide={decide} />
-        </div>
-      </main>
-      <MobileDecide line={selected} onDecide={decide} />
-    </div>
-  )
+  if (!session) return <SignIn error={signInError} onStart={start} />
+  return <Desk key={session.mode === 'live' ? session.key : 'demo'} session={session} onSignOut={signOut} />
 }

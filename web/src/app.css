@@ -64,16 +64,26 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 4px 6px;
+  color: var(--rail-ink);
+}
+
+.signout {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-left: 2px;
   border: 0;
   border-radius: var(--radius);
   background: transparent;
-  color: var(--rail-ink);
+  color: var(--rail-ink-2);
   cursor: pointer;
+  transition: background 160ms var(--ease), color 160ms var(--ease);
 }
 
-.viewer:hover {
+.signout:hover {
   background: var(--rail-raised);
+  color: #fff;
 }
 
 .viewer .company {
@@ -898,6 +908,221 @@ td.c-soldout {
   padding: 8px 0 2px;
 }
 
+/* ---------- plan switcher, states, toast ---------- */
+.plan-switch {
+  height: 30px;
+  margin-left: 4px;
+  padding: 0 28px 0 8px;
+  border: 1px solid var(--seam-strong);
+  border-radius: var(--radius);
+  background: var(--surface)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%234f5460' stroke-width='1.6'/%3E%3C/svg%3E")
+    no-repeat right 10px center;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 620;
+  vertical-align: 2px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.state-panel {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 10px;
+  max-width: 560px;
+  padding: 40px 24px;
+}
+
+.state-panel h2 {
+  font-size: 17px;
+  font-weight: 680;
+}
+
+.state-panel p {
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.loading {
+  display: grid;
+  gap: 1px;
+  padding: 56px 24px 0;
+}
+
+.loading-row {
+  height: 36px;
+  border-bottom: 1px solid var(--seam);
+  background: linear-gradient(90deg, transparent 0 30%, rgb(21 23 28 / 0.05) 50%, transparent 70%) 0 0 / 300% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -150% 0;
+  }
+}
+
+.past-summary {
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+
+.past-summary strong {
+  color: var(--ink);
+  font-weight: 680;
+}
+
+.toast {
+  position: fixed;
+  z-index: 20;
+  bottom: 20px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 10px 10px 10px 16px;
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: #fff;
+  font-size: 13.5px;
+  box-shadow: 0 8px 24px -8px rgb(21 23 28 / 0.4);
+  animation: toast-in 220ms var(--ease);
+}
+
+.toast-error {
+  background: var(--signal);
+}
+
+.toast-success {
+  background: var(--go);
+}
+
+.toast button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.toast button:hover {
+  background: rgb(255 255 255 / 0.16);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* ---------- sign in ---------- */
+.signin {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: 48px 1fr;
+  background: var(--paper);
+}
+
+.signin-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 24px;
+  background: var(--rail);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 760;
+  font-stretch: 112%;
+}
+
+.signin-card {
+  align-self: start;
+  justify-self: center;
+  width: min(420px, calc(100vw - 32px));
+  margin-top: 12vh;
+  padding-top: 18px;
+  border-top: 2px solid var(--ink);
+}
+
+.signin-card h1 {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.signin-card > p {
+  margin-top: 6px;
+  color: var(--ink-2);
+}
+
+.signin-card form {
+  display: grid;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.signin-card label {
+  font-size: 12.5px;
+  font-weight: 620;
+}
+
+.signin-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--seam-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-2);
+}
+
+.signin-field:focus-within {
+  border-color: var(--rail);
+  box-shadow: 0 0 0 3px var(--rail-pale);
+}
+
+.signin-field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+}
+
+.signin-problem {
+  color: var(--signal);
+  font-size: 13px;
+}
+
+.signin-card form .btn-primary {
+  justify-self: start;
+  margin-top: 6px;
+}
+
+.signin-demo {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--seam);
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
 /* ---------- buttons ---------- */
 .btn {
   display: inline-flex;
@@ -1168,6 +1393,11 @@ td.c-soldout {
 
   .why {
     scroll-margin-top: 8px;
+  }
+
+  .toast {
+    bottom: 88px;
+    left: 16px;
   }
 
   .mobile-decide {

@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { Download } from 'lucide-react'
 import type { PlanLine } from './types'
 import { CITIES, CITY_INK, WEEKS, WEEK_STARTS } from './cities'
-import { count, inr, sum, weekLabel } from './format'
+import { count, inr, weekLabel } from './format'
 import { StatusChip } from './StatusChip'
 
 interface Props {
   lines: PlanLine[]
   selectedId: number
   onSelect: (id: number) => void
+  onExport: () => void
 }
 
 // Fixed size ramp: the dot reads before the number does
@@ -19,7 +20,7 @@ function rampSize(searches: number): number {
   return searches > 0 ? 4 : 0
 }
 
-export function BuyList({ lines, selectedId, onSelect }: Props) {
+export function BuyList({ lines, selectedId, onSelect, onExport }: Props) {
   const [city, setCity] = useState<string | null>(null)
   const shown = city ? lines.filter((line) => line.city === city) : lines
 
@@ -40,14 +41,14 @@ export function BuyList({ lines, selectedId, onSelect }: Props) {
             </button>
           ))}
         </div>
-        <button className="btn btn-ghost" type="button">
+        <button className="btn btn-ghost" type="button" onClick={onExport}>
           <Download size={14} strokeWidth={2.25} aria-hidden="true" />
           CSV
         </button>
       </div>
 
       <div className="table-wrap">
-        <table className="table">
+        <table className="table" aria-label="Buy list">
           <thead>
             <tr>
               <th className="c-rank" scope="col">#</th>
@@ -69,7 +70,7 @@ export function BuyList({ lines, selectedId, onSelect }: Props) {
           </thead>
           <tbody>
             {shown.map((line) => {
-              const searches = sum(line.why.soldout_searches_past)
+              const searches = line.why.soldout_searches_total
               const dot = rampSize(searches)
               const ink = CITY_INK[line.city]
               return (
@@ -79,7 +80,7 @@ export function BuyList({ lines, selectedId, onSelect }: Props) {
                   aria-selected={line.id === selectedId}
                   onClick={() => onSelect(line.id)}
                 >
-                  <td className="c-rank">{line.id}</td>
+                  <td className="c-rank">{line.rank}</td>
                   <td className="c-hotel">
                     <button type="button" className="row-select" onClick={() => onSelect(line.id)}>
                       <i className="city-mark" style={{ background: ink }} aria-hidden="true" />

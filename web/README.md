@@ -7,6 +7,37 @@ npm install
 npm run dev          # http://localhost:5173
 npm run build        # type-check and build to dist/
 npm run lint
+npm run gen:api      # refresh src/api/schema.d.ts from the running API's /openapi.json
+```
+
+## Against the real API
+
+From the repo root, seed demo keys and start the API (port 8000):
+
+```bash
+python scripts/seed_demo.py                                   # prints keys for asha, ravi, meera, zed
+uvicorn voyance.api.app:create_app --factory --port 8000
+```
+
+Then run `npm run dev` here and sign in with one of those keys. Vite forwards `/v1` to the API, so no CORS
+setting is needed. Point it elsewhere with `VOYANCE_API=http://host:port npm run dev`.
+
+- **Sign in** with an API key. It is kept in this tab's session storage only. "Open the demo" uses the saved fixture plan instead.
+- **Create plan** runs the planner with the budget and risk sliders and saves the plan (30 per person per minute).
+- **Approve / Reject** works for approvers and admins on someone else's plan. The API's refusals show as messages.
+- **CSV** downloads the plan with the key sent in the header.
+
+Without a `GET /v1/me` route the dashboard cannot know the signed-in name or role, so it shows the key's prefix.
+Live "why" panels are rebuilt from the reason text and `/v1/markets`, until the API returns those fields.
+
+## End-to-end tests
+
+`../e2e` starts a throwaway API (fresh SQLite file, new demo keys) and this app, then signs in as each demo user:
+
+```bash
+cd ../e2e
+npm install
+npx playwright test        # uses your installed Chrome; PW_CHANNEL=chromium for Playwright's own
 ```
 
 ## Buy Desk mockup (Round 1)

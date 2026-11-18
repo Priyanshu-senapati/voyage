@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 
 from voyance.api import service
 from voyance.api.auth import Principal, get_principal, get_session, require_role
-from voyance.api.schemas import (AuditOut, ErrorOut, FrontierPoint, LineDecision, MarketItem, MeOut, PlanCreate,
-                                PlanLineOut, PlanOut, PlanPreview, PlanScope, PlanSummary)
+from voyance.api.schemas import (AuditOut, ErrorOut, FrontierPoint, FrontierQuery, LineDecision, MarketItem, MeOut,
+                                PlanCreate, PlanLineOut, PlanOut, PlanPreview, PlanSummary, PreviewRequest)
 
 MAX_ID = 2**31 - 1
 Id = Annotated[int, Path(ge=1, le=MAX_ID)]
@@ -35,19 +35,21 @@ def markets(request: Request, _: Principal = Depends(get_principal)) -> list[Mar
 
 
 @router.post("/plans/preview", response_model=PlanPreview, responses=_errors(400, 429, 503),
-             summary="Try a budget and risk without saving",
-             description="Same body and lines as creating a plan, but nothing is saved or logged. For sliders: "
+             summary="Try a budget, risk or what-if without saving",
+             description="Same body and lines as creating a plan, plus optional what-ifs (demand_change, "
+             "cost_change, event_lift) that the optimizer re-plans in. Nothing is saved or logged. For sliders: "
              f"its own limit of {service.PREVIEW_RATE.limit} a minute per person; please debounce.")
-def preview_plan(body: PlanCreate, request: Request,
+def preview_plan(body: PreviewRequest, request: Request,
                  principal: Principal = Depends(get_principal)) -> PlanPreview:
     return service.preview_plan(request.app.state.world, principal, body)
 
 
 @router.get("/frontier", response_model=list[FrontierPoint], responses=_errors(400, 429, 503),
             summary="Profit and worst case at each risk setting",
-            description="One point per risk setting 0, 0.1 ... 1 for this budget (and cities, repeated: "
-            f"?cities=Goa&cities=Kochi). {service.FRONTIER_RATE.limit} a minute per person.")
-def frontier(scope: Annotated[PlanScope, Query()], request: Request,
+            description="One point per risk setting 0, 0.1 ... 1 for this budget (cities repeated: "
+            "?cities=Goa&cities=Kochi), optionally in a what-if as in the preview. "
+            f"{service.FRONTIER_RATE.limit} a minute per person.")
+def frontier(scope: Annotated[FrontierQuery, Query()], request: Request,
              principal: Principal = Depends(get_principal)) -> list[FrontierPoint]:
     return service.risk_frontier(request.app.state.world, principal, scope)
 

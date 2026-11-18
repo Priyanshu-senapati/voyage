@@ -277,6 +277,39 @@ def test_preview_has_its_own_rate_limit(api, monkeypatch):
     assert new_plan(client, keys["buyer"]).status_code == 201  # dragging a slider never blocks saving
 
 
+def test_preview_runs_a_what_if_through_the_real_planner_and_echoes_it(api):
+    client, keys = api
+    base = preview(client, keys["buyer"]).json()
+    shocked = preview(client, keys["buyer"], demand_change=0.3, cost_change=-0.05, event_lift=2.0).json()
+    assert (shocked["demand_change"], shocked["cost_change"], shocked["event_lift"]) == (0.3, -0.05, 2.0)
+    assert (base["demand_change"], base["cost_change"], base["event_lift"]) == (0.0, 0.0, None)
+    assert shocked["expected_profit"] > base["expected_profit"]
+
+
+@pytest.mark.parametrize("what_if", [{"demand_change": -0.9}, {"demand_change": 5}, {"cost_change": 0.9},
+                                     {"event_lift": 0.5}, {"event_lift": 9}])
+def test_what_ifs_stay_in_a_sensible_range(api, what_if):
+    client, keys = api
+    assert preview(client, keys["buyer"], **what_if).status_code == 422
+
+
+def test_a_saved_plan_refuses_what_ifs_instead_of_ignoring_them(api):
+    client, keys = api
+    assert new_plan(client, keys["buyer"], demand_change=0.3).status_code == 422
+
+
+def test_frontier_takes_the_same_what_ifs(api):
+    client, keys = api
+    base = frontier(client, keys["buyer"], "budget_inr=1000000&cities=Goa&cities=Kochi").json()
+    shocked = frontier(client, keys["buyer"], "budget_inr=1000000&cities=Goa&cities=Kochi&demand_change=0.4").json()
+    assert shocked[0]["expected_profit"] > base[0]["expected_profit"]
+
+
+def test_frontier_refuses_a_misspelt_what_if(api):
+    client, keys = api
+    assert frontier(client, keys["buyer"], "budget_inr=1000000&demand_chnage=0.4").status_code == 422
+
+
 def test_preview_rejects_an_unknown_city(api):
     client, keys = api
     assert preview(client, keys["buyer"], cities=["Atlantis"]).status_code == 400
@@ -343,9 +376,9 @@ def test_frontier_borrows_idle_planner_slots_and_gives_them_all_back(api, monkey
     used = []
     real_build = service.build_plan
 
-    def watched_build(*args):
+    def watched_build(*args, **kwargs):
         used.append(threading.get_ident())
-        return real_build(*args)
+        return real_build(*args, **kwargs)
 
     monkeypatch.setattr(service, "build_plan", watched_build)
     assert frontier(client, keys["buyer"], query).status_code == status

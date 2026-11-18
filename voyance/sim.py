@@ -126,15 +126,15 @@ def unconstrained_mean(world: World) -> np.ndarray:
     return unconstrain(world.bookings_hist, world.soldout_searches_hist, LOOK_TO_BOOK).mean(axis=0)
 
 
-def hidden_demand_mean(world: World) -> np.ndarray:
+def hidden_demand_mean(world: World, event_lift: float = ASSUMED_EVENT_LIFT) -> np.ndarray:
     """Sold-outs counted back in, past event weeks scaled down and this season's event weeks
-    scaled up. The planner knows which weeks have events, not how big they are."""
+    scaled up by `event_lift`. The planner knows which weeks have events, not how big they are."""
     past = unconstrain(world.bookings_hist, world.soldout_searches_hist, LOOK_TO_BOOK)
-    return (past / _assumed_lift(world.event_lift_hist)).mean(axis=0) * _assumed_lift(world.event_lift_now)
+    return (past / _assumed_lift(world.event_lift_hist)).mean(axis=0) * _assumed_lift(world.event_lift_now, event_lift)
 
 
-def _assumed_lift(true_lift: np.ndarray) -> np.ndarray:
-    return np.where(true_lift > 1, ASSUMED_EVENT_LIFT, 1.0)
+def _assumed_lift(true_lift: np.ndarray, lift: float = ASSUMED_EVENT_LIFT) -> np.ndarray:
+    return np.where(true_lift > 1, lift, 1.0)
 
 
 def evaluate(world: World, buy: np.ndarray, test_demand: np.ndarray) -> dict[str, float]:

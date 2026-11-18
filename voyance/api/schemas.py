@@ -28,10 +28,31 @@ class PlanScope(BaseModel):
 
 
 class PlanCreate(PlanScope):
-    model_config = ConfigDict(json_schema_extra={
+    # what-ifs are only for previews: refuse them here rather than quietly saving the base plan
+    model_config = ConfigDict(extra="forbid", json_schema_extra={
         "examples": [{"budget_inr": 2_000_000, "risk_aversion": 0.3, "cities": ["Goa", "Udaipur"]}]})
     risk_aversion: float = Field(0.3, ge=0, le=1,
                                  description="0 = maximise expected profit, 1 = protect the worst case")
+
+
+class WhatIf(BaseModel):
+    """A different world to re-plan in. The optimizer re-plans; nothing is saved."""
+
+    demand_change: float = Field(0.0, ge=-0.5, le=1.0, description="0.2 = demand 20% above the forecast")
+    cost_change: float = Field(0.0, ge=-0.3, le=0.5, description="0.1 = supplier rates 10% dearer")
+    event_lift: float | None = Field(None, ge=1.0, le=3.0, description="Demand multiple in this season's event "
+                                     "weeks; leave out for the planner's own guess (1.5)")
+
+
+WHAT_IF_FIELDS = frozenset(WhatIf.model_fields)
+
+
+class PreviewRequest(PlanCreate, WhatIf):
+    pass
+
+
+class FrontierQuery(PlanScope, WhatIf):
+    model_config = ConfigDict(extra="forbid")  # a misspelt what-if must not quietly give the base frontier
 
 
 class LineDecision(BaseModel):
@@ -90,7 +111,7 @@ class PlanTotals(BaseModel):
     worst_case_profit: float
 
 
-class PlanPreview(PlanTotals):
+class PlanPreview(PlanTotals, WhatIf):
     lines: list[PreviewLine]
 
 

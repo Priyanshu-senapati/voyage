@@ -53,6 +53,33 @@ def test_each_line_has_its_own_worst_case_and_a_buy_by_date():
         assert line.buy_by == (WORLD.first_night[i] - WORLD.buy_ahead_days[i]).item()
 
 
+def _demand(plan):
+    return {(line.city, line.week, line.hotel): line.why["expected_demand"] for line in plan.lines}
+
+
+def test_what_if_demand_shock_scales_every_lines_expected_demand():
+    base, shocked = build_plan(WORLD, 2e7, 0.3), build_plan(WORLD, 2e7, 0.3, demand_change=0.25)
+    both = _demand(base).keys() & _demand(shocked).keys()
+    assert both and all(_demand(shocked)[k] == pytest.approx(1.25 * _demand(base)[k]) for k in both)
+    assert sum(line.rooms for line in shocked.lines) > sum(line.rooms for line in base.lines)
+
+
+def test_what_if_dearer_supplier_rates_buy_less_and_cost_more_per_room():
+    base, dearer = build_plan(WORLD, 2e7, 0.3), build_plan(WORLD, 2e7, 0.3, cost_change=0.10)
+    assert sum(line.rooms for line in dearer.lines) < sum(line.rooms for line in base.lines)
+    line = dearer.lines[0]
+    i = WORLD.labels.index(f"{line.city} {line.week} {line.hotel}")
+    assert line.unit_cost == pytest.approx(1.10 * WORLD.cost[i])
+
+
+def test_what_if_event_strength_changes_only_this_seasons_event_weeks():
+    weak, strong = build_plan(WORLD, 2e7, 0.0, event_lift=1.0), build_plan(WORLD, 2e7, 0.0, event_lift=2.5)
+    for key in _demand(weak).keys() & _demand(strong).keys():
+        line = next(line for line in strong.lines if (line.city, line.week, line.hotel) == key)
+        ratio = _demand(strong)[key] / _demand(weak)[key]
+        assert ratio == pytest.approx(2.5 if line.why["event_week"] else 1.0)
+
+
 def test_reasons_mention_sold_out_searches_and_event_weeks():
     reasons = " ".join(line.reason for line in build_plan(WORLD, budget=2e7, risk_aversion=0.0).lines)
     assert "sold-out searches" in reasons

@@ -48,8 +48,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Try a budget and risk without saving
-         * @description Same body and lines as creating a plan, but nothing is saved or logged. For sliders: its own limit of 120 a minute per person; please debounce.
+         * Try a budget, risk or what-if without saving
+         * @description Same body and lines as creating a plan, plus optional what-ifs (demand_change, cost_change, event_lift) that the optimizer re-plans in. Nothing is saved or logged. For sliders: its own limit of 120 a minute per person; please debounce.
          */
         post: operations["preview_plan_v1_plans_preview_post"];
         delete?: never;
@@ -67,7 +67,7 @@ export interface paths {
         };
         /**
          * Profit and worst case at each risk setting
-         * @description One point per risk setting 0, 0.1 ... 1 for this budget (and cities, repeated: ?cities=Goa&cities=Kochi). 10 a minute per person.
+         * @description One point per risk setting 0, 0.1 ... 1 for this budget (cities repeated: ?cities=Goa&cities=Kochi), optionally in a what-if as in the preview. 10 a minute per person.
          */
         get: operations["frontier_v1_frontier_get"];
         put?: never;
@@ -395,6 +395,23 @@ export interface components {
         };
         /** PlanPreview */
         PlanPreview: {
+            /**
+             * Demand Change
+             * @description 0.2 = demand 20% above the forecast
+             * @default 0
+             */
+            demand_change: number;
+            /**
+             * Cost Change
+             * @description 0.1 = supplier rates 10% dearer
+             * @default 0
+             */
+            cost_change: number;
+            /**
+             * Event Lift
+             * @description Demand multiple in this season's event weeks; leave out for the planner's own guess (1.5)
+             */
+            event_lift?: number | null;
             /** Budget Inr */
             budget_inr: number;
             /** Risk Aversion */
@@ -476,6 +493,52 @@ export interface components {
             buy_by: string;
             /** Sell Through */
             readonly sell_through: number;
+        };
+        /**
+         * PreviewRequest
+         * @example {
+         *       "budget_inr": 2000000,
+         *       "cities": [
+         *         "Goa",
+         *         "Udaipur"
+         *       ],
+         *       "risk_aversion": 0.3
+         *     }
+         */
+        PreviewRequest: {
+            /**
+             * Demand Change
+             * @description 0.2 = demand 20% above the forecast
+             * @default 0
+             */
+            demand_change: number;
+            /**
+             * Cost Change
+             * @description 0.1 = supplier rates 10% dearer
+             * @default 0
+             */
+            cost_change: number;
+            /**
+             * Event Lift
+             * @description Demand multiple in this season's event weeks; leave out for the planner's own guess (1.5)
+             */
+            event_lift?: number | null;
+            /**
+             * Budget Inr
+             * @description Maximum spend in INR (up to ₹1,000 crore)
+             */
+            budget_inr: number;
+            /**
+             * Cities
+             * @description Limit to these cities; leave out for all
+             */
+            cities?: string[] | null;
+            /**
+             * Risk Aversion
+             * @description 0 = maximise expected profit, 1 = protect the worst case
+             * @default 0.3
+             */
+            risk_aversion: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -566,7 +629,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PlanCreate"];
+                "application/json": components["schemas"]["PreviewRequest"];
             };
         };
         responses: {
@@ -629,6 +692,12 @@ export interface operations {
     frontier_v1_frontier_get: {
         parameters: {
             query: {
+                /** @description 0.2 = demand 20% above the forecast */
+                demand_change?: number;
+                /** @description 0.1 = supplier rates 10% dearer */
+                cost_change?: number;
+                /** @description Demand multiple in this season's event weeks; leave out for the planner's own guess (1.5) */
+                event_lift?: number | null;
                 /** @description Maximum spend in INR (up to ₹1,000 crore) */
                 budget_inr: number;
                 /** @description Limit to these cities; leave out for all */

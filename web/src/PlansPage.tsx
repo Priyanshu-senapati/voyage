@@ -1,7 +1,7 @@
-import { ArrowRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import type { PlanSummary } from './types'
 import { inr } from './format'
-import { PlanStatusChip } from './StatusChip'
+import { PlanStatusBadge } from './ui'
 
 interface Props {
   plans: PlanSummary[]
@@ -17,54 +17,53 @@ const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function PlansPage({ plans, openId, onOpen }: Props) {
   return (
-    <section className="page" aria-labelledby="plans-title">
+    <div className="page">
       <header className="page-head">
-        <h1 id="plans-title">Plans</h1>
-        <p>Every plan your company has saved, newest first. Open one to review its lines on the Buy Desk.</p>
+        <h1>Plans</h1>
+        <p>Every plan your company has saved, newest first. Open one to review its lines.</p>
       </header>
       {plans.length === 0 ? (
-        <div className="state-panel">
+        <div className="panel empty-state">
           <h2>No plans yet</h2>
-          <p>Set a budget and a risk level on the Buy Desk, then save the plan.</p>
+          <p>A buyer saves plans from the Buy Desk. They appear here.</p>
         </div>
       ) : (
-        <div className="table-wrap page-table">
+        <div className="panel table-panel">
           <table className="table" aria-label="Plans">
             <thead>
               <tr>
-                <th scope="col" className="c-rank">Plan</th>
-                <th scope="col">Created</th>
-                <th scope="col" className="c-num">Budget</th>
-                <th scope="col" className="c-num">Risk</th>
-                <th scope="col" className="c-num">Spend</th>
-                <th scope="col" className="c-num">Exp. profit</th>
-                <th scope="col" className="c-num">Worst 5%</th>
+                <th scope="col">Plan</th>
+                <th scope="col">Saved by</th>
+                <th scope="col" className="num">Budget</th>
+                <th scope="col" className="num hide-sm">Spend</th>
+                <th scope="col" className="num">Expected profit</th>
+                <th scope="col" className="num hide-sm">Bad season</th>
                 <th scope="col">Status</th>
-                <th scope="col">
+                <th scope="col" className="chevron-col">
                   <span className="sr-only">Open</span>
                 </th>
               </tr>
             </thead>
             <tbody>
               {plans.map((plan) => (
-                <tr key={plan.id} className="row" aria-selected={plan.id === openId} onClick={() => onOpen(plan.id)}>
-                  <td className="c-rank">#{plan.id}</td>
+                <tr key={plan.id} className="row-link" aria-current={plan.id === openId ? 'true' : undefined} onClick={() => onOpen(plan.id)}>
                   <td>
-                    <strong>{capital(plan.created_by)}</strong> <span className="muted">{when(plan.created_at)}</span>
-                  </td>
-                  <td className="c-num">{inr(plan.budget_inr)}</td>
-                  <td className="c-num">{plan.risk_aversion}</td>
-                  <td className="c-num">{inr(plan.spend)}</td>
-                  <td className="c-num c-profit">{inr(plan.expected_profit)}</td>
-                  <td className="c-num">{inr(plan.worst_case_profit)}</td>
-                  <td>
-                    <PlanStatusChip status={plan.status} />
-                  </td>
-                  <td className="c-open">
-                    <button className="btn btn-ghost" type="button" onClick={() => onOpen(plan.id)}>
-                      Open
-                      <ArrowRight size={13} strokeWidth={2.25} aria-hidden="true" />
+                    <button type="button" className="row-button" onClick={() => onOpen(plan.id)}>
+                      <strong>#{plan.id}</strong>
                     </button>
+                  </td>
+                  <td>
+                    {capital(plan.created_by)} <span className="muted">· {when(plan.created_at)}</span>
+                  </td>
+                  <td className="num">{inr(plan.budget_inr)}</td>
+                  <td className="num hide-sm">{inr(plan.spend)}</td>
+                  <td className="num strong">{inr(plan.expected_profit)}</td>
+                  <td className={`num hide-sm${plan.worst_case_profit < 0 ? ' neg' : ''}`}>{inr(plan.worst_case_profit)}</td>
+                  <td>
+                    <PlanStatusBadge status={plan.status} />
+                  </td>
+                  <td className="chevron-col">
+                    <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
                   </td>
                 </tr>
               ))}
@@ -72,6 +71,6 @@ export function PlansPage({ plans, openId, onOpen }: Props) {
           </table>
         </div>
       )}
-    </section>
+    </div>
   )
 }

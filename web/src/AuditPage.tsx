@@ -3,7 +3,7 @@ import type { AuditEvent, Me } from './types'
 import { useLoad } from './useLoad'
 
 const ACTIONS: Record<string, string> = {
-  'plan.created': 'Created a plan',
+  'plan.created': 'Saved a plan',
   'line.approved': 'Approved a line',
   'line.rejected': 'Rejected a line',
 }
@@ -28,13 +28,13 @@ export function AuditPage({ api, me }: { api: Api | null; me: Me | null }) {
   const log = useLoad<AuditEvent[]>(admin ? 'audit' : 'none', () => (admin ? api.audit() : null))
 
   return (
-    <section className="page" aria-labelledby="audit-title">
+    <div className="page">
       <header className="page-head">
-        <h1 id="audit-title">Audit log</h1>
-        <p>Who created which plan and who decided each line, newest first. Nothing here can be edited.</p>
+        <h1>Audit log</h1>
+        <p>Who saved each plan and who decided each line, newest first. Entries can't be edited.</p>
       </header>
       {!admin ? (
-        <div className="state-panel">
+        <div className="panel empty-state">
           <h2>Admins only</h2>
           <p>
             {api
@@ -43,16 +43,16 @@ export function AuditPage({ api, me }: { api: Api | null; me: Me | null }) {
           </p>
         </div>
       ) : log.status === 'loading' ? (
-        <p className="state-panel">Loading the audit log…</p>
+        <div className="panel loading">Loading the audit log…</div>
       ) : log.status === 'error' ? (
-        <p className="state-panel">{log.message}</p>
+        <div className="panel empty-state">{log.message}</div>
       ) : log.data.length === 0 ? (
-        <div className="state-panel">
+        <div className="panel empty-state">
           <h2>Nothing yet</h2>
           <p>Saved plans and decisions will appear here.</p>
         </div>
       ) : (
-        <div className="table-wrap page-table">
+        <div className="panel table-panel">
           <table className="table" aria-label="Audit log">
             <thead>
               <tr>
@@ -64,7 +64,7 @@ export function AuditPage({ api, me }: { api: Api | null; me: Me | null }) {
             </thead>
             <tbody>
               {log.data.map((event) => (
-                <tr key={event.id} className="row row-static">
+                <tr key={event.id}>
                   <td>{when(event.at)}</td>
                   <td>
                     <strong>{capital(event.actor)}</strong>
@@ -77,6 +77,6 @@ export function AuditPage({ api, me }: { api: Api | null; me: Me | null }) {
           </table>
         </div>
       )}
-    </section>
+    </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ApiError, apiFor, type Api } from './api/client'
+import { ApiError, apiFor, type Api, type WhatIfParams } from './api/client'
 import demoPlan from './demo/plan-2cr.json'
 import type { Session } from './session'
 import type { Decision, Me, Plan, PlanLine, PlanOut, PlanPreview, PlanSummary } from './types'
@@ -8,15 +8,23 @@ import { inr } from './format'
 export type Notice = { tone: 'error' | 'info' | 'success'; text: string }
 export type LoadState = 'loading' | 'ready' | 'error'
 export type Draft = { budget: number; risk: number }
+// demand and cost are fractions (0.2 = +20%); event is the event-week demand multiple, null = the planner's guess
+export type WhatIf = { demand: number; cost: number; event: number | null }
 
 export const DEFAULT_DRAFT: Draft = { budget: 2e7, risk: 0.3 }
+export const NO_WHAT_IF: WhatIf = { demand: 0, cost: 0, event: null }
 const DEMO_ME: Me = { name: 'ravi', role: 'approver', tenant: 'TBO Demo' }
 const PREVIEW_DELAY_MS = 300 // lane A asks for a pause after the slider stops
 
-const ranked = <T,>(lines: T[]) => lines.map((line, i) => ({ ...line, rank: i + 1 }))
+export const whatIfActive = (w: WhatIf) => w.demand !== 0 || w.cost !== 0 || w.event !== null
+export const whatIfParams = (w: WhatIf): WhatIfParams => ({
+  demand_change: w.demand,
+  cost_change: w.cost,
+  event_lift: w.event,
+})
 
 function savedPlan(raw: PlanOut): Plan {
-  return { ...raw, lines: ranked(raw.lines) }
+  return { ...raw, lines: raw.lines.map((line, i) => ({ ...line, rank: i + 1 })) }
 }
 
 function previewPlan(raw: PlanPreview): Plan {
@@ -40,10 +48,11 @@ function statusOf(lines: PlanLine[]): Plan['status'] {
   return kinds.size > 1 ? 'mixed' : (lines[0].decision as Plan['status'])
 }
 
-const draftOf = (plan: Plan | null): Draft =>
+export const draftOf = (plan: Plan | null): Draft =>
   plan ? { budget: plan.budget_inr, risk: plan.risk_aversion } : DEFAULT_DRAFT
 
 const sameDraft = (a: Draft, b: Draft) => a.budget === b.budget && a.risk === b.risk
+const draftKey = (d: Draft) => `${d.budget}|${d.risk}`
 
 async function loadDesk(api: Api) {
   const [me, list] = await Promise.all([api.me(), api.plans()])
@@ -57,7 +66,9 @@ export function useDesk(session: Session, onSignOut: (reason?: string) => void) 
   const [saved, setSaved] = useState<Plan | null>(() => (api ? null : savedPlan(demoPlan as unknown as PlanOut)))
   const [plans, setPlans] = useState<PlanSummary[]>(() => (saved ? [summaryOf(saved)] : []))
   const [draft, setDraftState] = useState<Draft>(() => draftOf(saved))
+  const [whatIf, setWhatIfState] = useState<WhatIf>(NO_WHAT_IF)
   const [preview, setPreview] = useState<Plan | null>(null)
+  const [base, setBase] = useState<Plan | null>(null) // what the plan looks like without the what-if
   const [previewing, setPreviewing] = useState(false)
   const [state, setState] = useState<LoadState>(api ? 'loading' : 'ready')
   const [attempt, setAttempt] = useState(0)
@@ -66,6 +77,7 @@ export function useDesk(session: Session, onSignOut: (reason?: string) => void) 
   const [deciding, setDeciding] = useState<number | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const inflight = useRef<AbortController>(undefined)
+  const baseCache = useRef(new Map<string, Plan>())
   const dismissNotice = useCallback(() => setNotice(null), [])
 
   const fail = useCallback(
@@ -82,17 +94,37 @@ export function useDesk(session: Session, onSignOut: (reason?: string) => void) 
     setPreviewing(false)
   }, [])
 
+  // Re-plan for these settings: the scenario, and in a what-if also the same budget and risk without it
   const runPreview = useCallback(
-    (next: Draft) => {
+    (next: Draft, w: WhatIf, current: Plan | null) => {
       if (!api) return
       cancelPreview()
+      if (current && sameDraft(next, draftOf(current)) && !whatIfActive(w)) {
+        setPreview(null)
+        setBase(null)
+        return
+      }
       timer.current = setTimeout(async () => {
         const controller = new AbortController()
         inflight.current = controller
         setPreviewing(true)
+        const body = { budget_inr: next.budget, risk_aversion: next.risk }
         try {
-          const result = await api.preview({ budget_inr: next.budget, risk_aversion: next.risk }, controller.signal)
+          const scenario = api.preview({ ...body, ...whatIfParams(w) }, controller.signal)
+          let baseline: Promise<Plan | null> = Promise.resolve(null)
+          if (whatIfActive(w)) {
+            const cached = current && sameDraft(next, draftOf(current)) ? current : baseCache.current.get(draftKey(next))
+            baseline = cached
+              ? Promise.resolve(cached)
+              : api.preview({ ...body, ...whatIfParams(NO_WHAT_IF) }, controller.signal).then((raw) => {
+                  const plan = previewPlan(raw)
+                  baseCache.current.set(draftKey(next), plan)
+                  return plan
+                })
+          }
+          const [result, baselinePlan] = await Promise.all([scenario, baseline])
           setPreview(previewPlan(result))
+          setBase(baselinePlan)
         } catch (error) {
           if (controller.signal.aborted) return
           fail(error, 'Could not preview that plan')
@@ -110,8 +142,10 @@ export function useDesk(session: Session, onSignOut: (reason?: string) => void) 
       cancelPreview()
       setSaved(plan)
       setPreview(null)
+      setBase(null)
       setDraftState(draftOf(plan))
-      if (!plan) runPreview(DEFAULT_DRAFT) // nothing saved yet: show what the default budget would buy
+      setWhatIfState(NO_WHAT_IF)
+      if (!plan) runPreview(DEFAULT_DRAFT, NO_WHAT_IF, null) // nothing saved yet: show what the default budget buys
     },
     [cancelPreview, runPreview],
   )
@@ -142,11 +176,12 @@ export function useDesk(session: Session, onSignOut: (reason?: string) => void) 
 
   function setDraft(next: Draft) {
     setDraftState(next)
-    if (!api) return
-    if (saved && sameDraft(next, draftOf(saved))) {
-      cancelPreview()
-      setPreview(null)
-    } else runPreview(next)
+    runPreview(next, whatIf, saved)
+  }
+
+  function setWhatIf(next: WhatIf) {
+    setWhatIfState(next)
+    runPreview(draft, next, saved)
   }
 
   async function openPlan(id: number) {
@@ -158,11 +193,12 @@ export function useDesk(session: Session, onSignOut: (reason?: string) => void) 
     }
   }
 
-  async function savePlan() {
+  async function savePlan(): Promise<boolean> {
     if (!api) {
-      setNotice({ tone: 'info', text: 'The demo shows one saved plan. Sign in with an API key to run the planner.' })
-      return
+      setNotice({ tone: 'info', text: 'The demo has one saved plan. Sign in with an API key to save new plans.' })
+      return false
     }
+    if (whatIfActive(whatIf)) return false
     cancelPreview()
     setCreating(true)
     try {
@@ -171,28 +207,39 @@ export function useDesk(session: Session, onSignOut: (reason?: string) => void) 
       setPlans((list) => [summaryOf(created), ...list])
       setNotice({
         tone: 'success',
-        text: `Plan #${created.id} saved: ${created.lines.length} lines, ${inr(created.spend)} of ${inr(draft.budget)}.`,
+        text: `Plan #${created.id} saved: ${created.lines.length} lines, ${inr(created.spend)} of ${inr(draft.budget)}. Every line now waits for an approver.`,
       })
+      return true
     } catch (error) {
       if (error instanceof ApiError && error.retryAfter && error.status === 503) {
         setNotice({ tone: 'error', text: `The planner is busy. Try again in ${error.retryAfter} s.` })
       } else fail(error, 'Could not save the plan')
+      return false
     } finally {
       setCreating(false)
     }
   }
 
-  function discardPreview() {
+  function resetChanges() {
     cancelPreview()
     setPreview(null)
+    setBase(null)
     setDraftState(draftOf(saved))
+    setWhatIfState(NO_WHAT_IF)
+    if (!saved) runPreview(DEFAULT_DRAFT, NO_WHAT_IF, null)
+  }
+
+  function resetWhatIf() {
+    setWhatIf(NO_WHAT_IF)
   }
 
   function applyLine(updated: Partial<PlanLine> & { id: number }) {
     setSaved((current) => {
       if (!current) return current
       const lines = current.lines.map((line) => (line.id === updated.id ? { ...line, ...updated } : line))
-      return { ...current, lines, status: statusOf(lines) }
+      const next = { ...current, lines, status: statusOf(lines) }
+      setPlans((list) => list.map((p) => (p.id === next.id ? { ...p, status: next.status } : p)))
+      return next
     })
   }
 
@@ -233,15 +280,19 @@ export function useDesk(session: Session, onSignOut: (reason?: string) => void) 
     }
   }
 
+  const changed = preview !== null || whatIfActive(whatIf) || (saved !== null && !sameDraft(draft, draftOf(saved)))
+
   return {
-    api, me, plans, saved, preview, draft, previewing, state, notice, creating, deciding,
-    plan: preview ?? saved,
+    api, me, plans, saved, preview, base, draft, whatIf, previewing, state, notice, creating, deciding, changed,
+    // what the Plan mode shows: the re-planned preview, or the open plan when nothing has changed
+    // (the demo can't re-plan, so it keeps showing its saved plan)
+    planView: preview ?? (changed && api ? null : saved),
     live: api !== null,
     retry: () => {
       setState('loading')
       setAttempt((n) => n + 1)
     },
-    setDraft, openPlan, savePlan, discardPreview, decide, exportCsv,
+    setDraft, setWhatIf, resetWhatIf, resetChanges, openPlan, savePlan, decide, exportCsv,
     dismissNotice,
     notify: setNotice,
   }

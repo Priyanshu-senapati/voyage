@@ -1,10 +1,27 @@
+import json
 from dataclasses import replace
+from datetime import date
+from pathlib import Path
 
 import numpy as np
 
-from voyance.sim import hidden_demand_mean, make_world, repeat_past_bookings, run
+from voyance.sim import (BUY_AHEAD_DAYS, SEASON_YEAR, WEEKS, hidden_demand_mean, make_world, repeat_past_bookings,
+                         run)
 
 FAST = {"n_scenarios": 60, "n_test_seasons": 100}
+
+
+def test_each_hotel_week_knows_its_first_night_and_how_far_ahead_to_buy():
+    world = make_world(seed=3)
+    for week, first, ahead in zip(world.week, world.first_night, world.buy_ahead_days):
+        assert first.item() == date(SEASON_YEAR, 12, int(week.split("-")[0]))
+        assert ahead == BUY_AHEAD_DAYS[WEEKS.index(week)]
+    assert BUY_AHEAD_DAYS.argmax() == WEEKS.index("22-28 Dec")  # Christmas is booked earliest
+
+
+def test_buy_ahead_days_match_the_real_booking_data():
+    calibration = json.loads((Path(__file__).parent.parent / "out" / "calibration.json").read_text("utf-8"))
+    assert BUY_AHEAD_DAYS.tolist() == calibration["real_agent_bookings"]["december_buy_ahead_days"]
 
 
 def test_run_is_reproducible_with_same_seed():

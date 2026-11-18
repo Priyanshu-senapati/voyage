@@ -1,6 +1,7 @@
 """Turn the optimizer's buy quantities into plan lines a buyer can read and approve."""
 
 from dataclasses import dataclass
+from datetime import date
 
 import numpy as np
 
@@ -28,6 +29,8 @@ class PlanLine:
     expected_profit: float
     reason: str
     why: dict  # the numbers behind `reason`, for the dashboard's charts (schemas.LineWhy)
+    worst_case_profit: float  # this line alone, in its worst WORST_SHARE of scenarios
+    buy_by: date
 
 
 @dataclass(frozen=True)
@@ -50,12 +53,16 @@ def build_plan(world: World, budget: float, risk_aversion: float,
     per_scenario = profits(buy, cost, price, demand)
     sold = np.minimum(buy, demand).mean(axis=0)
     line_profit = price * sold - cost * buy
-    whys = [_why(world, i, m) for i, m in zip(idx, mean)]
-    lines = [
-        PlanLine(world.city[i], world.week[i], world.hotel[i], int(b), float(world.cost[i]),
-                 float(world.price[i]), float(s), float(p), _reason(why), why)
-        for i, b, s, p, why in zip(idx, buy, sold, line_profit, whys) if b > 0
-    ]
+    line_scenarios = price * np.minimum(buy, demand) - cost * buy  # scenarios x lines
+    buy_by = world.first_night[idx] - world.buy_ahead_days[idx]
+    lines = []
+    for j, i in enumerate(idx):
+        if buy[j] == 0:
+            continue
+        why = _why(world, i, mean[j])
+        lines.append(PlanLine(world.city[i], world.week[i], world.hotel[i], int(buy[j]), float(cost[j]),
+                              float(price[j]), float(sold[j]), float(line_profit[j]), _reason(why), why,
+                              cvar(line_scenarios[:, j], WORST_SHARE), buy_by[j].item()))
     return PlanResult(
         lines=tuple(sorted(lines, key=lambda line: -line.expected_profit)),
         spend=float(cost @ buy),

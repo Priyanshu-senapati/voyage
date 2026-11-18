@@ -18,7 +18,7 @@ Source: `out/proof_results.csv` and `out/proof_chart.png`: 20 simulated December
    worst 5% of seasons ₹17.0L vs ₹15.0L. Caution also guards against our own forecast being off.
 6. **Feasible today:** a full buy plan (40 hotel-weeks, 200 demand scenarios) solves in under a second on a
    laptop (0.25–0.7 s, depending on the budget); cities run in parallel. The working API already has plans,
-   four-eyes approvals, an audit log and CSV export, with 107 automated tests.
+   four-eyes approvals, an audit log and CSV export, with over 100 automated tests.
 
 ## Checked against real bookings (`out/calibration.json`, `python scripts/calibrate.py`)
 Public dataset of 119,390 real bookings at two hotels, 2015–17 (Portugal, CC BY 4.0).

@@ -16,18 +16,16 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from voyance.calibrate import fetch_verified, summary  # noqa: E402
+from voyance.calibrate import DATASET_SHA256, DATASET_URL, fetch_verified, summary  # noqa: E402
 from voyance.sim import DEMAND_CV, WEEK_FACTOR  # noqa: E402
 
-URL = "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-02-11/hotels.csv"
-SHA256 = "7c2ae42a7353905ea136e5c2287f17c92c5435826598bfbb8491c6f0c7b1fc06"
 RAW = ROOT / "data" / "raw" / "hotels.csv"
 OUT = ROOT / "out" / "calibration.json"
 
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    data = fetch_verified(RAW, URL, SHA256)
+    data = fetch_verified(RAW, DATASET_URL, DATASET_SHA256)
     rows = list(csv.DictReader(io.StringIO(data.decode("utf-8"), newline="")))
     sim_shape = np.asarray(WEEK_FACTOR, dtype=float)
     report = {

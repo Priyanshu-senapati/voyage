@@ -71,6 +71,13 @@ gcloud run deploy "$SERVICE" \
 gcloud artifacts repositories set-cleanup-policies cloud-run-source-deploy --location "$REGION" \
   --policy deploy/registry-cleanup.json --no-dry-run --quiet >/dev/null
 
+# the policy runs on Google's schedule, so also delete now every image except the one serving
+IMAGES="${REGION}-docker.pkg.dev/${PROJECT}/cloud-run-source-deploy/${SERVICE}"
+SERVING="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(spec.template.spec.containers[0].image)')"
+for digest in $(gcloud artifacts docker images list "$IMAGES" --format='value(version)' 2>/dev/null); do
+  [ "$digest" = "${SERVING##*@}" ] || gcloud artifacts docker images delete "${IMAGES}@${digest}" --delete-tags --quiet >/dev/null
+done
+
 url="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
 echo "Live: $url"
 curl -fsS "$url/health" && echo

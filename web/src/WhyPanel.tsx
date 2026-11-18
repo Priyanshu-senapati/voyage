@@ -26,7 +26,7 @@ export function WhyPanel({ line, creator, onDecide }: Props) {
   return (
     <aside className="why" id="why" aria-label={`Why line ${line.id}`}>
       <header className="why-head">
-        <span className="why-rank" style={{ color: ink }}>{line.id}</span>
+        <span className="why-rank">{line.id}</span>
         <div>
           <h2>
             {line.city} · {line.hotel}

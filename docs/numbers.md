@@ -4,6 +4,8 @@ This page lists every figure on the slides and in the video, with its source and
 - **Simulated results** come from `out/proof_results.csv`, which `scripts/proof_chart.py` writes.
   The deck's build script (`deck/build_round1.js`) reads that file directly.
 - **The Buy Desk rows** come from `docs/sample_plan_round1.json`, real output of today's API.
+- **The real-bookings check** comes from `out/calibration.json`, which lane A's `scripts/calibrate.py`
+  writes. The build script reads it too.
 
 ## 1. TBO's scale (from TBO's own press releases)
 
@@ -70,7 +72,44 @@ better worst 5% than 0.4. Its expected profit is equal or higher everywhere exce
 0.4 points lower. At ₹2 cr, for example, 0.3 earns ₹25.1L with a ₹17.0L worst case; 0.4 earns
 ₹24.7L with ₹15.0L.
 
-## 3. Limitations
+## 3. The simulator, checked against real bookings
+
+Lane A compared the simulator with a public dataset of real hotel bookings
+(`python scripts/calibrate.py` downloads it once, checks its SHA-256 and writes `out/calibration.json`).
+- **Dataset:** N. Antonio, A. de Almeida, L. Nunes (2019), "Hotel booking demand datasets",
+  *Data in Brief* 22: 41–49, [doi:10.1016/j.dib.2018.11.126][hbd], licence CC BY 4.0.
+- **Coverage:** two hotels in Portugal, July 2015 – August 2017. "Agent" means bookings through
+  travel agents and tour operators.
+
+| Measure | Real bookings | Our simulator |
+|---|---|---|
+| Bookings in the dataset | 119,390 | n/a |
+| Share booked through travel agents and tour operators (TBO's channel) | 82% | n/a |
+| **Christmas week (22–28 Dec) vs the December average** | **1.45×** | **1.47×** |
+| Each December week vs the December average (1–7 / 8–14 / 15–21 / 22–28 Dec) | 1.16 / 0.68 / 0.70 / 1.45 | 0.65 / 0.82 / 1.06 / 1.47 |
+| **How much a week's agent demand swings from one year to the next** (coefficient of variation) | **22%** (124 week pairs) | **35%** |
+| Agent bookings later cancelled | 41% | n/a |
+| Median days ahead that agent bookings are made | 59 | n/a |
+
+On the slide (2), under the impact chart: *"Simulator checked on 119,390 real bookings (2 hotels,
+Portugal, 2015–17): Christmas week 1.45× the December average (ours 1.47×); year-to-year swing 22%
+(ours 35%, a harder test)."*
+
+**What it shows:**
+- The Christmas-week peak in our simulator matches the real data.
+- Real demand is steadier from year to year than our simulated demand, so our test is the harder one.
+- Most hotel bookings in the dataset (82%) come through agents and tour operators, the channel TBO sells through.
+- Pre-buying is risky. 41% of agent bookings were cancelled, and they arrive about two months ahead,
+  so the buy decision is made about two months out.
+
+**What it doesn't show (say so if asked):**
+- **It's Portugal, not India,** and only two hotels.
+- **Real early December is busier than ours** (1.16× vs 0.65× for 1–7 Dec). There are only 4
+  hotel-years of December data (2 hotels × Dec 2015 and Dec 2016), so that shape is rough.
+- **It checks the simulator, not Voyance.** The dataset has bookings only, no searches, so hidden
+  demand itself isn't tested on real data.
+
+## 4. Limitations
 - **About even with re-buying at ₹1.2 cr.**
 - **Worst case below re-buying from ₹60L to ₹1.2 cr.** For example, ₹12.9L vs ₹13.3L at ₹60L,
   and ₹18.4L vs ₹19.4L at ₹1.2 cr. It's slightly higher at ₹40L and clearly higher from ₹1.6 cr up.
@@ -81,20 +120,23 @@ better worst 5% than 0.4. Its expected profit is equal or higher everywhere exce
   optimizer. Event signals correct it, so the two ship together.
 - **At big budgets Voyance misses more demand** (1,275 vs 1,085 room-nights), because it skips
   rooms likely to go unsold.
-- **All data is simulated.** Today the data interface returns the simulator's market. Using TBO's
-  data needs search logs that record sold-out results, and wiring them in is Round 2 work.
+- **All results are simulated.** Today the data interface returns the simulator's market. The
+  simulator's December peak and year-to-year swing are checked against real bookings (section 3),
+  but Voyance hasn't been run on real data. Using TBO's data needs search logs that record sold-out
+  results, and wiring them in is Round 2 work.
 - **Scale is measured on 40 hotel-weeks.** The optimizer's model is sized for hundreds of items and
   a few hundred scenarios. In Round 2 we split the work by city and load-test at TBO's catalogue size.
 
-## 4. Tech claims (measured 18 Nov 2026, on a laptop, at commit be62864)
+## 5. Tech claims (measured 18 Nov 2026, on a laptop)
 
 | Claim | Evidence |
 |---|---|
-| 72 automated tests | `python -m pytest -q`: 72 passed in 12.6 s |
-| 0.2 s for one buy plan over 40 hotel-weeks | `voyance.api.planner.build_plan` on the demo data, ₹2 cr, risk 0.3: 0.215 s (best of 5, after a warm-up) |
-| Built today | Hidden demand (`voyance/demand.py`). Expected profit vs worst-5% optimizer, HiGHS (`voyance/optimizer.py`). Plan lines with reasons (`voyance/api/planner.py`). Buy Desk API (`voyance/api/`): API keys, buyer / approver / admin roles, approvals, audit log, tenant isolation, rate limits, CSV export, SQLite through SQLAlchemy |
+| 89 automated tests | `python -m pytest -q`: 89 passed in 12.3 s. Run on `pitch/round1` after merging main at f9d67d9, so it includes lane A's 17 calibration tests |
+| 0.2 s for one buy plan over 40 hotel-weeks | `voyance.api.planner.build_plan` on the demo data, ₹2 cr, risk 0.3: 0.215 s (best of 5, after a warm-up), at commit be62864. The merge since changed no planner or optimizer code |
+| Built today | Hidden demand (`voyance/demand.py`). Expected profit vs worst-5% optimizer, HiGHS (`voyance/optimizer.py`). Plan lines with reasons (`voyance/api/planner.py`). Buy Desk API (`voyance/api/`): API keys, buyer / approver / admin roles, approvals, audit log, tenant isolation, rate limits, CSV export, SQLite through SQLAlchemy. Simulator check against real bookings (`voyance/calibrate.py`) |
 | Round 2 | Go collector, Kafka/Redpanda, ClickHouse, Postgres, Redis, LightGBM demand range + SHAP, price tiers, webhooks, React dashboard |
 
 [q4fy26]: https://tbo-static-files.s3.eu-west-1.amazonaws.com/tbo-investor-relations/Financial-Reporting/Quarterly-Results/2025-26/Others/Q4/Press-Release.pdf
 [q2fy27]: https://tbo-static-files.s3.eu-west-1.amazonaws.com/tbo-investor-relations/Financial-Reporting/Quarterly-Results/2026-27/Others/Q2/Press-Release.pdf
+[hbd]: https://doi.org/10.1016/j.dib.2018.11.126
 [wb]: https://www.whalesbook.com/corporate-news/English/transportation/TBO-Tek-FY26-Revenue-Rs-2677-Crore-Profit-Rs-244-Crore/6a184c7a0c0232fe81aa1bb0

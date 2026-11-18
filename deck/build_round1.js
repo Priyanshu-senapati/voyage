@@ -1,7 +1,8 @@
 // Builds deck/voyance_round1.pptx: cover, 2 content slides, thank-you (TBO VoyageHack 4.0, Round 1).
 // Run from deck/:  npm install  then  node build_round1.js
-// Impact numbers and the chart are read from out/proof_results.csv (lane A's simulation), and the Buy Desk rows
-// from docs/sample_plan_round1.json (real API output), so the slide can't drift from the data.
+// Impact numbers and the chart are read from out/proof_results.csv (lane A's simulation), the real-bookings check
+// from out/calibration.json (lane A's scripts/calibrate.py), and the Buy Desk rows from docs/sample_plan_round1.json
+// (real API output), so the slides can't drift from the data.
 // Every other figure comes from docs/numbers.md. Change it there first, then here.
 // If deck/assets/buy_desk_mockup.png exists it is placed on slide 2; otherwise a sketch with the real rows is drawn.
 
@@ -14,6 +15,8 @@ const ROOT = path.resolve(__dirname, "..");
 const OUT = path.join(__dirname, "voyance_round1.pptx");
 const RESULTS_CSV = path.join(ROOT, "out", "proof_results.csv");
 const SAMPLE_PLAN = path.join(ROOT, "docs", "sample_plan_round1.json");
+const CALIBRATION = path.join(ROOT, "out", "calibration.json");
+const TESTS = 89; // `python -m pytest -q` on pitch/round1 after merging main, 18 Nov (docs/numbers.md)
 const MOCKUP = path.join(__dirname, "assets", "buy_desk_mockup.png");
 const REPO = "https://github.com/Priyanshu-senapati/voyage";
 const TEAM = "Priyanshu Senapati  ·  Gourab Dash  ·  Vinochan R";
@@ -94,6 +97,19 @@ const S = {
   perRupeeBase: (100 * result(LOOSE, BASE).mean_profit / result(LOOSE, BASE).spend).toFixed(1),
 };
 const PLAN = JSON.parse(fs.readFileSync(SAMPLE_PLAN, "utf8"));
+
+// Simulator vs 119,390 real bookings (2 Portuguese hotels, 2015–17). Week 4 of December = 22–28 Dec.
+const CAL = (() => {
+  const c = JSON.parse(fs.readFileSync(CALIBRATION, "utf8"));
+  const real = c.real_agent_bookings;
+  return {
+    bookings: real.bookings.toLocaleString("en-US"),
+    peakReal: real.december_shape[3].toFixed(2),
+    peakSim: c.simulator.december_shape[3].toFixed(2),
+    swingReal: Math.round(100 * real.year_to_year_cv),
+    swingSim: Math.round(100 * c.simulator.demand_cv),
+  };
+})();
 
 // ---------- presentation ----------
 
@@ -333,7 +349,7 @@ function buyDeskSketch(slide, x, y, w, h) {
     values: BUDGETS.map((b) => Number((result(b, strategy).mean_profit / 1e5).toFixed(2))),
   }));
   s.addChart(pres.charts.LINE, series, {
-    x: rx - 0.08, y: 1.62, w: chartW + 0.08, h: 2.72,
+    x: rx - 0.08, y: 1.62, w: chartW + 0.08, h: 2.45,
     chartColors: [BLUE, ORANGE, GREEN],
     lineSize: 2.25, lineDataSymbol: "circle", lineDataSymbolSize: 6,
     showLegend: true, legendPos: "t", legendFontSize: 10.5, legendFontFace: "+mn-lt", legendColor: INK,
@@ -348,8 +364,12 @@ function buyDeskSketch(slide, x, y, w, h) {
     objectName: "impact chart",
   });
   text(s, `An even split of the budget (not shown) loses ₹${S.evenLoss}L at ₹2 cr.`, {
-    x: rx, y: 4.38, w: chartW, h: 0.4, fontSize: 9.5, color: MUTED, italic: true,
+    x: rx, y: 4.11, w: chartW, h: 0.2, fontSize: 9.5, color: MUTED, italic: true,
   });
+  text(s, [
+    { text: `Simulator checked on ${CAL.bookings} real bookings`, options: { bold: true, color: INK } },
+    { text: ` (2 hotels, Portugal, 2015–17): Christmas week ${CAL.peakReal}× the December average (ours ${CAL.peakSim}×); year-to-year swing ${CAL.swingReal}% (ours ${CAL.swingSim}%, a harder test).`, options: { color: MUTED } },
+  ], { x: rx, y: 4.33, w: chartW, h: 0.5, fontSize: 9.5, objectName: "real bookings check" });
 
   const sx = rx + chartW + 0.3;
   const sw = M + CW - sx;
@@ -359,7 +379,7 @@ function buyDeskSketch(slide, x, y, w, h) {
     [signed(S.looseVsRaw), "more profit than our optimizer", "on raw bookings, at ₹2 cr"],
   ];
   stats.forEach(([big, line1, line2], i) => {
-    const y = 1.58 + i * 0.86;
+    const y = 1.58 + i * 0.83;
     text(s, big, { x: sx, y, w: sw, h: 0.46, fontSize: 30, bold: true, color: BLUE, valign: "middle" });
     text(s, [
       { text: line1, options: { breakLine: true } },
@@ -367,7 +387,7 @@ function buyDeskSketch(slide, x, y, w, h) {
     ], { x: sx, y: y + 0.45, w: sw, h: 0.38, fontSize: 11, color: INK });
   });
   text(s, "First two vs re-buying past bookings (about even with it at ₹1.2 cr). The third is what hidden demand + events add.", {
-    x: sx, y: 4.18, w: sw, h: 0.62, fontSize: 9.5, color: MUTED, italic: true,
+    x: sx, y: 4.11, w: sw, h: 0.62, fontSize: 9.5, color: MUTED, italic: true,
   });
 
   const by = 4.92;
@@ -407,7 +427,11 @@ function buyDeskSketch(slide, x, y, w, h) {
     "pick the best mix of buys for the chosen risk level, and explain every line for a second person to approve. " +
     `Impact, all simulated: ${signed(S.tightGain)} expected profit on a tight budget versus re-buying past bookings; ` +
     `at a generous budget a ${S.looseWorstGain}% better worst case, and ${S.looseVsRaw}% more profit than the same optimizer ` +
-    "without hidden demand, which is the part our idea adds. Money: margin for TBO, Peak Access for its agencies, " +
+    "without hidden demand, which is the part our idea adds. " +
+    `We checked the simulator against ${CAL.bookings} real hotel bookings from Portugal: the Christmas-week peak matches ` +
+    `(${CAL.peakReal} times the December average, ${CAL.peakSim} in ours), and real demand swings less from year to year ` +
+    `than our test does (${CAL.swingReal}% vs ${CAL.swingSim}%), so the test is the harder case. ` +
+    "Money: margin for TBO, Peak Access for its agencies, " +
     "and a white-label success fee measured against a holdout."
   );
 }
@@ -479,7 +503,7 @@ function buyDeskSketch(slide, x, y, w, h) {
 
   const bottom = [
     ["Scale", "0.2 s", "for one buy plan over 40 hotel-weeks in 5 cities, on a laptop (measured). Round 2: solve cities in parallel and load-test at TBO's catalogue size."],
-    ["Real today", "72 tests", "Budget never exceeded. More caution never lowers the planned worst case. No company sees another's plans. Nobody approves their own plan."],
+    ["Real today", `${TESTS} tests`,"Budget never exceeded. More caution never lowers the planned worst case. No company sees another's plans. Nobody approves their own plan."],
     ["Adoption risk: shadow mode", "1 season", "beside TBO's buyers before any money moves, logging sold-out searches if TBO doesn't yet. Then live city by city, a buyer approving every line."],
   ];
   const bw = (CW - 0.3 * 2) / 3;
@@ -493,11 +517,11 @@ function buyDeskSketch(slide, x, y, w, h) {
     text(s, body, { x: x + 0.22, y: by + 1.1, w: bw - 0.44, h: bh - 1.25, fontSize: 12, color: INK });
   });
 
-  sourceNote(s, "Built = in our repo today (Python, FastAPI, SQLite, 72 automated tests). Round 2 = planned for 26 Nov – 23 Dec. Timing measured on a laptop; all data is simulated until TBO's plugs in.");
+  sourceNote(s, `Built = in our repo today (Python, FastAPI, SQLite, ${TESTS} automated tests). Round 2 = planned for 26 Nov – 23 Dec. Timing measured on a laptop; all data is simulated until TBO's plugs in.`);
   s.addNotes(
     "Today: a Python engine counts hidden demand, adds event weeks and runs a budget optimizer that weighs expected profit " +
     "against the worst five percent of outcomes. One plan over 40 hotel-weeks takes 0.2 seconds on a laptop. The Buy Desk API " +
-    "is built: API keys, buyer, approver and admin roles, approvals, an audit log, SQLite storage and 72 tests. " +
+    `is built: API keys, buyer, approver and admin roles, approvals, an audit log, SQLite storage and ${TESTS} tests. ` +
     "Round 2: a Go collector streams TBO's search and booking events, sold-outs included, through Kafka into ClickHouse; " +
     "Postgres and Redis replace SQLite; a React dashboard on top. Adoption: shadow mode for one season beside TBO's buyers, " +
     "then live one city at a time."

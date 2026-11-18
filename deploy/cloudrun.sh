@@ -45,6 +45,12 @@ done
 
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com --quiet
 
+# new projects no longer give the build account its roles automatically; Cloud Run Builder is the one it needs
+BUILDER="$(gcloud builds get-default-service-account --format='value(serviceAccountEmail)' 2>/dev/null)"
+BUILDER="${BUILDER#projects/*/serviceAccounts/}"
+gcloud projects add-iam-policy-binding "$PROJECT" --member "serviceAccount:${BUILDER}" \
+  --role roles/run.builder --condition None --quiet >/dev/null
+
 # one instance at most: the demo database and the per-network limits live in its memory
 gcloud run deploy "$SERVICE" \
   --source "$SRC" \

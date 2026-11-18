@@ -17,7 +17,8 @@ from sqlalchemy.orm import Session, selectinload
 from voyance.api.auth import Principal
 from voyance.api.db import AuditEvent, Plan, PlanLineRow, Tenant, utcnow
 from voyance.api.planner import PlanRequestError, PlanResult, build_plan
-from voyance.api.schemas import FrontierPoint, MarketItem, MeOut, PlanCreate, PlanPreview, PlanScope
+from voyance.api.schemas import (WHAT_IF_FIELDS, FrontierPoint, FrontierQuery, MarketItem, MeOut, PlanCreate,
+                                 PlanPreview, PreviewRequest)
 from voyance.sim import World
 
 CSV_COLUMNS = ("city", "week", "hotel", "buy_by", "rooms", "unit_cost", "unit_price", "expected_sold",
@@ -103,19 +104,22 @@ def me(session: Session, principal: Principal) -> MeOut:
     return MeOut(name=principal.label, role=principal.role, tenant=tenant.name)
 
 
-def preview_plan(world: World, principal: Principal, request: PlanCreate) -> PlanPreview:
-    """The plan `create_plan` would save for this request, without saving or logging it."""
+def preview_plan(world: World, principal: Principal, request: PreviewRequest) -> PlanPreview:
+    """The plan `create_plan` would save for this request, or for a what-if, without saving or logging it."""
     _limit(PREVIEW_RATE, principal, "previews")
-    result = _solve(world, request.budget_inr, request.risk_aversion, request.cities)
+    result = _solve(world, request.budget_inr, request.risk_aversion, request.cities,
+                    **request.model_dump(include=WHAT_IF_FIELDS))
     return PlanPreview(**request.model_dump(), **asdict(result))
 
 
-def risk_frontier(world: World, principal: Principal, scope: PlanScope) -> list[FrontierPoint]:
-    """Expected profit, worst case and spend at each risk step, for one budget."""
+def risk_frontier(world: World, principal: Principal, scope: FrontierQuery) -> list[FrontierPoint]:
+    """Expected profit, worst case and spend at each risk step, for one budget (and what-if)."""
     _limit(FRONTIER_RATE, principal, "risk frontiers")
+    what_if = scope.model_dump(include=WHAT_IF_FIELDS)
     with _planner_slot(most=len(RISK_STEPS)) as slots, ThreadPoolExecutor(slots) as pool:
         # HiGHS releases the GIL, so steps on spare slots solve in parallel (11 steps: ~5 s -> ~1.2 s)
-        results = list(pool.map(lambda risk: build_plan(world, scope.budget_inr, risk, scope.cities), RISK_STEPS))
+        results = list(pool.map(lambda risk: build_plan(world, scope.budget_inr, risk, scope.cities, **what_if),
+                                RISK_STEPS))
     return [FrontierPoint(risk_aversion=risk, expected_profit=result.expected_profit,
                           worst_case_profit=result.worst_case_profit, spend=result.spend)
             for risk, result in zip(RISK_STEPS, results)]
@@ -167,9 +171,10 @@ def _planner_slot(most: int = 1) -> Iterator[int]:
             PLANNER_SLOTS.release()
 
 
-def _solve(world: World, budget: float, risk_aversion: float, cities: list[str] | None) -> PlanResult:
+def _solve(world: World, budget: float, risk_aversion: float, cities: list[str] | None,
+           **what_if: float | None) -> PlanResult:
     with _planner_slot():
-        return build_plan(world, budget, risk_aversion, cities)
+        return build_plan(world, budget, risk_aversion, cities, **what_if)
 
 
 def get_plan(session: Session, principal: Principal, plan_id: int) -> Plan:

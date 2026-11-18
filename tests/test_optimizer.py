@@ -64,6 +64,36 @@ def test_extra_room_value_is_what_one_more_room_of_allotment_would_earn():
     assert whole == pytest.approx(sol.extra_room_value[0], rel=1e-2)
 
 
+GROUPS = (np.array([0, 1]), np.array([2, 3]))  # e.g. two cities of two hotel-weeks each
+
+
+def test_group_caps_keep_each_groups_spend_within_its_share_of_the_budget():
+    cost, price, cap, demand = small_instance()
+    price[:2] = cost[:2] * 1.8  # the first group is far more profitable, so the plan wants to pile into it
+    free = solve_relaxed(cost, price, cap, demand, budget=2_000.0, risk_aversion=0.3, alpha=0.1)
+    assert cost[:2] @ free.buy[:2] > 0.5 * 2_000
+    capped = solve_relaxed(cost, price, cap, demand, budget=2_000.0, risk_aversion=0.3, alpha=0.1,
+                           groups=GROUPS, group_share=0.5)
+    assert cost[:2] @ capped.buy[:2] <= 0.5 * 2_000 + 1e-6 and capped.objective < free.objective
+    whole = optimize(cost, price, cap, demand, budget=2_000.0, risk_aversion=0.3, alpha=0.1, groups=GROUPS,
+                     group_share=0.5)
+    assert cost[:2] @ whole[:2] <= 0.5 * 2_000  # rounding down never breaks a cap
+
+
+def test_each_group_can_have_its_own_share():
+    cost, price, cap, demand = small_instance()
+    price[:2] = cost[:2] * 1.8
+    sol = solve_relaxed(cost, price, cap, demand, budget=2_000.0, risk_aversion=0.3, alpha=0.1,
+                        groups=GROUPS, group_share=[0.3, 1.0])
+    assert cost[:2] @ sol.buy[:2] <= 0.3 * 2_000 + 1e-6
+
+
+def test_group_caps_need_a_share_between_zero_and_one():
+    cost, price, cap, demand = small_instance()
+    with pytest.raises(ValueError, match="share"):
+        solve_relaxed(cost, price, cap, demand, budget=2_000.0, groups=GROUPS, group_share=0.0)
+
+
 def test_profits_per_scenario():
     p = profits(np.array([10]), np.array([60.0]), np.array([100.0]), np.array([[5.0], [15.0]]))
     # sold 5: 500 - 600; sold 10: 1000 - 600

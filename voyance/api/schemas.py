@@ -27,6 +27,13 @@ class PlanScope(BaseModel):
     budget_inr: float = Field(gt=0, le=1e10, description="Maximum spend in INR (up to ₹1,000 crore)")
     cities: list[City] | None = Field(None, min_length=1, max_length=50,
                                       description="Limit to these cities; leave out for all")
+    max_city_share: float | None = Field(None, gt=0, le=1, description="At most this share of the budget in any "
+                                         "one city, e.g. 0.35; leave out for no cap")
+    max_hotel_share: float | None = Field(None, gt=0, le=1, description="At most this share of the budget with "
+                                          "any one hotel (supplier); leave out for no cap")
+
+
+CAP_FIELDS = frozenset({"max_city_share", "max_hotel_share"})
 
 
 class PlanCreate(PlanScope):
@@ -118,6 +125,18 @@ class PlanTotals(BaseModel):
     worst_case_profit: float
     hurdle_rate: float = Field(description="Risk-adjusted rupees one more rupee of budget would earn: the return "
                                "every purchase must beat. 0 when money isn't the limit")
+    max_city_share: float | None = None
+    max_hotel_share: float | None = None
+    caps_cost: float = Field(description="Risk-adjusted profit the city and hotel caps give up (0 without caps)")
+
+
+class ExposureOut(BaseModel):
+    kind: Literal["city", "hotel"]
+    name: str
+    spend: float
+    share_of_budget: float
+    cap: float | None
+    at_cap: bool
 
 
 class PassedOut(BaseModel):
@@ -139,6 +158,7 @@ class PassedOut(BaseModel):
 class PlanPreview(PlanTotals, WhatIf):
     lines: list[PreviewLine]
     passed: list[PassedOut]
+    exposure: list[ExposureOut]
 
 
 class PlanSummary(PlanTotals):
@@ -151,6 +171,7 @@ class PlanSummary(PlanTotals):
 class PlanOut(PlanSummary):
     lines: list[PlanLineOut]
     passed: list[PassedOut]
+    exposure: list[ExposureOut]
 
 
 class QueueItem(BaseModel):

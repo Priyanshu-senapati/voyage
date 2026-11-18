@@ -54,6 +54,18 @@ class Passed:
 
 
 @dataclass(frozen=True)
+class Exposure:
+    """How much of the budget one city or hotel takes, against its cap."""
+
+    kind: str  # "city" or "hotel"
+    name: str
+    spend: float
+    share_of_budget: float
+    cap: float | None
+    at_cap: bool
+
+
+@dataclass(frozen=True)
 class PlanResult:
     lines: tuple[PlanLine, ...]
     spend: float
@@ -61,22 +73,40 @@ class PlanResult:
     worst_case_profit: float
     hurdle_rate: float  # risk-adjusted rupees one more rupee of budget would earn: what every purchase must beat
     passed: tuple[Passed, ...]  # closest calls first
+    exposure: tuple[Exposure, ...]  # every city, then every hotel
+    caps_cost: float  # risk-adjusted profit the city / hotel caps give up (0 without caps)
 
 
 def build_plan(world: World, budget: float, risk_aversion: float, cities: list[str] | None = None,
-               demand_change: float = 0.0, cost_change: float = 0.0, event_lift: float | None = None) -> PlanResult:
+               demand_change: float = 0.0, cost_change: float = 0.0, event_lift: float | None = None,
+               max_city_share: float | None = None, max_hotel_share: float | None = None) -> PlanResult:
     """Best buy plan within budget, best lines first.
 
     What-ifs re-plan in a different world: demand `demand_change` above the forecast (0.2 = +20%), supplier
     rates `cost_change` dearer, and this season's event weeks lifted `event_lift` times instead of the
-    planner's own guess.
+    planner's own guess. Caps keep any one city (or hotel) to at most that share of the budget.
     """
     idx = _select(world, cities)
     lift = ASSUMED_EVENT_LIFT if event_lift is None else event_lift
     mean = hidden_demand_mean(world, lift)[idx] * (1 + demand_change)
     demand = scenarios(mean, DEMAND_CV, N_SCENARIOS, np.random.default_rng(PLAN_SEED))
     cost, price, cap = world.cost[idx] * (1 + cost_change), world.price[idx], world.cap[idx]
-    solution = solve_relaxed(cost, price, cap, demand, budget, risk_aversion, WORST_SHARE)
+    city_of = [world.city[i] for i in idx]
+    hotel_of = [f"{world.city[i]} · {world.hotel[i]}" for i in idx]  # "Hotel A" is a different hotel per city
+    groups, shares = [], []
+    for names, share in ((city_of, max_city_share), (hotel_of, max_hotel_share)):
+        if share is not None:
+            for name in dict.fromkeys(names):
+                groups.append(np.array([j for j, n in enumerate(names) if n == name]))
+                shares.append(share)
+    solution = solve_relaxed(cost, price, cap, demand, budget, risk_aversion, WORST_SHARE, groups=groups,
+                             group_share=shares)
+    # priced by solving once without the caps: per-cap shadow prices split arbitrarily when caps add up
+    # to the budget, the total cost does not
+    caps_cost = 0.0
+    if groups:
+        uncapped = solve_relaxed(cost, price, cap, demand, budget, risk_aversion, WORST_SHARE)
+        caps_cost = max(0.0, uncapped.objective - solution.objective)
     buy = whole_rooms(solution.buy, cost, cap, budget)
 
     per_scenario = profits(buy, cost, price, demand)
@@ -106,7 +136,21 @@ def build_plan(world: World, budget: float, risk_aversion: float, cities: list[s
         worst_case_profit=cvar(per_scenario, WORST_SHARE),
         hurdle_rate=hurdle,
         passed=tuple(sorted(passed, key=lambda p: p.forced_room_cost)),
+        exposure=(*_exposure("city", city_of, cost * buy, cost * solution.buy, budget, max_city_share),
+                  *_exposure("hotel", hotel_of, cost * buy, cost * solution.buy, budget, max_hotel_share)),
+        caps_cost=caps_cost,
     )
+
+
+def _exposure(kind: str, names: list[str], spend: np.ndarray, relaxed_spend: np.ndarray, budget: float,
+              cap: float | None) -> list[Exposure]:
+    out = []
+    for name in dict.fromkeys(names):
+        at = np.array([n == name for n in names])
+        # at the cap in the optimizer's own (fractional) plan; whole rooms then round a little below it
+        at_cap = cap is not None and relaxed_spend[at].sum() >= cap * budget * (1 - 1e-6)
+        out.append(Exposure(kind, name, float(spend[at].sum()), float(spend[at].sum() / budget), cap, bool(at_cap)))
+    return out
 
 
 def _passed(world: World, i: int, cost: float, price: float, mean: float, demand: np.ndarray,

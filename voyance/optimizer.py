@@ -9,6 +9,7 @@ scenarios, linearised the Rockafellar-Uryasev way, so the whole thing is one lin
 program solved by HiGHS (bundled with scipy).
 """
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import numpy as np
@@ -31,6 +32,8 @@ class Solution:
     budget_value: float           # what one more rupee of budget would add; 0 when money isn't the limit
     forced_room_cost: np.ndarray  # per item bought none: what forcing one room in would cost the plan
     extra_room_value: np.ndarray  # per item at its hotel cap: what one more room of allotment would add
+    # no per-group cap values: when caps add up to the budget the duals split arbitrarily between them;
+    # the planner prices caps by solving once without them instead
 
 
 def profits(buy: ArrayLike, cost: ArrayLike, price: ArrayLike, demand: ArrayLike,
@@ -58,11 +61,15 @@ def cvar(profit: ArrayLike, alpha: float) -> float:
 
 
 def optimize(cost: ArrayLike, price: ArrayLike, cap: ArrayLike, demand: ArrayLike, budget: float,
-             risk_aversion: float = 0.0, alpha: float = 0.05,
-             salvage: ArrayLike | None = None) -> np.ndarray:
-    """Whole rooms to buy per item. demand has one row per scenario, one column per item."""
-    relaxed = plan_relaxed(cost, price, cap, demand, budget, risk_aversion, alpha, salvage)
-    return whole_rooms(relaxed, cost, cap, budget)
+             risk_aversion: float = 0.0, alpha: float = 0.05, salvage: ArrayLike | None = None,
+             groups: Sequence[ArrayLike] = (), group_share: float | ArrayLike = 1.0) -> np.ndarray:
+    """Whole rooms to buy per item. demand has one row per scenario, one column per item.
+
+    groups: item indices per group (e.g. per city); each may spend at most group_share of the budget.
+    """
+    relaxed = solve_relaxed(cost, price, cap, demand, budget, risk_aversion, alpha, salvage, groups,
+                            group_share).buy
+    return whole_rooms(relaxed, cost, cap, budget)  # rounding down only lowers each group's spend
 
 
 def whole_rooms(relaxed: ArrayLike, cost: ArrayLike, cap: ArrayLike, budget: float) -> np.ndarray:
@@ -86,14 +93,24 @@ def plan_relaxed(cost: ArrayLike, price: ArrayLike, cap: ArrayLike, demand: Arra
 
 def solve_relaxed(cost: ArrayLike, price: ArrayLike, cap: ArrayLike, demand: ArrayLike,
                   budget: float, risk_aversion: float = 0.0, alpha: float = 0.05,
-                  salvage: ArrayLike | None = None) -> Solution:
+                  salvage: ArrayLike | None = None, groups: Sequence[ArrayLike] = (),
+                  group_share: float | ArrayLike = 1.0) -> Solution:
     """Optimal fractional plan with its shadow prices: what money, a forced room or more allotment is worth."""
     cost, price, cap = (np.asarray(a, dtype=float) for a in (cost, price, cap))
     demand = np.atleast_2d(np.asarray(demand, dtype=float))
     salvage = np.zeros(cost.size) if salvage is None else np.asarray(salvage, dtype=float)
     _validate(cost, price, cap, demand, salvage, budget, risk_aversion, alpha)
+    groups = [np.asarray(g, dtype=int) for g in groups]
+    shares = np.broadcast_to(np.asarray(group_share, dtype=float), (len(groups),))
+    if ((shares <= 0) | (shares > 1)).any() or any(((g < 0) | (g >= cost.size)).any() for g in groups):
+        raise ValueError("each group needs item indices and a share of the budget in (0, 1]")
 
     c, a_ub, b_ub, lower, upper = _model(cost, price, cap, demand, salvage, budget, risk_aversion, alpha)
+    if groups:  # appended last, so the rows before keep their places
+        rows = np.repeat(np.arange(len(groups)), [g.size for g in groups])
+        cols = np.concatenate(groups)
+        caps = sparse.csr_matrix((cost[cols], (rows, cols)), shape=(len(groups), a_ub.shape[1]))
+        a_ub, b_ub = sparse.vstack([a_ub, caps]).tocsr(), np.concatenate([b_ub, shares * budget])
     res = linprog(c, A_ub=a_ub, b_ub=b_ub, bounds=np.column_stack([lower, upper]), method="highs")
     if res.status != 0:
         raise RuntimeError(f"optimizer found no plan: {res.message}")

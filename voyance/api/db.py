@@ -70,6 +70,10 @@ class Plan(Base):
     worst_case_profit: Mapped[float]
     hurdle_rate: Mapped[float]
     passed: Mapped[list] = mapped_column(JSON)  # hotel-weeks bought none of, with why (planner.Passed)
+    max_city_share: Mapped[float | None]
+    max_hotel_share: Mapped[float | None]
+    caps_cost: Mapped[float]
+    exposure: Mapped[list] = mapped_column(JSON)  # spend per city and hotel against its cap (planner.Exposure)
     lines: Mapped[list["PlanLineRow"]] = relationship(
         back_populates="plan", order_by="PlanLineRow.id", cascade="all, delete-orphan")
 

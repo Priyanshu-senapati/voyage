@@ -326,6 +326,27 @@ def test_plans_carry_their_hurdle_what_limits_each_line_and_what_they_passed(api
     assert client.get("/v1/plans", headers=auth(keys["buyer"])).json()[0]["hurdle_rate"] == fetched["hurdle_rate"]
 
 
+def test_caps_shape_the_plan_say_what_they_cost_and_are_saved_with_it(api):
+    client, keys = api
+    free = preview(client, keys["buyer"], budget_inr=4_000_000).json()
+    assert free["caps_cost"] == 0 and free["max_city_share"] is None
+    assert {e["kind"] for e in free["exposure"]} == {"city", "hotel"}
+    capped = preview(client, keys["buyer"], budget_inr=4_000_000, max_city_share=0.25).json()
+    assert capped["max_city_share"] == 0.25 and capped["caps_cost"] > 0
+    assert all(e["share_of_budget"] <= 0.25 for e in capped["exposure"] if e["kind"] == "city")
+    saved = new_plan(client, keys["buyer"], budget_inr=4_000_000, max_city_share=0.25, max_hotel_share=0.2).json()
+    fetched = client.get(f"/v1/plans/{saved['id']}", headers=auth(keys["buyer"])).json()
+    assert (fetched["max_city_share"], fetched["max_hotel_share"]) == (0.25, 0.2)
+    assert fetched["exposure"] == saved["exposure"] and fetched["caps_cost"] == pytest.approx(saved["caps_cost"])
+    assert frontier(client, keys["buyer"], "budget_inr=4000000&cities=Goa&max_city_share=0.5").status_code == 200
+
+
+@pytest.mark.parametrize("caps", [{"max_city_share": 0}, {"max_city_share": 1.5}, {"max_hotel_share": -0.1}])
+def test_caps_are_shares_of_the_budget(api, caps):
+    client, keys = api
+    assert new_plan(client, keys["buyer"], **caps).status_code == 422
+
+
 def queue(client, key, plan_id, as_of=None):
     return client.get(f"/v1/plans/{plan_id}/queue" + (f"?as_of={as_of}" if as_of else ""), headers=auth(key))
 

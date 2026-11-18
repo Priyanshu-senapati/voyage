@@ -24,7 +24,7 @@ Needs Python 3.11+.
 
 ```bash
 python -m pip install -e ".[test]"
-python -m pytest                   # 156 tests, about 45 s
+python -m pytest                   # 171 tests, about 40 s
 python scripts/proof_chart.py      # about 3.5 min; writes out/proof_chart.png and out/proof_results.csv
 python scripts/calibrate.py        # downloads 16 MB once; writes out/calibration.json
 python scripts/forecast_backtest.py  # forecast + buying decisions vs re-buying last year on real 2017 bookings
@@ -47,7 +47,7 @@ Send the key in the `X-API-Key` header. Demo users: **asha** (buyer), **ravi** (
 | `POST /v1/plans` | anyone | Budget + risk (+ cities) in, ranked buy plan out. Each line has a reason and its numbers (`why`), its own worst case, and a buy-by date (before 90% of that week's agent bookings, measured on real data) |
 | `POST /v1/plans/preview` | anyone | The same plan without saving it, for sliders (120 a minute). What-ifs: `demand_change`, `cost_change`, `event_lift` re-plan in a different world through the same optimizer |
 | `GET /v1/frontier` | anyone | Expected profit and worst case at risk 0, 0.1 … 1 for one budget, optionally in a what-if (10 a minute) |
-| `GET /v1/plans`, `GET /v1/plans/{id}` | anyone | Your company's plans. Each has its hurdle rate (what a rupee must earn to get in), what limits each line (hotel, budget or demand), and every hotel-week passed with why |
+| `GET /v1/plans`, `GET /v1/plans/{id}` | anyone | Your company's plans. Each has its hurdle rate (what a rupee must earn to get in), what limits each line (hotel, budget or demand), every hotel-week passed with why, and its exposure per city and hotel. Optional caps (`max_city_share`, `max_hotel_share`, on plans, previews and the frontier) keep any one city or hotel to a share of the budget, and the plan says what they cost |
 | `GET /v1/plans/{id}/queue?as_of=` | anyone | What to do on a day: buy now (due within 14 days), scheduled buys, watch (ask a hotel for more rooms, close calls), skip |
 | `PATCH /v1/plans/{id}/lines/{line}` | approver, admin | Approve or reject a line; never your own plan |
 | `GET /v1/plans/{id}/export.csv` | anyone | Plan as a spreadsheet |

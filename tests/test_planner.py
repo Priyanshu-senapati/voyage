@@ -152,6 +152,42 @@ def test_lines_know_the_first_night_of_their_week():
     assert line.first_night == WORLD.first_night[i].item() and line.buy_by < line.first_night
 
 
+def _spend_by(plan, key):
+    spend = {}
+    for line in plan.lines:
+        spend[key(line)] = spend.get(key(line), 0.0) + line.rooms * line.unit_cost
+    return spend
+
+
+def test_without_caps_the_plan_shows_its_exposure_and_costs_nothing():
+    plan = build_plan(WORLD, 4e6, 0.3)
+    assert plan.caps_cost == 0
+    cities = {e.name: e for e in plan.exposure if e.kind == "city"}
+    assert set(cities) == set(WORLD.city) and all(e.cap is None and not e.at_cap for e in cities.values())
+    for city, spend in _spend_by(plan, lambda line: line.city).items():
+        assert cities[city].spend == pytest.approx(spend) and cities[city].share_of_budget == pytest.approx(spend / 4e6)
+
+
+def test_a_city_cap_holds_its_spend_and_says_what_it_costs():
+    free = build_plan(WORLD, 4e6, 0.3)
+    biggest = max(_spend_by(free, lambda line: line.city).values()) / 4e6
+    capped = build_plan(WORLD, 4e6, 0.3, max_city_share=biggest * 0.7)
+    assert max(_spend_by(capped, lambda line: line.city).values()) <= biggest * 0.7 * 4e6
+    assert capped.caps_cost > 0 and capped.expected_profit < free.expected_profit
+    assert any(e.at_cap for e in capped.exposure if e.kind == "city")
+
+
+def test_a_hotel_cap_holds_each_hotels_spend():
+    capped = build_plan(WORLD, 4e6, 0.3, max_hotel_share=0.08)
+    assert max(_spend_by(capped, lambda line: (line.city, line.hotel)).values()) <= 0.08 * 4e6
+    hotels = [e for e in capped.exposure if e.kind == "hotel"]
+    assert len(hotels) == 10 and all(e.cap == 0.08 for e in hotels) and any(e.at_cap for e in hotels)
+
+
+def test_a_cap_that_does_not_bind_changes_nothing():
+    assert build_plan(WORLD, 4e6, 0.3, max_city_share=1.0).lines == build_plan(WORLD, 4e6, 0.3).lines
+
+
 def test_reasons_mention_sold_out_searches_and_event_weeks():
     reasons = " ".join(line.reason for line in build_plan(WORLD, budget=2e7, risk_aversion=0.0).lines)
     assert "sold-out searches" in reasons

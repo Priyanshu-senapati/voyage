@@ -27,6 +27,7 @@ class PlanLine:
     expected_sold: float
     expected_profit: float
     reason: str
+    why: dict  # the numbers behind `reason`, for the dashboard's charts (schemas.LineWhy)
 
 
 @dataclass(frozen=True)
@@ -49,10 +50,11 @@ def build_plan(world: World, budget: float, risk_aversion: float,
     per_scenario = profits(buy, cost, price, demand)
     sold = np.minimum(buy, demand).mean(axis=0)
     line_profit = price * sold - cost * buy
+    whys = [_why(world, i, m) for i, m in zip(idx, mean)]
     lines = [
         PlanLine(world.city[i], world.week[i], world.hotel[i], int(b), float(world.cost[i]),
-                 float(world.price[i]), float(s), float(p), _reason(world, i, m))
-        for i, b, s, p, m in zip(idx, buy, sold, line_profit, mean) if b > 0
+                 float(world.price[i]), float(s), float(p), _reason(why), why)
+        for i, b, s, p, why in zip(idx, buy, sold, line_profit, whys) if b > 0
     ]
     return PlanResult(
         lines=tuple(sorted(lines, key=lambda line: -line.expected_profit)),
@@ -74,13 +76,24 @@ def _select(world: World, cities: list[str] | None) -> np.ndarray:
     return np.array([i for i, city in enumerate(world.city) if city in wanted])
 
 
-def _reason(world: World, i: int, expected_demand: float) -> str:
-    parts = [f"expected demand {expected_demand:.0f} room-nights vs "
-             f"{world.bookings_hist[-1, i]:.0f} booked last December"]
-    searches = world.soldout_searches_hist[:, i].sum()
+def _why(world: World, i: int, expected_demand: float) -> dict:
+    return {
+        "expected_demand": float(expected_demand),
+        "booked_last_december": float(world.bookings_hist[-1, i]),
+        "bookings_past_decembers": world.bookings_hist[:, i].tolist(),  # oldest first
+        "soldout_searches_past": world.soldout_searches_hist[:, i].tolist(),
+        "event_week": bool(world.event_lift_now[i] > 1),
+        "margin": float((world.price[i] - world.cost[i]) / world.price[i]),
+    }
+
+
+def _reason(why: dict) -> str:
+    parts = [f"expected demand {why['expected_demand']:.0f} room-nights vs "
+             f"{why['booked_last_december']:.0f} booked last December"]
+    searches = sum(why["soldout_searches_past"])
     if searches > 0:
         parts.append(f"{searches:,.0f} sold-out searches in past Decembers")
-    if world.event_lift_now[i] > 1:
+    if why["event_week"]:
         parts.append("event week this year")
-    parts.append(f"{(world.price[i] - world.cost[i]) / world.price[i]:.0%} margin")
+    parts.append(f"{why['margin']:.0%} margin")
     return "; ".join(parts)

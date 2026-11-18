@@ -16,9 +16,9 @@ Source: `out/proof_results.csv` and `out/proof_chart.png`: 20 simulated December
    year's festival weeks. It pays only once event weeks are separated.
 5. **The risk slider pays for itself:** at ₹2 cr, the default risk setting (0.3) vs none: profit ₹25.1L vs ₹24.7L,
    worst 5% of seasons ₹17.0L vs ₹15.0L. Caution also guards against our own forecast being off.
-6. **Feasible today:** a full buy plan (40 hotel-weeks, 200 demand scenarios) solves in under half a second on a
-   laptop; cities run in parallel. The working API already has plans, four-eyes approvals, an audit log and
-   CSV export, with 72 automated tests.
+6. **Feasible today:** a full buy plan (40 hotel-weeks, 200 demand scenarios) solves in under a second on a
+   laptop (0.25–0.7 s, depending on the budget); cities run in parallel. The working API already has plans,
+   four-eyes approvals, an audit log and CSV export, with 107 automated tests.
 
 ## Checked against real bookings (`out/calibration.json`, `python scripts/calibrate.py`)
 Public dataset of 119,390 real bookings at two hotels, 2015–17 (Portugal, CC BY 4.0).

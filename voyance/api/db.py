@@ -94,14 +94,11 @@ class PlanLineRow(Base):
     expected_sold: Mapped[float]
     expected_profit: Mapped[float]
     reason: Mapped[str] = mapped_column(Text)
+    why: Mapped[dict] = mapped_column(JSON)
     decision: Mapped[str] = mapped_column(String(10), default="pending")
     decided_by: Mapped[str | None] = mapped_column(String(100))
     decided_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
     plan: Mapped[Plan] = relationship(back_populates="lines")
-
-    @property
-    def sell_through(self) -> float:
-        return self.expected_sold / self.rooms
 
 
 class AuditEvent(Base):

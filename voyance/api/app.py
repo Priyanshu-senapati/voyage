@@ -21,7 +21,7 @@ from voyance.api.service import ServiceError
 
 
 def create_app(database_url: str | None = None, datasource: DataSource | None = None) -> FastAPI:
-    app = FastAPI(title="Voyance API", version="0.1.0",
+    app = FastAPI(title="Voyance API", version="0.2.0",
                   description="Buy Desk: what hotel inventory to pre-buy within a budget, "
                               "with human approval and an audit trail.")
     app.state.sessions = make_sessions(

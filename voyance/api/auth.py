@@ -5,6 +5,7 @@ import hashlib
 import secrets
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from typing import get_args
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import APIKeyHeader
@@ -12,8 +13,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from voyance.api.db import ApiKey, Tenant, User, utcnow
+from voyance.api.schemas import Role
 
-ROLES = ("buyer", "approver", "admin")
+ROLES = get_args(Role)
+MIN_FIXED_KEY_LENGTH = 32
 _key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
@@ -37,10 +40,15 @@ def normalise_name(name: str) -> str:
     return cleaned
 
 
-def create_api_key(session: Session, tenant_name: str, role: str, name: str) -> str:
-    """Issue a new key for a person, creating the company and person if needed. Shown once."""
+def create_api_key(session: Session, tenant_name: str, role: str, name: str, key: str | None = None) -> str:
+    """Issue a new key for a person, creating the company and person if needed. Shown once.
+
+    Pass `key` to use a fixed one (a hosted demo's "sign in as"); issuing it again to the same person
+    changes nothing, so a seed script can run on every start."""
     if role not in ROLES:
         raise ValueError(f"role must be one of {ROLES}")
+    if key is not None and (len(key) < MIN_FIXED_KEY_LENGTH or not key.startswith("vy_")):
+        raise ValueError(f"a fixed key needs the vy_ prefix and at least {MIN_FIXED_KEY_LENGTH} characters")
     tenant = session.scalar(select(Tenant).where(Tenant.name == tenant_name))
     if tenant is None:
         tenant = Tenant(name=tenant_name)
@@ -54,8 +62,16 @@ def create_api_key(session: Session, tenant_name: str, role: str, name: str) -> 
         session.flush()
     elif user.role != role:
         raise ValueError(f"{user_name} is already a {user.role} at {tenant_name}")
-    key = f"vy_{secrets.token_urlsafe(32)}"
-    session.add(ApiKey(user_id=user.id, key_hash=hash_key(key)))
+    key = key or f"vy_{secrets.token_urlsafe(32)}"
+    held = session.scalar(select(ApiKey).where(ApiKey.key_hash == hash_key(key)))
+    if held is None:
+        session.add(ApiKey(user_id=user.id, key_hash=hash_key(key)))
+    elif held.user_id != user.id:
+        session.rollback()  # leave no half-created company or person behind
+        raise ValueError("that key belongs to someone else; pick another")
+    elif held.revoked_at is not None:
+        session.rollback()
+        raise ValueError("that key was revoked; pick another")
     session.commit()
     return key
 

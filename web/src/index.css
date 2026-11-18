@@ -1,0 +1,97 @@
+:root {
+  --rail: #1c3a6e;
+  --rail-raised: #24467f;
+  --rail-ink: #f1f4fa;
+  --rail-ink-2: #b4c3de;
+
+  --paper: #f3f4f1;
+  --surface: #ffffff;
+  --seam: #d9dbd5;
+  --seam-strong: #b8bbb3;
+  --ink: #15171c;
+  --ink-2: #4f5460;
+  --ink-3: #646974;
+
+  --signal: #c8312a;
+  --go: #1f7a4d;
+  --go-tint: #e3f1e8;
+  --demand: var(--rail);
+  --booked: #8b8f98;
+
+  --city-goa: #0d8a87;
+  --city-jaipur: #c94f7c;
+  --city-udaipur: #3a9ad9;
+  --city-manali: #6a5bcf;
+  --city-kochi: #c27c1a;
+
+  --face: 'Archivo Variable', 'Archivo', system-ui, sans-serif;
+  --narrow: 78%;
+  --ui: 94%;
+
+  --radius: 4px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  font-family: var(--face);
+  font-stretch: var(--ui);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink);
+  background: var(--paper);
+  font-synthesis: none;
+  font-variant-numeric: tabular-nums;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  color-scheme: light;
+  accent-color: var(--rail);
+  caret-color: var(--rail);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--paper);
+}
+
+::selection {
+  background: #c9d6ee;
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--rail);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--seam-strong) transparent;
+}
+
+button {
+  font: inherit;
+  font-stretch: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

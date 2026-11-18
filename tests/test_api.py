@@ -314,6 +314,48 @@ def test_frontier_checks_its_inputs(api, query, status):
     assert frontier(client, keys["buyer"], query).status_code == status
 
 
+def _free_slots(slots: threading.BoundedSemaphore) -> int:
+    taken = 0
+    while slots.acquire(blocking=False):
+        taken += 1
+    for _ in range(taken):
+        slots.release()
+    return taken
+
+
+@pytest.mark.parametrize("query, status", [("budget_inr=300000&cities=Goa", 200),
+                                           ("budget_inr=300000&cities=Atlantis", 400)])
+def test_frontier_borrows_idle_planner_slots_and_gives_them_all_back(api, monkeypatch, query, status):
+    client, keys = api
+    slots = threading.BoundedSemaphore(3)
+    monkeypatch.setattr(service, "PLANNER_SLOTS", slots)
+    used = []
+    real_build = service.build_plan
+
+    def watched_build(*args):
+        used.append(threading.get_ident())
+        return real_build(*args)
+
+    monkeypatch.setattr(service, "build_plan", watched_build)
+    assert frontier(client, keys["buyer"], query).status_code == status
+    assert _free_slots(slots) == 3
+    if status == 200:
+        assert len(used) == len(service.RISK_STEPS) and len(set(used)) > 1  # steps ran on several threads
+
+
+def test_frontier_says_busy_when_no_planner_slot_is_free(api, monkeypatch):
+    client, keys = api
+    slots = threading.BoundedSemaphore(1)
+    monkeypatch.setattr(service, "PLANNER_SLOTS", slots)
+    monkeypatch.setattr(service, "PLANNER_WAIT_S", 0.01)
+    slots.acquire()
+    try:
+        response = frontier(client, keys["buyer"], "budget_inr=300000&cities=Goa")
+    finally:
+        slots.release()
+    assert response.status_code == 503 and response.headers["retry-after"]
+
+
 def test_frontier_is_rate_limited(api, monkeypatch):
     client, keys = api
     monkeypatch.setattr(service, "FRONTIER_RATE", service.RateLimiter(limit=1, window_s=60))

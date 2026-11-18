@@ -3,7 +3,12 @@ import { KEYS } from '../keys'
 
 async function signIn(page: Page, name: keyof typeof KEYS) {
   await page.goto('/')
-  await page.getByLabel('API key').fill(KEYS[name])
+  // a hosted demo makes its own keys at deploy time and hands them out in /config.js
+  const served = await page.evaluate(
+    (who) => (window as { __VOYANCE__?: { demoKeys?: Record<string, string> } }).__VOYANCE__?.demoKeys?.[who],
+    name,
+  )
+  await page.getByLabel('API key').fill(served ?? KEYS[name])
   await page.getByRole('button', { name: 'Sign in', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible()
   await expect(page.getByRole('slider').first()).toBeEnabled()

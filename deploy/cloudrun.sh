@@ -73,4 +73,4 @@ gcloud artifacts repositories set-cleanup-policies cloud-run-source-deploy --loc
 
 url="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
 echo "Live: $url"
-curl -fsS "$url/healthz" && echo
+curl -fsS "$url/health" && echo

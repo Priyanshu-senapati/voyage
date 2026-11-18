@@ -94,8 +94,9 @@ def build_app(web_dist: Path | None = None, trusted_hops: int | None = None) -> 
             response.headers.setdefault("Content-Security-Policy", CSP)
         return response
 
-    @app.get("/healthz", include_in_schema=False)
-    def healthz() -> dict:
+    # not /healthz: Cloud Run reserves some paths ending in "z" and answers them itself
+    @app.get("/health", include_in_schema=False)
+    def health() -> dict:
         return {"ok": True}
 
     @app.get("/config.js", include_in_schema=False)

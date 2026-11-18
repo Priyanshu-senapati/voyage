@@ -35,7 +35,7 @@ def test_dashboard_and_api_share_one_origin(client):
     page = client.get("/")
     assert page.status_code == 200 and "<title>Voyance</title>" in page.text
     assert "frame-ancestors 'none'" in page.headers["content-security-policy"]
-    assert client.get("/healthz").json() == {"ok": True}
+    assert client.get("/health").json() == {"ok": True}
     assert client.get("/v1/me").status_code == 401  # API routes win over the static mount
 
 

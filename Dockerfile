@@ -27,5 +27,5 @@ RUN useradd --create-home --uid 10001 voyance
 USER voyance
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
-    CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.environ[\"PORT\"]}/healthz', timeout=4)"
+    CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.environ[\"PORT\"]}/health', timeout=4)"
 CMD ["python", "deploy/start.py"]

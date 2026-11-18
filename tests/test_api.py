@@ -457,22 +457,21 @@ def _free_slots(slots: threading.BoundedSemaphore) -> int:
 
 @pytest.mark.parametrize("query, status", [("budget_inr=300000&cities=Goa", 200),
                                            ("budget_inr=300000&cities=Atlantis", 400)])
-def test_frontier_borrows_idle_planner_slots_and_gives_them_all_back(api, monkeypatch, query, status):
+def test_frontier_takes_one_planner_slot_and_always_gives_it_back(api, monkeypatch, query, status):
     client, keys = api
     slots = threading.BoundedSemaphore(3)
     monkeypatch.setattr(service, "PLANNER_SLOTS", slots)
-    used = []
+    free_while_solving = []
     real_build = service.build_plan
 
     def watched_build(*args, **kwargs):
-        used.append(threading.get_ident())
+        free_while_solving.append(_free_slots(slots))
         return real_build(*args, **kwargs)
 
     monkeypatch.setattr(service, "build_plan", watched_build)
     assert frontier(client, keys["buyer"], query).status_code == status
     assert _free_slots(slots) == 3
-    if status == 200:
-        assert len(used) == len(service.RISK_STEPS) and len(set(used)) > 1  # steps ran on several threads
+    assert set(free_while_solving) == {2}  # one slot, for the whole sweep
 
 
 def test_frontier_says_busy_when_no_planner_slot_is_free(api, monkeypatch):

@@ -9,13 +9,51 @@ scenarios, linearised the Rockafellar-Uryasev way, so the whole thing is one lin
 program solved by HiGHS (bundled with scipy).
 """
 
+import queue
+import threading
 from collections.abc import Sequence
+from concurrent.futures import Future
 from dataclasses import dataclass
 
 import numpy as np
 from numpy.typing import ArrayLike
 from scipy import sparse
 from scipy.optimize import linprog
+
+class _SolverThread:
+    """Runs every HiGHS solve, one at a time, on one long-lived daemon thread.
+
+    HiGHS through scipy crashes the process when a thread that ran a solve exits (Windows, scipy 1.17: 2 of 2
+    runs of 300 one-at-a-time short-lived solver threads segfaulted; the same threads without the solve never
+    did). Web servers run requests on worker threads that come and go, so solves never run on the caller's
+    thread. As a daemon this thread is never joined: the OS ends it at exit without the clean-up that crashes.
+    """
+
+    # shortcut: one thread solves everything, one plan at a time; use separate processes to solve in parallel.
+    def __init__(self) -> None:
+        self._jobs: queue.SimpleQueue = queue.SimpleQueue()
+        self._start = threading.Lock()
+        self._thread: threading.Thread | None = None
+
+    def run(self, solve, *args, **kwargs):
+        with self._start:
+            if self._thread is None:
+                self._thread = threading.Thread(target=self._serve, name="highs-solver", daemon=True)
+                self._thread.start()
+        result: Future = Future()
+        self._jobs.put((result, solve, args, kwargs))
+        return result.result()
+
+    def _serve(self) -> None:
+        while True:
+            result, solve, args, kwargs = self._jobs.get()
+            try:
+                result.set_result(solve(*args, **kwargs))
+            except BaseException as exc:  # handed back to the caller, who raises it
+                result.set_exception(exc)
+
+
+_SOLVER = _SolverThread()
 
 
 @dataclass(frozen=True)
@@ -111,7 +149,7 @@ def solve_relaxed(cost: ArrayLike, price: ArrayLike, cap: ArrayLike, demand: Arr
         cols = np.concatenate(groups)
         caps = sparse.csr_matrix((cost[cols], (rows, cols)), shape=(len(groups), a_ub.shape[1]))
         a_ub, b_ub = sparse.vstack([a_ub, caps]).tocsr(), np.concatenate([b_ub, shares * budget])
-    res = linprog(c, A_ub=a_ub, b_ub=b_ub, bounds=np.column_stack([lower, upper]), method="highs")
+    res = _SOLVER.run(linprog, c, A_ub=a_ub, b_ub=b_ub, bounds=np.column_stack([lower, upper]), method="highs")
     if res.status != 0:
         raise RuntimeError(f"optimizer found no plan: {res.message}")
     n, budget_row = cost.size, demand.size  # rows: one sales cap per scenario and item, then the budget

@@ -1,3 +1,5 @@
+import threading
+
 import numpy as np
 import pytest
 
@@ -62,6 +64,34 @@ def test_extra_room_value_is_what_one_more_room_of_allotment_would_earn():
     whole = _objective(cost, price, cap + np.array([1, 0, 0, 0]), demand, 1e9, 0.0) - sol.objective
     assert tenth / 0.1 == pytest.approx(sol.extra_room_value[0], rel=1e-3)
     assert whole == pytest.approx(sol.extra_room_value[0], rel=1e-2)
+
+
+def test_every_solve_runs_on_the_one_long_lived_solver_thread(monkeypatch):
+    # HiGHS through scipy crashes the process when a thread that ran a solve exits (seen on Windows), so
+    # solves never run on the caller's thread, which may be a short-lived worker
+    ran_on = []
+    real = optimizer.linprog
+
+    def watched(*args, **kwargs):
+        ran_on.append(threading.current_thread())
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(optimizer, "linprog", watched)
+    cost, price, cap, demand = small_instance()
+    callers = [threading.Thread(target=optimize, args=(cost, price, cap, demand, 2_000.0)) for _ in range(3)]
+    for t in callers:
+        t.start()
+    for t in callers:
+        t.join()
+    optimize(cost, price, cap, demand, budget=2_000.0)
+    assert len(ran_on) == 4 and len(set(ran_on)) == 1
+    assert ran_on[0].daemon and ran_on[0] is not threading.main_thread() and ran_on[0] not in callers
+
+
+def test_a_failing_solve_raises_in_the_caller():
+    cost, price, cap, demand = small_instance()
+    with pytest.raises(ValueError):
+        optimize(cost, price, cap, demand, budget=-1.0)
 
 
 GROUPS = (np.array([0, 1]), np.array([2, 3]))  # e.g. two cities of two hotel-weeks each

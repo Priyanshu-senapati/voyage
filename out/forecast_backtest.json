@@ -1,0 +1,77 @@
+{
+  "train_weeks": [
+    "2015-07-06",
+    "2016-12-26"
+  ],
+  "test_weeks": [
+    "2017-01-02",
+    "2017-08-21"
+  ],
+  "by_lead": [
+    {
+      "lead": 7,
+      "hotel_weeks": 68,
+      "wape_last_year": 0.15506310875453863,
+      "wape_forecast": 0.04478813750785293,
+      "range_coverage": 0.6470588235294118,
+      "share_on_books": 0.9565442913953086
+    },
+    {
+      "lead": 14,
+      "hotel_weeks": 68,
+      "wape_last_year": 0.15506310875453863,
+      "wape_forecast": 0.05048892467224307,
+      "range_coverage": 0.6029411764705882,
+      "share_on_books": 0.939412713964613
+    },
+    {
+      "lead": 30,
+      "hotel_weeks": 68,
+      "wape_last_year": 0.15506310875453863,
+      "wape_forecast": 0.07259360756073643,
+      "range_coverage": 0.6764705882352942,
+      "share_on_books": 0.8742147426661288
+    },
+    {
+      "lead": 60,
+      "hotel_weeks": 68,
+      "wape_last_year": 0.15506310875453863,
+      "wape_forecast": 0.08411395366978111,
+      "range_coverage": 0.7205882352941176,
+      "share_on_books": 0.7872168751080629
+    },
+    {
+      "lead": 90,
+      "hotel_weeks": 68,
+      "wape_last_year": 0.15506310875453863,
+      "wape_forecast": 0.09686323301475817,
+      "range_coverage": 0.7647058823529411,
+      "share_on_books": 0.6941098495763933
+    },
+    {
+      "lead": 120,
+      "hotel_weeks": 68,
+      "wape_last_year": 0.15506310875453863,
+      "wape_forecast": 0.10180139287246256,
+      "range_coverage": 0.75,
+      "share_on_books": 0.5844475822719152
+    },
+    {
+      "lead": 150,
+      "hotel_weeks": 68,
+      "wape_last_year": 0.15506310875453863,
+      "wape_forecast": 0.10551259204808021,
+      "range_coverage": 0.8235294117647058,
+      "share_on_books": 0.48553397498703244
+    }
+  ],
+  "mean_abs_shap": {
+    "lead": 67.37076680195872,
+    "on_books": 208.6460912346904,
+    "week_of_year": 58.65520516639376,
+    "hotel": 66.57564657074175,
+    "final_last_year": 31.418352647434823,
+    "on_books_last_year": 8.339854789976966,
+    "on_books_4_weeks_earlier": 11.624529763487324
+  }
+}

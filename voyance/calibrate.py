@@ -13,6 +13,9 @@ from pathlib import Path
 
 import numpy as np
 
+DATASET_URL = ("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-02-11/"
+               "hotels.csv")
+DATASET_SHA256 = "7c2ae42a7353905ea136e5c2287f17c92c5435826598bfbb8491c6f0c7b1fc06"
 DOWNLOAD_TIMEOUT_S = 60
 MAX_DOWNLOAD_BYTES = 64 * 2**20  # the dataset is about 16 MB
 MAD_TO_SIGMA = 1.4826  # median absolute deviation -> standard deviation, for normal noise

@@ -9,7 +9,8 @@ interface Props {
   onStart: (session: Session) => void
 }
 
-// Hosted demo only: VITE_DEMO_KEYS='{"asha":"vy_…","ravi":"vy_…",…}' at build time. These keys are public.
+// Hosted demo only. The server's /config.js sets window.__VOYANCE__.demoKeys at run time (deploy/server.py);
+// VITE_DEMO_KEYS='{"asha":"vy_…",…}' does the same at build time for dev and tests. These keys are public.
 const DEMO_PEOPLE = [
   { name: 'asha', label: 'Asha', role: 'Buyer: creates plans' },
   { name: 'ravi', label: 'Ravi', role: 'Approver: decides lines' },
@@ -17,12 +18,20 @@ const DEMO_PEOPLE = [
   { name: 'zed', label: 'Zed', role: 'Another company' },
 ]
 
-function demoKeys(): Record<string, string> {
-  try {
-    return JSON.parse(import.meta.env.VITE_DEMO_KEYS ?? '{}')
-  } catch {
-    return {}
+declare global {
+  interface Window {
+    __VOYANCE__?: { demoKeys?: Record<string, string> }
   }
+}
+
+function demoKeys(): Record<string, string> {
+  let built: Record<string, string> = {}
+  try {
+    built = JSON.parse(import.meta.env.VITE_DEMO_KEYS ?? '{}')
+  } catch {
+    // ignore a malformed build setting
+  }
+  return { ...built, ...window.__VOYANCE__?.demoKeys }
 }
 
 const DEMO_KEYS = demoKeys()

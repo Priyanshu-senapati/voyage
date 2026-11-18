@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test'
+import { KEY_ENV, KEYS } from './keys'
 
 const API_PORT = process.env.E2E_API_PORT ?? '8001'
 const WEB_PORT = process.env.E2E_WEB_PORT ?? '5174'
@@ -19,13 +20,13 @@ export default defineConfig({
     {
       command: 'node start-api.mjs',
       url: `http://127.0.0.1:${API_PORT}/docs`,
-      env: { E2E_API_PORT: API_PORT },
+      env: { E2E_API_PORT: API_PORT, ...KEY_ENV },
       timeout: 60_000,
     },
     {
       command: `npm --prefix ../web run dev -- --port ${WEB_PORT} --strictPort`,
       url: `http://localhost:${WEB_PORT}`,
-      env: { VOYANCE_API: `http://127.0.0.1:${API_PORT}` },
+      env: { VOYANCE_API: `http://127.0.0.1:${API_PORT}`, VITE_DEMO_KEYS: JSON.stringify(KEYS) },
       timeout: 60_000,
     },
   ],

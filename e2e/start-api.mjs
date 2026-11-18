@@ -1,6 +1,6 @@
-// Starts a throwaway Voyance API for the tests: fresh SQLite file, demo keys seeded, keys saved for the tests.
+// Starts a throwaway Voyance API for the tests: fresh SQLite file, seeded with the fixed keys from the environment.
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -21,14 +21,6 @@ if (seed.status !== 0) {
   console.error(seed.stderr || seed.error)
   process.exit(1)
 }
-// each line: "<company> <role> <name> <key>"
-const keys = Object.fromEntries(
-  seed.stdout.trim().split('\n').map((line) => {
-    const parts = line.trim().split(/\s+/)
-    return [parts.at(-2), parts.at(-1)]
-  }),
-)
-writeFileSync(join(tmp, 'keys.json'), JSON.stringify(keys))
 
 const api = spawn(python, ['-m', 'uvicorn', 'voyance.api.app:create_app', '--factory', '--port', port], {
   cwd: root,

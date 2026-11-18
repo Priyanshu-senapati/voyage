@@ -23,12 +23,23 @@ Then run `npm run dev` here and sign in with one of those keys. Vite forwards `/
 setting is needed. Point it elsewhere with `VOYANCE_API=http://host:port npm run dev`.
 
 - **Sign in** with an API key. It is kept in this tab's session storage only. "Open the demo" uses the saved fixture plan instead.
-- **Create plan** runs the planner with the budget and risk sliders and saves the plan (30 per person per minute).
-- **Approve / Reject** works for approvers and admins on someone else's plan. The API's refusals show as messages.
+- **Sliders preview** a plan 300 ms after they stop (`POST /v1/plans/preview`, nothing saved). **Save plan** saves it and
+  sends every line for approval; **Discard** goes back to the open plan.
+- **Approve / Reject** shows only to approvers and admins, and never on their own plan (from `GET /v1/me`). The API
+  enforces the same rules; its refusals show as messages.
+- **Risk curve** tab: expected profit and the worst 5% of seasons at risk 0 to 1 for the current budget
+  (`GET /v1/frontier`, 4-7 s, 10 a minute, fetched once per budget). Click a point to use that risk.
 - **CSV** downloads the plan with the key sent in the header.
 
-Without a `GET /v1/me` route the dashboard cannot know the signed-in name or role, so it shows the key's prefix.
-Live "why" panels are rebuilt from the reason text and `/v1/markets`, until the API returns those fields.
+After pulling an API change: delete the API's database, run `seed_demo.py` again, then `npm run gen:api`.
+The type-check then shows every place the new contract touches.
+
+### Hosted demo
+
+Build with `VITE_DEMO_KEYS='{"asha":"vy_…","ravi":"vy_…","meera":"vy_…","zed":"vy_…"}'` to show "sign in as"
+buttons, and seed the API with the same keys (`VOYANCE_DEMO_KEY_ASHA`, `_RAVI`, `_MEERA`, `_ZED`). Those keys are
+public: anyone can approve plans and read the audit log in TBO Demo. Keep real data out of that database, reset it on
+every deploy, and put a per-IP rate limit in front of the API, because every visitor shares the same four people.
 
 ## End-to-end tests
 

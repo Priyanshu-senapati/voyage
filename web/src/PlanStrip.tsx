@@ -1,19 +1,25 @@
-import { useState, type CSSProperties } from 'react'
-import { Play } from 'lucide-react'
+import type { CSSProperties } from 'react'
+import { Save, Undo2 } from 'lucide-react'
 import type { Plan, PlanSummary } from './types'
+import type { Draft } from './useDesk'
 import { inr } from './format'
 
 interface Props {
   plan: Plan | null
   plans: PlanSummary[]
+  draft: Draft
   live: boolean
+  ready: boolean
+  previewing: boolean
   creating: boolean
+  canDiscard: boolean
+  onDraft: (draft: Draft) => void
   onOpen: (id: number) => void
-  onCreate: (budget: number, risk: number) => void
+  onSave: () => void
+  onDiscard: () => void
 }
 
 const BUDGET = { min: 2e6, max: 5e7, step: 1e6 }
-const DEFAULTS = { budget: 2e7, risk: 0.3 }
 
 function riskWord(value: number): string {
   if (value === 0) return 'Max profit'
@@ -30,51 +36,46 @@ const when = (iso: string) =>
 
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
-export function PlanStrip({ plan, plans, live, creating, onOpen, onCreate }: Props) {
-  const [budget, setBudget] = useState(plan?.budget_inr ?? DEFAULTS.budget)
-  const [risk, setRisk] = useState(plan?.risk_aversion ?? DEFAULTS.risk)
-  const changed = !plan || budget !== plan.budget_inr || risk !== plan.risk_aversion
+export function PlanStrip({ plan, plans, draft, live, ready, previewing, creating, canDiscard, onDraft, onOpen, onSave, onDiscard }: Props) {
+  const unsaved = plan !== null && plan.id === null
+  const { budget, risk } = draft
 
   return (
     <section className="plan" aria-label="Plan settings and totals">
       <div className="plan-head">
         <div className="plan-title">
-          {plan ? (
-            <>
-              <h1>
-                December buy plan{' '}
-                {plans.length > 1 ? (
-                  <select
-                    className="plan-switch"
-                    aria-label="Open another plan"
-                    value={plan.id}
-                    onChange={(e) => onOpen(Number(e.target.value))}
-                  >
-                    {plans.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        #{p.id} · {capital(p.created_by)} · {when(p.created_at)}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <span className="plan-id">#{plan.id}</span>
-                )}
-              </h1>
-              <p className="plan-meta">
+          <h1>
+            December buy plan{' '}
+            {unsaved ? (
+              <span className="preview-tag">Preview, not saved</span>
+            ) : plan && plans.length > 1 ? (
+              <select
+                className="plan-switch"
+                aria-label="Open another plan"
+                value={plan.id ?? ''}
+                onChange={(e) => onOpen(Number(e.target.value))}
+              >
+                {plans.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    #{p.id} · {capital(p.created_by)} · {when(p.created_at)}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              plan && <span className="plan-id">#{plan.id}</span>
+            )}
+          </h1>
+          <p className="plan-meta">
+            {plan?.created_by && plan.created_at ? (
+              <>
                 Created by <strong>{capital(plan.created_by)}</strong> · {when(plan.created_at)} ·{' '}
                 {plan.cities?.length ? plan.cities.join(', ') : 'all 5 cities'}
-                <span className="sim-tag">Simulated data · one simulated December</span>
-              </p>
-            </>
-          ) : (
-            <>
-              <h1>December buy plan</h1>
-              <p className="plan-meta">
-                5 cities · 40 hotel-weeks
-                <span className="sim-tag">Simulated data · one simulated December</span>
-              </p>
-            </>
-          )}
+              </>
+            ) : (
+              <>Move the sliders to try a budget and risk level · all 5 cities</>
+            )}
+            <span className="sim-tag">Simulated data · one simulated December</span>
+          </p>
         </div>
 
         <div className="controls">
@@ -88,7 +89,8 @@ export function PlanStrip({ plan, plans, live, creating, onOpen, onCreate }: Pro
               max={BUDGET.max}
               step={BUDGET.step}
               value={budget}
-              onChange={(e) => setBudget(Number(e.target.value))}
+              disabled={!ready}
+              onChange={(e) => onDraft({ budget: Number(e.target.value), risk })}
               style={{ '--fill': `${((budget - BUDGET.min) / (BUDGET.max - BUDGET.min)) * 100}%` } as CSSProperties}
             />
             <span className="control-ends">
@@ -106,7 +108,8 @@ export function PlanStrip({ plan, plans, live, creating, onOpen, onCreate }: Pro
               max={1}
               step={0.05}
               value={risk}
-              onChange={(e) => setRisk(Number(e.target.value))}
+              disabled={!ready}
+              onChange={(e) => onDraft({ budget, risk: Number(e.target.value) })}
               style={{ '--fill': `${risk * 100}%` } as CSSProperties}
             />
             <span className="control-ends">
@@ -114,15 +117,23 @@ export function PlanStrip({ plan, plans, live, creating, onOpen, onCreate }: Pro
               <span>Protect worst case</span>
             </span>
           </label>
-          <button
-            className="btn btn-secondary"
-            type="button"
-            disabled={!changed || creating}
-            onClick={() => onCreate(budget, risk)}
-          >
-            <Play size={14} strokeWidth={2.25} aria-hidden="true" />
-            {creating ? 'Planning…' : live ? 'Create plan' : 'Run what-if'}
-          </button>
+          <div className="plan-actions">
+            {unsaved && canDiscard && (
+              <button className="btn btn-ghost btn-discard" type="button" onClick={onDiscard} disabled={creating}>
+                <Undo2 size={14} strokeWidth={2.25} aria-hidden="true" />
+                Discard
+              </button>
+            )}
+            <button
+              className="btn btn-secondary"
+              type="button"
+              disabled={!ready || (live && !unsaved) || previewing || creating}
+              onClick={onSave}
+            >
+              <Save size={14} strokeWidth={2.25} aria-hidden="true" />
+              {creating ? 'Saving…' : previewing ? 'Updating…' : 'Save plan'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -135,6 +146,7 @@ function Figures({ plan }: { plan: Plan }) {
   const used = plan.spend / plan.budget_inr
   const tally = { approved: 0, rejected: 0, pending: 0 }
   plan.lines.forEach((line) => tally[line.decision]++)
+  const unsaved = plan.id === null
 
   return (
     <dl className="figures">
@@ -168,17 +180,26 @@ function Figures({ plan }: { plan: Plan }) {
       </div>
       <div className="figure figure-approvals">
         <dt>Approvals</dt>
-        <dd>
-          <span className="figure-value">{tally.approved}</span>
-          <span className="figure-of">
-            of {plan.lines.length} · {tally.rejected} rejected · {tally.pending} waiting
-          </span>
-        </dd>
-        <div className="ticks" aria-hidden="true">
-          {plan.lines.map((line) => (
-            <span key={line.id} className={`tick tick-${line.decision}`} />
-          ))}
-        </div>
+        {unsaved ? (
+          <dd>
+            <span className="figure-value">{plan.lines.length}</span>
+            <span className="figure-of">lines · save to send for approval</span>
+          </dd>
+        ) : (
+          <>
+            <dd>
+              <span className="figure-value">{tally.approved}</span>
+              <span className="figure-of">
+                of {plan.lines.length} · {tally.rejected} rejected · {tally.pending} waiting
+              </span>
+            </dd>
+            <div className="ticks" aria-hidden="true">
+              {plan.lines.map((line) => (
+                <span key={line.id} className={`tick tick-${line.decision}`} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </dl>
   )

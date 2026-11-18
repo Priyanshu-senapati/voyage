@@ -9,24 +9,48 @@ interface Props {
   onStart: (session: Session) => void
 }
 
+// Hosted demo only: VITE_DEMO_KEYS='{"asha":"vy_…","ravi":"vy_…",…}' at build time. These keys are public.
+const DEMO_PEOPLE = [
+  { name: 'asha', label: 'Asha', role: 'Buyer: creates plans' },
+  { name: 'ravi', label: 'Ravi', role: 'Approver: decides lines' },
+  { name: 'meera', label: 'Meera', role: 'Admin: sees everything' },
+  { name: 'zed', label: 'Zed', role: 'Another company' },
+]
+
+function demoKeys(): Record<string, string> {
+  try {
+    return JSON.parse(import.meta.env.VITE_DEMO_KEYS ?? '{}')
+  } catch {
+    return {}
+  }
+}
+
+const DEMO_KEYS = demoKeys()
+
 export function SignIn({ error, onStart }: Props) {
   const [key, setKey] = useState('')
   const [checking, setChecking] = useState(false)
   const [problem, setProblem] = useState(error)
 
-  async function submit(event: FormEvent) {
-    event.preventDefault()
-    const trimmed = key.trim()
-    if (!trimmed) return setProblem('Paste the API key you were given.')
+  async function signInWith(candidate: string) {
     setChecking(true)
     try {
-      await apiFor(trimmed).plans()
-      onStart({ mode: 'live', key: trimmed })
+      await apiFor(candidate).me()
+      onStart({ mode: 'live', key: candidate })
     } catch (err) {
       setProblem(err instanceof ApiError ? err.message : 'Could not check that key.')
       setChecking(false)
     }
   }
+
+  function submit(event: FormEvent) {
+    event.preventDefault()
+    const trimmed = key.trim()
+    if (!trimmed) return setProblem('Paste the API key you were given.')
+    signInWith(trimmed)
+  }
+
+  const people = DEMO_PEOPLE.filter((p) => DEMO_KEYS[p.name])
 
   return (
     <div className="signin">
@@ -63,6 +87,21 @@ export function SignIn({ error, onStart }: Props) {
             {!checking && <ArrowRight size={16} strokeWidth={2.25} aria-hidden="true" />}
           </button>
         </form>
+        {people.length > 0 && (
+          <div className="signin-people">
+            <p>Or sign in as a demo person. Shared with every visitor, on simulated data.</p>
+            <ul>
+              {people.map((p) => (
+                <li key={p.name}>
+                  <button type="button" disabled={checking} onClick={() => signInWith(DEMO_KEYS[p.name])}>
+                    <strong>{p.label}</strong>
+                    <span>{p.role}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="signin-demo">
           <p>No key? Look around with one saved plan on simulated data.</p>
           <button className="btn btn-secondary" type="button" onClick={() => onStart({ mode: 'demo' })}>

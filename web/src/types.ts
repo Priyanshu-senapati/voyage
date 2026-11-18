@@ -3,29 +3,24 @@ import type { components } from './api/schema'
 type Schemas = components['schemas']
 
 export type Decision = 'pending' | 'approved' | 'rejected'
+export type Me = Schemas['MeOut']
 export type PlanSummary = Schemas['PlanSummary']
 export type PlanCreate = Schemas['PlanCreate']
-export type MarketItem = Schemas['MarketItem']
+export type PlanOut = Schemas['PlanOut']
+export type PlanPreview = Schemas['PlanPreview']
 export type PlanLineOut = Schemas['PlanLineOut']
-
-// The facts behind a line's reason. Not in the API yet (requested from lane A), so for live plans
-// they are rebuilt from the reason text and /v1/markets; the demo fixture carries them in full.
-export interface LineWhy {
-  expected_demand: number
-  booked_last_december: number
-  soldout_searches_total: number
-  event_week: boolean
-  margin: number
-  booked_avg?: number
-  bookings_past_decembers?: number[]
-  soldout_searches_past?: number[]
-}
+export type LineWhy = Schemas['LineWhy']
+export type FrontierPoint = Schemas['FrontierPoint']
 
 export interface PlanLine extends PlanLineOut {
   rank: number
-  why: LineWhy
 }
 
-export interface Plan extends Omit<Schemas['PlanOut'], 'lines'> {
+// A saved plan, or an unsaved preview (id null) while the sliders are being tried
+export interface Plan extends Omit<PlanOut, 'id' | 'created_at' | 'created_by' | 'status' | 'lines'> {
+  id: number | null
+  created_at: string | null
+  created_by: string | null
+  status: PlanOut['status']
   lines: PlanLine[]
 }

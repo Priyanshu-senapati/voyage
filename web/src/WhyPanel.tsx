@@ -6,7 +6,9 @@ import { StatusChip } from './StatusChip'
 
 interface Props {
   line: PlanLine
-  creator: string
+  note: string // who decides, or why this viewer can't
+  canDecide: boolean
+  unsaved: boolean
   busy: boolean
   onDecide: (id: number, decision: Exclude<Decision, 'pending'>) => void
 }
@@ -14,7 +16,7 @@ interface Props {
 const PAST = ["Dec '23", "Dec '24", "Dec '25"]
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
-export function WhyPanel({ line, creator, busy, onDecide }: Props) {
+export function WhyPanel({ line, note, canDecide, unsaved, busy, onDecide }: Props) {
   const { why } = line
   const ink = CITY_INK[line.city]
   const scale = Math.ceil((Math.max(why.expected_demand, line.rooms, why.booked_last_december) * 1.08) / 20) * 20
@@ -25,7 +27,7 @@ export function WhyPanel({ line, creator, busy, onDecide }: Props) {
     : null
 
   return (
-    <aside className="why" id="why" aria-label={`Why line ${line.rank}`}>
+    <section className="why" id="why" role="tabpanel" aria-labelledby="tab-why">
       <header className="why-head">
         <span className="why-rank">{line.rank}</span>
         <div>
@@ -41,7 +43,7 @@ export function WhyPanel({ line, creator, busy, onDecide }: Props) {
             )}
           </p>
         </div>
-        <StatusChip decision={line.decision} />
+        <StatusChip decision={line.decision} unsaved={unsaved} />
       </header>
 
       <dl className="buy-terms">
@@ -104,7 +106,6 @@ export function WhyPanel({ line, creator, busy, onDecide }: Props) {
         </div>
       </section>
 
-      {why.bookings_past_decembers && why.soldout_searches_past ? (
       <section className="past" aria-label="Past Decembers">
         <table>
           <thead>
@@ -131,20 +132,12 @@ export function WhyPanel({ line, creator, busy, onDecide }: Props) {
           </tbody>
         </table>
       </section>
-      ) : (
-        <p className="past-summary">
-          <strong>Past Decembers:</strong>{' '}
-          {why.booked_avg !== undefined && <>{count(why.booked_avg)} booked on average · </>}
-          <span className="past-soldout">{count(why.soldout_searches_total)}</span> sold-out searches in all
-        </p>
-      )}
 
       <footer className="decide">
         {line.decision === 'pending' ? (
           <>
-            <p>
-              Made by {capital(creator)}. Only another approver can decide; final and logged.
-            </p>
+            <p>{note}</p>
+            {canDecide && (
             <div className="decide-actions">
               <button className="btn btn-primary" type="button" disabled={busy} onClick={() => onDecide(line.id, 'approved')}>
                 <Check size={16} strokeWidth={2.5} aria-hidden="true" />
@@ -155,6 +148,7 @@ export function WhyPanel({ line, creator, busy, onDecide }: Props) {
                 Reject
               </button>
             </div>
+            )}
           </>
         ) : (
           <p className="decided">
@@ -163,6 +157,6 @@ export function WhyPanel({ line, creator, busy, onDecide }: Props) {
           </p>
         )}
       </footer>
-    </aside>
+    </section>
   )
 }

@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who is calling: name, role and company */
+        get: operations["me_v1_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/markets": {
         parameters: {
             query?: never;
@@ -13,6 +30,46 @@ export interface paths {
         };
         /** Hotel-weeks that can be bought */
         get: operations["markets_v1_markets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/plans/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Try a budget and risk without saving
+         * @description Same body and lines as creating a plan, but nothing is saved or logged. For sliders: its own limit of 120 a minute per person; please debounce.
+         */
+        post: operations["preview_plan_v1_plans_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/frontier": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Profit and worst case at each risk setting
+         * @description One point per risk setting 0, 0.1 ... 1 for this budget (and cities, repeated: ?cities=Goa&cities=Kochi). 10 a minute per person.
+         */
+        get: operations["frontier_v1_frontier_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -138,6 +195,17 @@ export interface components {
             /** Detail */
             detail: string;
         };
+        /** FrontierPoint */
+        FrontierPoint: {
+            /** Risk Aversion */
+            risk_aversion: number;
+            /** Expected Profit */
+            expected_profit: number;
+            /** Worst Case Profit */
+            worst_case_profit: number;
+            /** Spend */
+            spend: number;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -155,6 +223,36 @@ export interface components {
              * @enum {string}
              */
             decision: "approved" | "rejected";
+        };
+        /**
+         * LineWhy
+         * @description The numbers behind a line's reason, so the dashboard can draw them.
+         */
+        LineWhy: {
+            /**
+             * Expected Demand
+             * @description Room-nights we expect this December, hidden demand included
+             */
+            expected_demand: number;
+            /** Booked Last December */
+            booked_last_december: number;
+            /**
+             * Bookings Past Decembers
+             * @description Oldest first
+             */
+            bookings_past_decembers: number[];
+            /**
+             * Soldout Searches Past
+             * @description Searches that found nothing left, oldest first
+             */
+            soldout_searches_past: number[];
+            /** Event Week */
+            event_week: boolean;
+            /**
+             * Margin
+             * @description (price - cost) / price
+             */
+            margin: number;
         };
         /** MarketItem */
         MarketItem: {
@@ -177,6 +275,18 @@ export interface components {
             /** Event This Season */
             event_this_season: boolean;
         };
+        /** MeOut */
+        MeOut: {
+            /** Name */
+            name: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "buyer" | "approver" | "admin";
+            /** Tenant */
+            tenant: string;
+        };
         /**
          * PlanCreate
          * @example {
@@ -195,21 +305,19 @@ export interface components {
              */
             budget_inr: number;
             /**
+             * Cities
+             * @description Limit to these cities; leave out for all
+             */
+            cities?: string[] | null;
+            /**
              * Risk Aversion
              * @description 0 = maximise expected profit, 1 = protect the worst case
              * @default 0.3
              */
             risk_aversion: number;
-            /**
-             * Cities
-             * @description Limit to these cities; leave out for all
-             */
-            cities?: string[] | null;
         };
         /** PlanLineOut */
         PlanLineOut: {
-            /** Id */
-            id: number;
             /** City */
             city: string;
             /** Week */
@@ -224,12 +332,13 @@ export interface components {
             unit_price: number;
             /** Expected Sold */
             expected_sold: number;
-            /** Sell Through */
-            sell_through: number;
             /** Expected Profit */
             expected_profit: number;
             /** Reason */
             reason: string;
+            why: components["schemas"]["LineWhy"];
+            /** Id */
+            id: number;
             /**
              * Decision
              * @enum {string}
@@ -239,18 +348,11 @@ export interface components {
             decided_by: string | null;
             /** Decided At */
             decided_at: string | null;
+            /** Sell Through */
+            readonly sell_through: number;
         };
         /** PlanOut */
         PlanOut: {
-            /** Id */
-            id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Created By */
-            created_by: string;
             /** Budget Inr */
             budget_inr: number;
             /** Risk Aversion */
@@ -263,6 +365,15 @@ export interface components {
             expected_profit: number;
             /** Worst Case Profit */
             worst_case_profit: number;
+            /** Id */
+            id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
             /**
              * Status
              * @enum {string}
@@ -271,17 +382,8 @@ export interface components {
             /** Lines */
             lines: components["schemas"]["PlanLineOut"][];
         };
-        /** PlanSummary */
-        PlanSummary: {
-            /** Id */
-            id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Created By */
-            created_by: string;
+        /** PlanPreview */
+        PlanPreview: {
             /** Budget Inr */
             budget_inr: number;
             /** Risk Aversion */
@@ -294,11 +396,64 @@ export interface components {
             expected_profit: number;
             /** Worst Case Profit */
             worst_case_profit: number;
+            /** Lines */
+            lines: components["schemas"]["PreviewLine"][];
+        };
+        /** PlanSummary */
+        PlanSummary: {
+            /** Budget Inr */
+            budget_inr: number;
+            /** Risk Aversion */
+            risk_aversion: number;
+            /** Cities */
+            cities: string[] | null;
+            /** Spend */
+            spend: number;
+            /** Expected Profit */
+            expected_profit: number;
+            /** Worst Case Profit */
+            worst_case_profit: number;
+            /** Id */
+            id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
             /**
              * Status
              * @enum {string}
              */
             status: "empty" | "pending" | "approved" | "rejected" | "mixed";
+        };
+        /**
+         * PreviewLine
+         * @description A buy line before it is saved.
+         */
+        PreviewLine: {
+            /** City */
+            city: string;
+            /** Week */
+            week: string;
+            /** Hotel */
+            hotel: string;
+            /** Rooms */
+            rooms: number;
+            /** Unit Cost */
+            unit_cost: number;
+            /** Unit Price */
+            unit_price: number;
+            /** Expected Sold */
+            expected_sold: number;
+            /** Expected Profit */
+            expected_profit: number;
+            /** Reason */
+            reason: string;
+            why: components["schemas"]["LineWhy"];
+            /** Sell Through */
+            readonly sell_through: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -322,6 +477,35 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    me_v1_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeOut"];
+                };
+            };
+            /** @description Missing or invalid API key */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
     markets_v1_markets_get: {
         parameters: {
             query?: never;
@@ -342,6 +526,145 @@ export interface operations {
             };
             /** @description Missing or invalid API key */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    preview_plan_v1_plans_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanPreview"];
+                };
+            };
+            /** @description Bad request, e.g. an unknown city */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Missing or invalid API key */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too many plans; see Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Planner busy; see Retry-After */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    frontier_v1_frontier_get: {
+        parameters: {
+            query: {
+                /** @description Maximum spend in INR (up to ₹1,000 crore) */
+                budget_inr: number;
+                /** @description Limit to these cities; leave out for all */
+                cities?: string[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrontierPoint"][];
+                };
+            };
+            /** @description Bad request, e.g. an unknown city */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Missing or invalid API key */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too many plans; see Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Planner busy; see Retry-After */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

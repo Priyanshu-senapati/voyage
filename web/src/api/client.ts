@@ -1,7 +1,4 @@
-import type { Decision, MarketItem, PlanCreate, PlanLineOut, PlanSummary } from '../types'
-import type { components } from './schema'
-
-type PlanOut = components['schemas']['PlanOut']
+import type { Decision, FrontierPoint, Me, PlanCreate, PlanLineOut, PlanOut, PlanPreview, PlanSummary } from '../types'
 
 // Same origin by default: Vite proxies /v1 to the API in dev and preview.
 const BASE = import.meta.env.VITE_API_URL ?? ''
@@ -24,7 +21,8 @@ async function request<T>(key: string, path: string, init: RequestInit = {}): Pr
       ...init,
       headers: { 'X-API-Key': key, ...(init.body ? { 'Content-Type': 'application/json' } : {}) },
     })
-  } catch {
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error
     throw new ApiError(0, "Can't reach the Voyance API. Check that it is running.")
   }
   if (!res.ok) {
@@ -49,7 +47,14 @@ async function errorText(res: Response): Promise<string> {
 
 export function apiFor(key: string) {
   return {
-    markets: () => request<MarketItem[]>(key, '/v1/markets'),
+    me: () => request<Me>(key, '/v1/me'),
+    preview: (body: PlanCreate, signal?: AbortSignal) =>
+      request<PlanPreview>(key, '/v1/plans/preview', { method: 'POST', body: JSON.stringify(body), signal }),
+    frontier: (budget: number, cities?: string[] | null) => {
+      const query = new URLSearchParams({ budget_inr: String(budget) })
+      cities?.forEach((city) => query.append('cities', city))
+      return request<FrontierPoint[]>(key, `/v1/frontier?${query}`)
+    },
     plans: () => request<PlanSummary[]>(key, '/v1/plans?limit=20'),
     plan: (id: number) => request<PlanOut>(key, `/v1/plans/${id}`),
     createPlan: (body: PlanCreate) =>

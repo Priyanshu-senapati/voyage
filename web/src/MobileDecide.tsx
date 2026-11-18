@@ -6,11 +6,12 @@ import { StatusChip } from './StatusChip'
 interface Props {
   line: PlanLine
   busy: boolean
+  canDecide: boolean
   onDecide: (id: number, decision: Exclude<Decision, 'pending'>) => void
 }
 
 // Phones only: the selected line's decision stays in reach while the list scrolls
-export function MobileDecide({ line, busy, onDecide }: Props) {
+export function MobileDecide({ line, busy, canDecide, onDecide }: Props) {
   return (
     <div className="mobile-decide" role="region" aria-label="Decide the selected line">
       <a className="mobile-decide-line" href="#why">
@@ -19,7 +20,7 @@ export function MobileDecide({ line, busy, onDecide }: Props) {
         </strong>
         <span>{weekLabel(line.week)} · see why</span>
       </a>
-      {line.decision === 'pending' ? (
+      {line.decision === 'pending' && canDecide ? (
         <div className="mobile-decide-actions">
           <button className="btn btn-reject" type="button" aria-label="Reject line" disabled={busy} onClick={() => onDecide(line.id, 'rejected')}>
             <X size={16} strokeWidth={2.5} aria-hidden="true" />

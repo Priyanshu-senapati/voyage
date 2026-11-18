@@ -1,0 +1,68 @@
+[
+ {
+  "risk_aversion": 0.0,
+  "expected_profit": 2498602.85,
+  "worst_case_profit": 1858187.36,
+  "spend": 12604017.14
+ },
+ {
+  "risk_aversion": 0.1,
+  "expected_profit": 2492263.42,
+  "worst_case_profit": 1931178.27,
+  "spend": 12395849.21
+ },
+ {
+  "risk_aversion": 0.2,
+  "expected_profit": 2484108.44,
+  "worst_case_profit": 1975286.91,
+  "spend": 12298748.83
+ },
+ {
+  "risk_aversion": 0.3,
+  "expected_profit": 2473960.32,
+  "worst_case_profit": 2003528.21,
+  "spend": 12160458.13
+ },
+ {
+  "risk_aversion": 0.4,
+  "expected_profit": 2457598.47,
+  "worst_case_profit": 2029959.3,
+  "spend": 11989919.65
+ },
+ {
+  "risk_aversion": 0.5,
+  "expected_profit": 2445067.81,
+  "worst_case_profit": 2042032.75,
+  "spend": 11843813.65
+ },
+ {
+  "risk_aversion": 0.6,
+  "expected_profit": 2422822.92,
+  "worst_case_profit": 2058127.3,
+  "spend": 11621187.19
+ },
+ {
+  "risk_aversion": 0.7,
+  "expected_profit": 2406507.42,
+  "worst_case_profit": 2063204.35,
+  "spend": 11468755.98
+ },
+ {
+  "risk_aversion": 0.8,
+  "expected_profit": 2381017.45,
+  "worst_case_profit": 2067474.25,
+  "spend": 11274172.82
+ },
+ {
+  "risk_aversion": 0.9,
+  "expected_profit": 2374089.65,
+  "worst_case_profit": 2070815.31,
+  "spend": 11230347.73
+ },
+ {
+  "risk_aversion": 1.0,
+  "expected_profit": 2361147.49,
+  "worst_case_profit": 2071520.4,
+  "spend": 11166206.34
+ }
+]

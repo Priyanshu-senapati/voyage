@@ -9,7 +9,7 @@ from sqlalchemy import event, text
 from voyance.api import service
 from voyance.api.app import create_app
 from voyance.api.auth import Principal, create_api_key, revoke_api_key
-from voyance.api.db import User, make_sessions
+from voyance.api.db import Tenant, User, make_sessions
 
 
 @pytest.fixture
@@ -240,6 +240,125 @@ def test_api_contract_gives_the_dashboard_fixed_value_lists(api):
     assert schemas["PlanLineOut"]["properties"]["decision"]["enum"] == ["pending", "approved", "rejected"]
     assert set(schemas["PlanSummary"]["properties"]["status"]["enum"]) == {
         "empty", "pending", "approved", "rejected", "mixed"}
+    assert schemas["MeOut"]["properties"]["role"]["enum"] == ["buyer", "approver", "admin"]
+    assert "sell_through" in schemas["PreviewLine"]["required"]  # a computed field the dashboard reads
+
+
+def test_me_says_who_is_calling(api):
+    client, keys = api
+    assert client.get("/v1/me", headers=auth(keys["approver"])).json() == {
+        "name": "ravi", "role": "approver", "tenant": "TBO Demo"}
+
+
+def preview(client, key, **overrides):
+    body = {"budget_inr": 3_000_000, "risk_aversion": 0.3} | overrides
+    return client.post("/v1/plans/preview", json=body, headers=auth(key))
+
+
+def test_preview_matches_the_plan_but_saves_and_logs_nothing(api):
+    client, keys = api
+    response = preview(client, keys["buyer"])
+    assert response.status_code == 200
+    shown = response.json()
+    assert client.get("/v1/plans", headers=auth(keys["buyer"])).json() == []
+    assert client.get("/v1/audit", headers=auth(keys["admin"])).json() == []
+
+    saved = new_plan(client, keys["buyer"]).json()
+    assert shown["expected_profit"] == pytest.approx(saved["expected_profit"])
+    assert [(line["hotel"], line["rooms"], line["why"]) for line in shown["lines"]] == \
+        [(line["hotel"], line["rooms"], line["why"]) for line in saved["lines"]]
+
+
+def test_preview_has_its_own_rate_limit(api, monkeypatch):
+    client, keys = api
+    monkeypatch.setattr(service, "PREVIEW_RATE", service.RateLimiter(limit=1, window_s=60))
+    monkeypatch.setattr(service, "PLAN_RATE", service.RateLimiter(limit=1, window_s=60))
+    assert [preview(client, keys["buyer"]).status_code for _ in range(2)] == [200, 429]
+    assert new_plan(client, keys["buyer"]).status_code == 201  # dragging a slider never blocks saving
+
+
+def test_preview_rejects_an_unknown_city(api):
+    client, keys = api
+    assert preview(client, keys["buyer"], cities=["Atlantis"]).status_code == 400
+
+
+def test_saved_lines_keep_their_why(api):
+    client, keys = api
+    created = new_plan(client, keys["buyer"]).json()
+    fetched = client.get(f"/v1/plans/{created['id']}", headers=auth(keys["buyer"])).json()
+    assert fetched["lines"][0]["why"] == created["lines"][0]["why"]
+    assert {"expected_demand", "booked_last_december", "bookings_past_decembers", "soldout_searches_past",
+            "event_week", "margin"} == created["lines"][0]["why"].keys()
+
+
+def frontier(client, key, query: str):
+    return client.get(f"/v1/frontier?{query}", headers=auth(key))
+
+
+def test_frontier_gives_profit_and_worst_case_at_each_risk_step(api):
+    client, keys = api
+    points = frontier(client, keys["buyer"], "budget_inr=1000000&cities=Goa&cities=Kochi").json()
+    assert [p["risk_aversion"] for p in points] == pytest.approx([i / 10 for i in range(11)])
+    assert all(p["spend"] <= 1_000_000 and p["worst_case_profit"] <= p["expected_profit"] for p in points)
+    plan = new_plan(client, keys["buyer"], budget_inr=1_000_000, cities=["Goa", "Kochi"]).json()
+    assert points[3]["expected_profit"] == pytest.approx(plan["expected_profit"])
+    assert points[3]["worst_case_profit"] == pytest.approx(plan["worst_case_profit"])
+
+
+@pytest.mark.parametrize("query, status", [
+    ("budget_inr=0", 422), ("cities=Goa", 422), ("budget_inr=1000000&cities=", 422),
+    ("budget_inr=1000000&cities=Atlantis", 400),
+])
+def test_frontier_checks_its_inputs(api, query, status):
+    client, keys = api
+    assert frontier(client, keys["buyer"], query).status_code == status
+
+
+def test_frontier_is_rate_limited(api, monkeypatch):
+    client, keys = api
+    monkeypatch.setattr(service, "FRONTIER_RATE", service.RateLimiter(limit=1, window_s=60))
+    statuses = [frontier(client, keys["buyer"], "budget_inr=300000&cities=Goa").status_code for _ in range(2)]
+    assert statuses == [200, 429]
+
+
+FIXED_KEY = "vy_fixed-demo-key-for-the-hosted-demo-0123456789"
+
+
+def test_a_fixed_key_works_and_issuing_it_again_changes_nothing(api):
+    client, _ = api
+    with client.app.state.sessions() as session:
+        assert create_api_key(session, "TBO Demo", "approver", "ravi", key=FIXED_KEY) == FIXED_KEY
+        assert create_api_key(session, "TBO Demo", "approver", "ravi", key=FIXED_KEY) == FIXED_KEY
+    assert client.get("/v1/me", headers=auth(FIXED_KEY)).json()["name"] == "ravi"
+
+
+@pytest.mark.parametrize("key, match", [
+    ("vy_short", "at least"), ("x" * 40, "vy_ prefix"), (FIXED_KEY, "someone else")])
+def test_a_fixed_key_must_be_long_and_not_held_by_another_person(api, key, match):
+    client, _ = api
+    with client.app.state.sessions() as session:
+        create_api_key(session, "TBO Demo", "admin", "meera", key=FIXED_KEY)
+        with pytest.raises(ValueError, match=match):
+            create_api_key(session, "TBO Demo", "approver", "ravi", key=key)
+
+
+def test_a_refused_fixed_key_leaves_no_new_company_or_person(api):
+    client, keys = api
+    with client.app.state.sessions() as session:
+        with pytest.raises(ValueError, match="someone else"):
+            create_api_key(session, "New Co", "buyer", "nina", key=keys["admin"])
+        session.commit()
+        assert session.query(User).filter_by(name="nina").count() == 0
+        assert session.query(Tenant).filter_by(name="New Co").count() == 0
+
+
+def test_a_revoked_fixed_key_is_not_brought_back(api):
+    client, _ = api
+    with client.app.state.sessions() as session:
+        create_api_key(session, "TBO Demo", "approver", "ravi", key=FIXED_KEY)
+        revoke_api_key(session, FIXED_KEY)
+        with pytest.raises(ValueError, match="revoked"):
+            create_api_key(session, "TBO Demo", "approver", "ravi", key=FIXED_KEY)
 
 
 def test_audit_log_is_admin_only_and_per_company(api):

@@ -5,14 +5,17 @@ import io
 import threading
 import time
 from collections import defaultdict, deque
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import asdict
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session, selectinload
 
 from voyance.api.auth import Principal
-from voyance.api.db import AuditEvent, Plan, PlanLineRow, utcnow
-from voyance.api.planner import PlanRequestError, build_plan
-from voyance.api.schemas import MarketItem, PlanCreate
+from voyance.api.db import AuditEvent, Plan, PlanLineRow, Tenant, utcnow
+from voyance.api.planner import PlanRequestError, PlanResult, build_plan
+from voyance.api.schemas import FrontierPoint, MarketItem, MeOut, PlanCreate, PlanPreview, PlanScope
 from voyance.sim import World
 
 CSV_COLUMNS = ("city", "week", "hotel", "rooms", "unit_cost", "unit_price", "expected_sold",
@@ -72,8 +75,11 @@ class RateLimiter:
 
 
 PLAN_RATE = RateLimiter(limit=30, window_s=60)
-PLANNER_SLOTS = threading.BoundedSemaphore(4)  # solves at once; each takes ~0.1-0.3 s of CPU
+PREVIEW_RATE = RateLimiter(limit=120, window_s=60)  # sliders: the dashboard should still debounce
+FRONTIER_RATE = RateLimiter(limit=10, window_s=60)  # each call is one solve per risk step
+PLANNER_SLOTS = threading.BoundedSemaphore(4)  # solves at once; each takes ~0.25-0.7 s of CPU
 PLANNER_WAIT_S = 5.0
+RISK_STEPS = tuple(step / 10 for step in range(11))  # 0, 0.1 ... 1
 
 
 def market_items(world: World) -> list[MarketItem]:
@@ -89,12 +95,31 @@ def market_items(world: World) -> list[MarketItem]:
     ]
 
 
+def me(session: Session, principal: Principal) -> MeOut:
+    tenant = session.get(Tenant, principal.tenant_id)
+    return MeOut(name=principal.label, role=principal.role, tenant=tenant.name)
+
+
+def preview_plan(world: World, principal: Principal, request: PlanCreate) -> PlanPreview:
+    """The plan `create_plan` would save for this request, without saving or logging it."""
+    _limit(PREVIEW_RATE, principal, "previews")
+    result = _solve(world, request.budget_inr, request.risk_aversion, request.cities)
+    return PlanPreview(**request.model_dump(), **asdict(result))
+
+
+def risk_frontier(world: World, principal: Principal, scope: PlanScope) -> list[FrontierPoint]:
+    """Expected profit, worst case and spend at each risk step, for one budget."""
+    _limit(FRONTIER_RATE, principal, "risk frontiers")
+    with _planner_slot():  # one slot for the whole sweep, so a call never queues 11 times
+        results = [build_plan(world, scope.budget_inr, risk, scope.cities) for risk in RISK_STEPS]
+    return [FrontierPoint(risk_aversion=risk, expected_profit=result.expected_profit,
+                          worst_case_profit=result.worst_case_profit, spend=result.spend)
+            for risk, result in zip(RISK_STEPS, results)]
+
+
 def create_plan(session: Session, world: World, principal: Principal, request: PlanCreate) -> Plan:
-    if not PLAN_RATE.allow(principal.user_id):
-        error = TooManyRequests("too many plans; wait a minute")
-        error.headers = {"Retry-After": str(int(PLAN_RATE.window_s))}
-        raise error
-    result = _solve(world, request)
+    _limit(PLAN_RATE, principal, "plans")
+    result = _solve(world, request.budget_inr, request.risk_aversion, request.cities)
     plan = Plan(
         tenant_id=principal.tenant_id, created_by_user_id=principal.user_id, created_by=principal.label,
         budget_inr=request.budget_inr, risk_aversion=request.risk_aversion, cities=request.cities,
@@ -103,7 +128,7 @@ def create_plan(session: Session, world: World, principal: Principal, request: P
         lines=[PlanLineRow(city=line.city, week=line.week, hotel=line.hotel, rooms=line.rooms,
                            unit_cost=line.unit_cost, unit_price=line.unit_price,
                            expected_sold=line.expected_sold, expected_profit=line.expected_profit,
-                           reason=line.reason)
+                           reason=line.reason, why=line.why)
                for line in result.lines],
     )
     session.add(plan)
@@ -113,15 +138,28 @@ def create_plan(session: Session, world: World, principal: Principal, request: P
     return plan
 
 
-def _solve(world: World, request: PlanCreate):
+def _limit(limiter: RateLimiter, principal: Principal, what: str) -> None:
+    if not limiter.allow(principal.user_id):
+        error = TooManyRequests(f"too many {what}; wait a minute")
+        error.headers = {"Retry-After": str(int(limiter.window_s))}
+        raise error
+
+
+@contextmanager
+def _planner_slot() -> Iterator[None]:
     if not PLANNER_SLOTS.acquire(timeout=PLANNER_WAIT_S):
         raise Busy("planner is busy; retry in a moment")
     try:
-        return build_plan(world, request.budget_inr, request.risk_aversion, request.cities)
+        yield
     except PlanRequestError as exc:
         raise BadRequest(str(exc)) from exc
     finally:
         PLANNER_SLOTS.release()
+
+
+def _solve(world: World, budget: float, risk_aversion: float, cities: list[str] | None) -> PlanResult:
+    with _planner_slot():
+        return build_plan(world, budget, risk_aversion, cities)
 
 
 def get_plan(session: Session, principal: Principal, plan_id: int) -> Plan:

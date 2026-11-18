@@ -14,7 +14,7 @@ Needs Python 3.11+.
 
 ```bash
 python -m pip install -e ".[test]"
-python -m pytest                   # 89 tests, about 12 s
+python -m pytest                   # 107 tests, about 20 s
 python scripts/proof_chart.py      # about 3.5 min; writes out/proof_chart.png and out/proof_results.csv
 python scripts/calibrate.py        # downloads 16 MB once; writes out/calibration.json
 ```
@@ -31,8 +31,11 @@ Send the key in the `X-API-Key` header. Demo users: **asha** (buyer), **ravi** (
 
 | Endpoint | Who | What |
 |---|---|---|
+| `GET /v1/me` | anyone | Your name, role and company |
 | `GET /v1/markets` | anyone | Hotel-weeks that can be bought, with past bookings and sold-out searches |
-| `POST /v1/plans` | anyone | Budget + risk (+ cities) in, ranked buy plan out, each line with a reason |
+| `POST /v1/plans` | anyone | Budget + risk (+ cities) in, ranked buy plan out, each line with a reason and its numbers (`why`) |
+| `POST /v1/plans/preview` | anyone | The same plan without saving it, for sliders (120 a minute) |
+| `GET /v1/frontier` | anyone | Expected profit and worst case at risk 0, 0.1 … 1 for one budget (10 a minute) |
 | `GET /v1/plans`, `GET /v1/plans/{id}` | anyone | Your company's plans |
 | `PATCH /v1/plans/{id}/lines/{line}` | approver, admin | Approve or reject a line; never your own plan |
 | `GET /v1/plans/{id}/export.csv` | anyone | Plan as a spreadsheet |
@@ -40,6 +43,8 @@ Send the key in the `X-API-Key` header. Demo users: **asha** (buyer), **ravi** (
 
 Settings: `VOYANCE_DATABASE_URL` (default `sqlite:///voyance.db`, any SQLAlchemy URL works) and
 `VOYANCE_CORS_ORIGINS` (comma-separated dashboard origins, e.g. `http://localhost:5173`; `*` is refused).
+For a hosted demo, `VOYANCE_DEMO_KEY_ASHA` (and `_RAVI`, `_MEERA`, `_ZED`) give `seed_demo.py` fixed keys.
+There are no database migrations yet: after pulling a schema change, delete `voyance.db` and seed again.
 
 ### Security model
 

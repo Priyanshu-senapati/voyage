@@ -34,6 +34,16 @@ def test_same_inputs_give_the_same_plan():
     assert build_plan(WORLD, 3e6, 0.3) == build_plan(WORLD, 3e6, 0.3)
 
 
+def test_each_line_carries_the_numbers_behind_its_reason():
+    line = build_plan(WORLD, budget=5_000_000, risk_aversion=0.3).lines[0]
+    why = line.why
+    assert why["booked_last_december"] == why["bookings_past_decembers"][-1]
+    assert len(why["bookings_past_decembers"]) == len(why["soldout_searches_past"]) == 3
+    assert why["margin"] == pytest.approx((line.unit_price - line.unit_cost) / line.unit_price)
+    assert f"expected demand {why['expected_demand']:.0f} room-nights" in line.reason
+    assert ("event week" in line.reason) == why["event_week"]
+
+
 def test_reasons_mention_sold_out_searches_and_event_weeks():
     reasons = " ".join(line.reason for line in build_plan(WORLD, budget=2e7, risk_aversion=0.0).lines)
     assert "sold-out searches" in reasons

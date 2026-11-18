@@ -6,14 +6,17 @@ import { StatusChip } from './StatusChip'
 
 interface Props {
   line: PlanLine
-  creator: string
-  onDecide: (id: number, decision: Decision) => void
+  note: string // who decides, or why this viewer can't
+  canDecide: boolean
+  unsaved: boolean
+  busy: boolean
+  onDecide: (id: number, decision: Exclude<Decision, 'pending'>) => void
 }
 
 const PAST = ["Dec '23", "Dec '24", "Dec '25"]
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
-export function WhyPanel({ line, creator, onDecide }: Props) {
+export function WhyPanel({ line, note, canDecide, unsaved, busy, onDecide }: Props) {
   const { why } = line
   const ink = CITY_INK[line.city]
   const scale = Math.ceil((Math.max(why.expected_demand, line.rooms, why.booked_last_december) * 1.08) / 20) * 20
@@ -24,9 +27,9 @@ export function WhyPanel({ line, creator, onDecide }: Props) {
     : null
 
   return (
-    <aside className="why" id="why" aria-label={`Why line ${line.id}`}>
+    <section className="why" id="why" role="tabpanel" aria-labelledby="tab-why">
       <header className="why-head">
-        <span className="why-rank">{line.id}</span>
+        <span className="why-rank">{line.rank}</span>
         <div>
           <h2>
             {line.city} · {line.hotel}
@@ -40,7 +43,7 @@ export function WhyPanel({ line, creator, onDecide }: Props) {
             )}
           </p>
         </div>
-        <StatusChip decision={line.decision} />
+        <StatusChip decision={line.decision} unsaved={unsaved} />
       </header>
 
       <dl className="buy-terms">
@@ -133,19 +136,19 @@ export function WhyPanel({ line, creator, onDecide }: Props) {
       <footer className="decide">
         {line.decision === 'pending' ? (
           <>
-            <p>
-              {capital(creator)} made this plan, so you decide. Final and logged.
-            </p>
+            <p>{note}</p>
+            {canDecide && (
             <div className="decide-actions">
-              <button className="btn btn-primary" type="button" onClick={() => onDecide(line.id, 'approved')}>
+              <button className="btn btn-primary" type="button" disabled={busy} onClick={() => onDecide(line.id, 'approved')}>
                 <Check size={16} strokeWidth={2.5} aria-hidden="true" />
                 Approve line
               </button>
-              <button className="btn btn-reject" type="button" onClick={() => onDecide(line.id, 'rejected')}>
+              <button className="btn btn-reject" type="button" disabled={busy} onClick={() => onDecide(line.id, 'rejected')}>
                 <X size={16} strokeWidth={2.5} aria-hidden="true" />
                 Reject
               </button>
             </div>
+            )}
           </>
         ) : (
           <p className="decided">
@@ -154,6 +157,6 @@ export function WhyPanel({ line, creator, onDecide }: Props) {
           </p>
         )}
       </footer>
-    </aside>
+    </section>
   )
 }

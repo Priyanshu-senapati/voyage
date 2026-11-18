@@ -9,6 +9,8 @@ interface Props {
   lines: PlanLine[]
   selectedId: number
   onSelect: (id: number) => void
+  onExport: () => void
+  unsaved: boolean
 }
 
 // Fixed size ramp: the dot reads before the number does
@@ -19,7 +21,7 @@ function rampSize(searches: number): number {
   return searches > 0 ? 4 : 0
 }
 
-export function BuyList({ lines, selectedId, onSelect }: Props) {
+export function BuyList({ lines, selectedId, onSelect, onExport, unsaved }: Props) {
   const [city, setCity] = useState<string | null>(null)
   const shown = city ? lines.filter((line) => line.city === city) : lines
 
@@ -40,14 +42,14 @@ export function BuyList({ lines, selectedId, onSelect }: Props) {
             </button>
           ))}
         </div>
-        <button className="btn btn-ghost" type="button">
+        <button className="btn btn-ghost" type="button" onClick={onExport} disabled={unsaved}>
           <Download size={14} strokeWidth={2.25} aria-hidden="true" />
           CSV
         </button>
       </div>
 
       <div className="table-wrap">
-        <table className="table">
+        <table className="table" aria-label="Buy list">
           <thead>
             <tr>
               <th className="c-rank" scope="col">#</th>
@@ -79,7 +81,7 @@ export function BuyList({ lines, selectedId, onSelect }: Props) {
                   aria-selected={line.id === selectedId}
                   onClick={() => onSelect(line.id)}
                 >
-                  <td className="c-rank">{line.id}</td>
+                  <td className="c-rank">{line.rank}</td>
                   <td className="c-hotel">
                     <button type="button" className="row-select" onClick={() => onSelect(line.id)}>
                       <i className="city-mark" style={{ background: ink }} aria-hidden="true" />
@@ -115,7 +117,7 @@ export function BuyList({ lines, selectedId, onSelect }: Props) {
                   <td className="c-num" data-label="Sell at">{inr(line.unit_price)}</td>
                   <td className="c-num c-profit" data-label="Profit">{inr(line.expected_profit)}</td>
                   <td className="c-status">
-                    <StatusChip decision={line.decision} />
+                    <StatusChip decision={line.decision} unsaved={unsaved} />
                   </td>
                 </tr>
               )

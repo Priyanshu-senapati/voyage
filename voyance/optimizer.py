@@ -139,9 +139,11 @@ def solve_relaxed(cost: ArrayLike, price: ArrayLike, cap: ArrayLike, demand: Arr
     salvage = np.zeros(cost.size) if salvage is None else np.asarray(salvage, dtype=float)
     _validate(cost, price, cap, demand, salvage, budget, risk_aversion, alpha)
     groups = [np.asarray(g, dtype=int) for g in groups]
-    shares = np.broadcast_to(np.asarray(group_share, dtype=float), (len(groups),))
-    if ((shares <= 0) | (shares > 1)).any() or any(((g < 0) | (g >= cost.size)).any() for g in groups):
-        raise ValueError("each group needs item indices and a share of the budget in (0, 1]")
+    shares = np.asarray(group_share, dtype=float)
+    shares = np.full(len(groups), float(shares)) if shares.ndim == 0 else shares
+    if (shares.shape != (len(groups),) or not np.isfinite(shares).all() or ((shares <= 0) | (shares > 1)).any()
+            or any(((g < 0) | (g >= cost.size)).any() or np.unique(g).size != g.size for g in groups)):
+        raise ValueError("each group needs distinct item indices and a share of the budget in (0, 1]")
 
     c, a_ub, b_ub, lower, upper = _model(cost, price, cap, demand, salvage, budget, risk_aversion, alpha)
     if groups:  # appended last, so the rows before keep their places

@@ -243,7 +243,7 @@ def test_api_contract_gives_the_dashboard_fixed_value_lists(api):
         "empty", "pending", "approved", "rejected", "mixed"}
     assert schemas["MeOut"]["properties"]["role"]["enum"] == ["buyer", "approver", "admin"]
     assert "sell_through" in schemas["PreviewLine"]["required"]  # a computed field the dashboard reads
-    assert schemas["PreviewLine"]["properties"]["limited_by"]["enum"] == ["hotel", "budget", "demand"]
+    assert schemas["PreviewLine"]["properties"]["limited_by"]["enum"] == ["hotel", "cap", "budget", "demand"]
     assert schemas["QueueItem"]["properties"]["action"]["enum"] == ["buy_now", "scheduled", "watch", "skip"]
 
 
@@ -333,7 +333,7 @@ def test_caps_shape_the_plan_say_what_they_cost_and_are_saved_with_it(api):
     assert {e["kind"] for e in free["exposure"]} == {"city", "hotel"}
     capped = preview(client, keys["buyer"], budget_inr=4_000_000, max_city_share=0.25).json()
     assert capped["max_city_share"] == 0.25 and capped["caps_cost"] > 0
-    assert all(e["share_of_budget"] <= 0.25 for e in capped["exposure"] if e["kind"] == "city")
+    assert all(e["share_of_budget"] <= 0.25 + 1e-9 for e in capped["exposure"] if e["kind"] == "city")
     saved = new_plan(client, keys["buyer"], budget_inr=4_000_000, max_city_share=0.25, max_hotel_share=0.2).json()
     fetched = client.get(f"/v1/plans/{saved['id']}", headers=auth(keys["buyer"])).json()
     assert (fetched["max_city_share"], fetched["max_hotel_share"]) == (0.25, 0.2)

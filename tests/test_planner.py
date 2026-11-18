@@ -5,6 +5,7 @@ import pytest
 from scipy.optimize import linprog
 
 from voyance import optimizer
+from voyance.api import planner
 from voyance.api.planner import N_SCENARIOS, PLAN_SEED, build_plan
 from voyance.demand import scenarios
 from voyance.sim import DEMAND_CV, WORST_SHARE, hidden_demand_mean, make_world
@@ -172,14 +173,33 @@ def test_a_city_cap_holds_its_spend_and_says_what_it_costs():
     free = build_plan(WORLD, 4e6, 0.3)
     biggest = max(_spend_by(free, lambda line: line.city).values()) / 4e6
     capped = build_plan(WORLD, 4e6, 0.3, max_city_share=biggest * 0.7)
-    assert max(_spend_by(capped, lambda line: line.city).values()) <= biggest * 0.7 * 4e6
+    assert max(_spend_by(capped, lambda line: line.city).values()) <= biggest * 0.7 * 4e6 + 1
     assert capped.caps_cost > 0 and capped.expected_profit < free.expected_profit
-    assert any(e.at_cap for e in capped.exposure if e.kind == "city")
+    at_cap = {e.name for e in capped.exposure if e.kind == "city" and e.at_cap}
+    assert at_cap and all(line.limited_by == "cap" for line in capped.lines if line.city in at_cap)
+
+
+def test_a_cap_below_one_rooms_cost_empties_the_plan_and_costs_what_it_forgoes():
+    free = build_plan(WORLD, 4e6, 0.3)
+    starved = build_plan(WORLD, 4e6, 0.3, max_hotel_share=0.0005)  # Rs 2,000 a hotel; rooms cost 3,500+
+    assert not starved.lines and starved.caps_cost > 0.5 * free.expected_profit
+    assert all(p.reason.startswith("its hotel is at the cap") or p.earns_here <= 0 for p in starved.passed)
+
+
+def test_caps_cost_an_extra_solve_only_when_they_can_bind_and_are_priced(monkeypatch):
+    calls = []
+    real = planner.solve_relaxed
+    monkeypatch.setattr(planner, "solve_relaxed", lambda *a, **k: calls.append(1) or real(*a, **k))
+    build_plan(WORLD, 4e6, 0.3, max_city_share=1.0)
+    build_plan(WORLD, 4e6, 0.3, max_city_share=0.25, price_caps=False)
+    assert len(calls) == 2
+    build_plan(WORLD, 4e6, 0.3, max_city_share=0.25)
+    assert len(calls) == 4
 
 
 def test_a_hotel_cap_holds_each_hotels_spend():
     capped = build_plan(WORLD, 4e6, 0.3, max_hotel_share=0.08)
-    assert max(_spend_by(capped, lambda line: (line.city, line.hotel)).values()) <= 0.08 * 4e6
+    assert max(_spend_by(capped, lambda line: (line.city, line.hotel)).values()) <= 0.08 * 4e6 + 1
     hotels = [e for e in capped.exposure if e.kind == "hotel"]
     assert len(hotels) == 10 and all(e.cap == 0.08 for e in hotels) and any(e.at_cap for e in hotels)
 

@@ -107,7 +107,7 @@ def test_group_caps_keep_each_groups_spend_within_its_share_of_the_budget():
     assert cost[:2] @ capped.buy[:2] <= 0.5 * 2_000 + 1e-6 and capped.objective < free.objective
     whole = optimize(cost, price, cap, demand, budget=2_000.0, risk_aversion=0.3, alpha=0.1, groups=GROUPS,
                      group_share=0.5)
-    assert cost[:2] @ whole[:2] <= 0.5 * 2_000  # rounding down never breaks a cap
+    assert cost[:2] @ whole[:2] <= 0.5 * 2_000 + 1e-6  # rounding down never breaks a cap (solver tolerance)
 
 
 def test_each_group_can_have_its_own_share():
@@ -118,10 +118,12 @@ def test_each_group_can_have_its_own_share():
     assert cost[:2] @ sol.buy[:2] <= 0.3 * 2_000 + 1e-6
 
 
-def test_group_caps_need_a_share_between_zero_and_one():
+@pytest.mark.parametrize("groups, share", [(GROUPS, 0.0), (GROUPS, float("nan")), (GROUPS, [0.5]),
+                                           ((np.array([0, 0]),), 0.5), ((np.array([7]),), 0.5)])
+def test_group_caps_need_distinct_items_and_a_share_between_zero_and_one(groups, share):
     cost, price, cap, demand = small_instance()
     with pytest.raises(ValueError, match="share"):
-        solve_relaxed(cost, price, cap, demand, budget=2_000.0, groups=GROUPS, group_share=0.0)
+        solve_relaxed(cost, price, cap, demand, budget=2_000.0, groups=groups, group_share=share)
 
 
 def test_profits_per_scenario():

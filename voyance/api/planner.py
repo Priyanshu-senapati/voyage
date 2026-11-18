@@ -33,7 +33,7 @@ class PlanLine:
     worst_case_profit: float  # this line alone, in its worst WORST_SHARE of scenarios
     buy_by: date
     first_night: date
-    limited_by: str  # what stopped it buying more: "hotel" (allotment), "budget" or "demand"
+    limited_by: str  # what stopped it buying more: "hotel" (allotment), "cap" (city/hotel cap), "budget", "demand"
     extra_room_value: float  # risk-adjusted rupees one more room of allotment would add (hotel-limited lines)
 
 
@@ -79,12 +79,14 @@ class PlanResult:
 
 def build_plan(world: World, budget: float, risk_aversion: float, cities: list[str] | None = None,
                demand_change: float = 0.0, cost_change: float = 0.0, event_lift: float | None = None,
-               max_city_share: float | None = None, max_hotel_share: float | None = None) -> PlanResult:
+               max_city_share: float | None = None, max_hotel_share: float | None = None,
+               price_caps: bool = True) -> PlanResult:
     """Best buy plan within budget, best lines first.
 
     What-ifs re-plan in a different world: demand `demand_change` above the forecast (0.2 = +20%), supplier
     rates `cost_change` dearer, and this season's event weeks lifted `event_lift` times instead of the
-    planner's own guess. Caps keep any one city (or hotel) to at most that share of the budget.
+    planner's own guess. Caps keep any one city (or hotel) to at most that share of the whole budget, also
+    when `cities` narrows the plan; `price_caps=False` skips working out what they cost (one more solve).
     """
     idx = _select(world, cities)
     lift = ASSUMED_EVENT_LIFT if event_lift is None else event_lift
@@ -95,19 +97,24 @@ def build_plan(world: World, budget: float, risk_aversion: float, cities: list[s
     hotel_of = [f"{world.city[i]} · {world.hotel[i]}" for i in idx]  # "Hotel A" is a different hotel per city
     groups, shares = [], []
     for names, share in ((city_of, max_city_share), (hotel_of, max_hotel_share)):
-        if share is not None:
+        if share is not None and share < 1:  # a cap of the whole budget can never bind
             for name in dict.fromkeys(names):
                 groups.append(np.array([j for j, n in enumerate(names) if n == name]))
                 shares.append(share)
     solution = solve_relaxed(cost, price, cap, demand, budget, risk_aversion, WORST_SHARE, groups=groups,
                              group_share=shares)
-    # priced by solving once without the caps: per-cap shadow prices split arbitrarily when caps add up
-    # to the budget, the total cost does not
-    caps_cost = 0.0
-    if groups:
-        uncapped = solve_relaxed(cost, price, cap, demand, budget, risk_aversion, WORST_SHARE)
-        caps_cost = max(0.0, uncapped.objective - solution.objective)
     buy = whole_rooms(solution.buy, cost, cap, budget)
+    # priced on the whole-room plans a buyer sees, by solving once without the caps: per-cap shadow prices
+    # split arbitrarily when caps add up to the budget, and miss a cap below one room's cost
+    caps_cost = 0.0
+    if groups and price_caps:
+        free = whole_rooms(solve_relaxed(cost, price, cap, demand, budget, risk_aversion, WORST_SHARE).buy,
+                           cost, cap, budget)
+        caps_cost = max(0.0, _risk_adjusted(free, cost, price, demand, risk_aversion)
+                        - _risk_adjusted(buy, cost, price, demand, risk_aversion))
+    exposure = (*_exposure("city", city_of, cost * buy, cost * solution.buy, budget, max_city_share),
+                *_exposure("hotel", hotel_of, cost * buy, cost * solution.buy, budget, max_hotel_share))
+    capped = {e.name: f"its {e.kind} is at the cap of {e.cap:.0%} of the budget" for e in exposure if e.at_cap}
 
     per_scenario = profits(buy, cost, price, demand)
     sold = np.minimum(buy, demand).mean(axis=0)
@@ -117,17 +124,19 @@ def build_plan(world: World, budget: float, risk_aversion: float, cities: list[s
     hurdle = solution.budget_value
     lines, passed = [], []
     for j, i in enumerate(idx):
+        cap_reason = capped.get(city_of[j]) or capped.get(hotel_of[j])
         if buy[j] == 0:
             passed.append(_passed(world, i, cost[j], price[j], mean[j], demand[:, j], solution.buy[j],
-                                  solution.forced_room_cost[j], hurdle))
+                                  solution.forced_room_cost[j], hurdle, cap_reason))
             continue
         why = _why(world, i, mean[j], cost[j], price[j])
         at_cap = buy[j] >= np.floor(cap[j])  # whole rooms bought, after rounding and the budget trim
+        limited_by = ("hotel" if at_cap else "cap" if cap_reason else
+                      "budget" if hurdle > HURDLE_EPS else "demand")
         lines.append(PlanLine(world.city[i], world.week[i], world.hotel[i], int(buy[j]), float(cost[j]),
                               float(price[j]), float(sold[j]), float(line_profit[j]), _reason(why), why,
                               cvar(line_scenarios[:, j], WORST_SHARE), buy_by[j].item(),
-                              world.first_night[i].item(),
-                              "hotel" if at_cap else "budget" if hurdle > HURDLE_EPS else "demand",
+                              world.first_night[i].item(), limited_by,
                               float(solution.extra_room_value[j]) if at_cap else 0.0))
     return PlanResult(
         lines=tuple(sorted(lines, key=lambda line: -line.expected_profit)),
@@ -136,10 +145,16 @@ def build_plan(world: World, budget: float, risk_aversion: float, cities: list[s
         worst_case_profit=cvar(per_scenario, WORST_SHARE),
         hurdle_rate=hurdle,
         passed=tuple(sorted(passed, key=lambda p: p.forced_room_cost)),
-        exposure=(*_exposure("city", city_of, cost * buy, cost * solution.buy, budget, max_city_share),
-                  *_exposure("hotel", hotel_of, cost * buy, cost * solution.buy, budget, max_hotel_share)),
+        exposure=exposure,
         caps_cost=caps_cost,
     )
+
+
+def _risk_adjusted(buy: np.ndarray, cost: np.ndarray, price: np.ndarray, demand: np.ndarray,
+                   risk_aversion: float) -> float:
+    """The optimizer's objective for a whole-room plan: (1 - r) x expected profit + r x worst-share CVaR."""
+    per_scenario = profits(buy, cost, price, demand)
+    return float((1 - risk_aversion) * per_scenario.mean() + risk_aversion * cvar(per_scenario, WORST_SHARE))
 
 
 def _exposure(kind: str, names: list[str], spend: np.ndarray, relaxed_spend: np.ndarray, budget: float,
@@ -154,7 +169,7 @@ def _exposure(kind: str, names: list[str], spend: np.ndarray, relaxed_spend: np.
 
 
 def _passed(world: World, i: int, cost: float, price: float, mean: float, demand: np.ndarray,
-            fractional_buy: float, shadow_cost: float, hurdle: float) -> Passed:
+            fractional_buy: float, shadow_cost: float, hurdle: float, cap_reason: str | None) -> Passed:
     earns_here = float(price * np.minimum(demand, 1).mean() - cost)
     earns_elsewhere = float(hurdle * cost)
     # The LP's shadow price is the rate for a first sliver of a room and can be a degenerate 0. The money
@@ -163,6 +178,8 @@ def _passed(world: World, i: int, cost: float, price: float, mean: float, demand
     forced = max(float(shadow_cost), earns_elsewhere - earns_here)
     if earns_here <= 0:
         reason = f"a room here would lose about ₹{-earns_here:,.0f}: demand is too thin for its price"
+    elif cap_reason:
+        reason = cap_reason
     elif fractional_buy > 1e-6:
         reason = "worth less than one whole room"
     elif hurdle > HURDLE_EPS:

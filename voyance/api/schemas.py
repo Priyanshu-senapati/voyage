@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 City = Annotated[str, Field(min_length=1, max_length=50)]
 Decision = Literal["pending", "approved", "rejected"]
-LimitedBy = Literal["hotel", "budget", "demand"]
+LimitedBy = Literal["hotel", "cap", "budget", "demand"]
 QueueAction = Literal["buy_now", "scheduled", "watch", "skip"]
 PlanStatus = Literal["empty", "pending", "approved", "rejected", "mixed"]
 Role = Literal["buyer", "approver", "admin"]
@@ -27,10 +27,11 @@ class PlanScope(BaseModel):
     budget_inr: float = Field(gt=0, le=1e10, description="Maximum spend in INR (up to ₹1,000 crore)")
     cities: list[City] | None = Field(None, min_length=1, max_length=50,
                                       description="Limit to these cities; leave out for all")
-    max_city_share: float | None = Field(None, gt=0, le=1, description="At most this share of the budget in any "
-                                         "one city, e.g. 0.35; leave out for no cap")
-    max_hotel_share: float | None = Field(None, gt=0, le=1, description="At most this share of the budget with "
-                                          "any one hotel (supplier); leave out for no cap")
+    max_city_share: float | None = Field(None, gt=0, le=1, description="At most this share of the whole budget "
+                                         "in any one city, e.g. 0.35, also when `cities` narrows the plan; "
+                                         "leave out for no cap")
+    max_hotel_share: float | None = Field(None, gt=0, le=1, description="At most this share of the whole budget "
+                                          "with any one hotel (supplier); leave out for no cap")
 
 
 CAP_FIELDS = frozenset({"max_city_share", "max_hotel_share"})
@@ -97,8 +98,8 @@ class PreviewLine(BaseModel):
     worst_case_profit: float = Field(description="This line alone, averaged over its worst 5% of scenarios")
     buy_by: date = Field(description="Commit by this date: 90% of that week's agent bookings come later")
     first_night: date
-    limited_by: LimitedBy = Field(description="What stopped it buying more: the hotel's allotment, the budget "
-                                  "(the next room earns less than the hurdle rate) or demand")
+    limited_by: LimitedBy = Field(description="What stopped it buying more: the hotel's allotment, a city or "
+                                  "hotel cap, the budget (the next room earns less than the hurdle rate) or demand")
     extra_room_value: float = Field(description="Risk-adjusted rupees one more room of allotment would add; "
                                     "0 unless limited by the hotel")
 
@@ -132,11 +133,11 @@ class PlanTotals(BaseModel):
 
 class ExposureOut(BaseModel):
     kind: Literal["city", "hotel"]
-    name: str
+    name: str = Field(description='A city, or "City · Hotel" for a hotel')
     spend: float
     share_of_budget: float
     cap: float | None
-    at_cap: bool
+    at_cap: bool = Field(description="The optimizer's plan fills the cap; whole rooms can round a little below it")
 
 
 class PassedOut(BaseModel):

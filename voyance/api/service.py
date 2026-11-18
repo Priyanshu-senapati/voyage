@@ -118,7 +118,8 @@ def risk_frontier(world: World, principal: Principal, scope: FrontierQuery) -> l
     _limit(FRONTIER_RATE, principal, "risk frontiers")
     options = scope.model_dump(include=WHAT_IF_FIELDS | CAP_FIELDS)
     with _planner_slot():  # one slot for the whole sweep; the solves run one at a time (see optimizer)
-        results = [build_plan(world, scope.budget_inr, risk, scope.cities, **options) for risk in RISK_STEPS]
+        results = [build_plan(world, scope.budget_inr, risk, scope.cities, price_caps=False, **options)
+                   for risk in RISK_STEPS]
     return [FrontierPoint(risk_aversion=risk, expected_profit=result.expected_profit,
                           worst_case_profit=result.worst_case_profit, spend=result.spend)
             for risk, result in zip(RISK_STEPS, results)]

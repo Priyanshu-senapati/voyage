@@ -108,7 +108,8 @@ def _model(cost, price, cap, demand, salvage, budget, risk_aversion, alpha):
                                sparse.csr_matrix((n_scen * n, n_tail))])
     spend = sparse.hstack([cost[None, :], sparse.csr_matrix((1, n_scen * n + n_tail))])
     # u_s >= eta - profit_s, written as u_s - eta + profit_s >= 0
-    tail = sparse.hstack([sparse.kron(np.ones((n_scen, 1)), hold[None, :]),
+    # a sparse first input keeps kron returning a sparse matrix on SciPy >= 1.20 too
+    tail = sparse.hstack([sparse.kron(sparse.coo_matrix(np.ones((n_scen, 1))), hold[None, :]),
                           sparse.kron(sparse.identity(n_scen), margin[None, :]),
                           -np.ones((n_scen, 1)), sparse.identity(n_scen)])
     constraints = [LinearConstraint(sales_cap, -np.inf, 0),

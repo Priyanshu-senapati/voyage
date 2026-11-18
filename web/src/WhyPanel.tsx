@@ -1,6 +1,6 @@
 import { Check, X } from 'lucide-react'
 import type { Decision, PlanLine } from './types'
-import { CITY_INK } from './cities'
+import { CITY_INK, SEASON_YEAR } from './cities'
 import { count, inr, percent, weekLabel } from './format'
 import { StatusChip } from './StatusChip'
 
@@ -13,7 +13,9 @@ interface Props {
   onDecide: (id: number, decision: Exclude<Decision, 'pending'>) => void
 }
 
-const PAST = ["Dec '23", "Dec '24", "Dec '25"]
+const PAST = [3, 2, 1].map((back) => `Dec '${String(SEASON_YEAR - back).slice(2)}`)
+const buyBy = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function WhyPanel({ line, note, canDecide, unsaved, busy, onDecide }: Props) {
@@ -35,7 +37,7 @@ export function WhyPanel({ line, note, canDecide, unsaved, busy, onDecide }: Pro
             {line.city} · {line.hotel}
           </h2>
           <p>
-            {weekLabel(line.week)}
+            {weekLabel(line.week)} · <span className="why-buyby">buy by {buyBy(line.buy_by)}</span>
             {why.event_week && (
               <span className="why-event">
                 <sup className="footnote">E</sup> Event week this season
@@ -52,7 +54,7 @@ export function WhyPanel({ line, note, canDecide, unsaved, busy, onDecide }: Pro
           <dd>{line.rooms} rooms</dd>
         </div>
         <div>
-          <dt>Cost / room</dt>
+          <dt>Cost</dt>
           <dd>{inr(line.unit_cost)}</dd>
         </div>
         <div>
@@ -60,8 +62,12 @@ export function WhyPanel({ line, note, canDecide, unsaved, busy, onDecide }: Pro
           <dd>{inr(line.unit_price)}</dd>
         </div>
         <div>
-          <dt>Expected profit</dt>
+          <dt>Exp. profit</dt>
           <dd className="terms-profit">{inr(line.expected_profit)}</dd>
+        </div>
+        <div>
+          <dt>Worst 5%</dt>
+          <dd>{inr(line.worst_case_profit)}</dd>
         </div>
       </dl>
 

@@ -17,7 +17,7 @@ deploy/cloudrun.sh                        # builds in Cloud Build and deploys; p
 
 - Runs one instance at most, because the demo database and the rate limits live in its memory.
 - Sized for the free tier: 512 MiB, CPU billed only while a request runs, no startup boost, scale to zero, and only
-  the two newest images kept. `asia-south1` (Mumbai) is a Tier 1 region. Only committed files are uploaded.
+  the newest image kept. `asia-south1` (Mumbai) is a Tier 1 region. Only committed files are uploaded.
 - Scales to zero when idle. The first visit after that takes a few seconds and starts from fresh demo data.
 - The demo keys stay the same across redeploys. Set `VOYANCE_DEMO_KEY_ASHA` (and `_RAVI`, `_MEERA`, `_ZED`)
   before running the script to rotate them.

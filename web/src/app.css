@@ -1051,7 +1051,7 @@ td.c-soldout {
 
 .buy-terms {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1.2fr;
+  grid-template-columns: 1.05fr 0.9fr 0.9fr 1fr 1.1fr;
   margin: 0;
   border-top: 2px solid var(--ink);
   border-bottom: 1px solid var(--seam);
@@ -1075,13 +1075,18 @@ td.c-soldout {
 
 .buy-terms dd {
   margin: 1px 0 0;
-  font-size: 16.5px;
+  font-size: 15.5px;
   font-weight: 680;
   font-stretch: 88%;
 }
 
 .terms-profit {
   color: var(--go);
+}
+
+.why-buyby {
+  color: var(--ink);
+  font-weight: 620;
 }
 
 .why h3 {
@@ -1262,6 +1267,16 @@ td.c-soldout {
 
 .page .table td {
   height: 44px;
+}
+
+.page .table th:first-child,
+.page .table td:first-child {
+  padding-left: 24px;
+}
+
+.page .table th:last-child,
+.page .table td:last-child {
+  padding-right: 24px;
 }
 
 .row-static {

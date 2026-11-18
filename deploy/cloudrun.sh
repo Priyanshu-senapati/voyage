@@ -9,7 +9,7 @@
 # The demo keys are public by design (the sign-in page offers them), so never put real data in this service.
 #
 # Sized to stay inside Cloud Run's free tier: 512 MiB, CPU billed only while a request runs, no startup boost,
-# scale to zero, one instance. asia-south1 is a Tier 1 region. Old images are cleaned up after each deploy.
+# scale to zero, one instance. asia-south1 is a Tier 1 region. Older images are deleted after each deploy.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -67,7 +67,7 @@ gcloud run deploy "$SERVICE" \
   --set-env-vars "$envs" \
   --quiet
 
-# keep the two newest images; Artifact Registry's free storage is 0.5 GB
+# keep only the newest image (the one serving); Artifact Registry's free storage is 0.5 GB
 gcloud artifacts repositories set-cleanup-policies cloud-run-source-deploy --location "$REGION" \
   --policy deploy/registry-cleanup.json --no-dry-run --quiet >/dev/null
 

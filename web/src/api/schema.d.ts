@@ -337,6 +337,17 @@ export interface components {
             /** Reason */
             reason: string;
             why: components["schemas"]["LineWhy"];
+            /**
+             * Worst Case Profit
+             * @description This line alone, averaged over its worst 5% of scenarios
+             */
+            worst_case_profit: number;
+            /**
+             * Buy By
+             * Format: date
+             * @description Commit by this date: 90% of that week's agent bookings come later
+             */
+            buy_by: string;
             /** Id */
             id: number;
             /**
@@ -452,6 +463,17 @@ export interface components {
             /** Reason */
             reason: string;
             why: components["schemas"]["LineWhy"];
+            /**
+             * Worst Case Profit
+             * @description This line alone, averaged over its worst 5% of scenarios
+             */
+            worst_case_profit: number;
+            /**
+             * Buy By
+             * Format: date
+             * @description Commit by this date: 90% of that week's agent bookings come later
+             */
+            buy_by: string;
             /** Sell Through */
             readonly sell_through: number;
         };

@@ -10,7 +10,7 @@ name = "voyance"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = ["numpy", "scipy", "matplotlib", "fastapi", "uvicorn", "sqlalchemy>=2", "pydantic>=2",
-                "pandas>=2", "lightgbm>=4"]
+                "pandas>=2", "lightgbm[scikit-learn]>=4"]
 
 [project.optional-dependencies]
 test = ["pytest", "httpx", "coverage"]

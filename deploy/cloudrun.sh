@@ -7,8 +7,20 @@
 # Settings (environment): REGION (default asia-south1), SERVICE (default voyance), and the demo keys
 # VOYANCE_DEMO_KEY_ASHA, _RAVI, _MEERA, _ZED. Missing keys are kept from the running service, else made up.
 # The demo keys are public by design (the sign-in page offers them), so never put real data in this service.
+#
+# Sized to stay inside Cloud Run's free tier: 512 MiB, CPU billed only while a request runs, no startup boost,
+# scale to zero, one instance. asia-south1 is a Tier 1 region. Old images are cleaned up after each deploy.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+
+# upload committed code only, never local files (.env, databases, design notes)
+if [ -n "$(git status --porcelain -- Dockerfile .dockerignore deploy voyance scripts web pyproject.toml)" ]; then
+  echo "Commit your changes first: only committed files are deployed." >&2
+  exit 1
+fi
+SRC="$(mktemp -d)"
+trap 'rm -rf "$SRC"' EXIT
+git archive HEAD | tar -x -C "$SRC"
 
 REGION="${REGION:-asia-south1}"
 SERVICE="${SERVICE:-voyance}"
@@ -35,17 +47,23 @@ gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregi
 
 # one instance at most: the demo database and the per-network limits live in its memory
 gcloud run deploy "$SERVICE" \
-  --source . \
+  --source "$SRC" \
   --region "$REGION" \
   --allow-unauthenticated \
   --port 8080 \
   --cpu 1 \
-  --memory 1Gi \
+  --memory 512Mi \
+  --cpu-throttling \
+  --no-cpu-boost \
   --min-instances 0 \
   --max-instances 1 \
   --timeout 120 \
   --set-env-vars "$envs" \
   --quiet
+
+# keep the two newest images; Artifact Registry's free storage is 0.5 GB
+gcloud artifacts repositories set-cleanup-policies cloud-run-source-deploy --location "$REGION" \
+  --policy deploy/registry-cleanup.json --no-dry-run --quiet >/dev/null
 
 url="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
 echo "Live: $url"

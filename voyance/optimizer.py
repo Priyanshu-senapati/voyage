@@ -9,10 +9,28 @@ scenarios, linearised the Rockafellar-Uryasev way, so the whole thing is one lin
 program solved by HiGHS (bundled with scipy).
 """
 
+from dataclasses import dataclass
+
 import numpy as np
 from numpy.typing import ArrayLike
 from scipy import sparse
-from scipy.optimize import Bounds, LinearConstraint, milp
+from scipy.optimize import linprog
+
+
+@dataclass(frozen=True)
+class Solution:
+    """The best plan when fractional rooms are allowed, and what the solver knows about its economics.
+
+    Values are in risk-adjusted rupees, the units of the objective: (1 - risk_aversion) x expected profit
+    + risk_aversion x CVaR. They come from the linear program's dual values (shadow prices), so they are exact
+    at the margin and close for one whole room or rupee.
+    """
+
+    buy: np.ndarray               # rooms per item
+    objective: float              # risk-adjusted profit of this plan
+    budget_value: float           # what one more rupee of budget would add; 0 when money isn't the limit
+    forced_room_cost: np.ndarray  # per item bought none: what forcing one room in would cost the plan
+    extra_room_value: np.ndarray  # per item at its hotel cap: what one more room of allotment would add
 
 
 def profits(buy: ArrayLike, cost: ArrayLike, price: ArrayLike, demand: ArrayLike,
@@ -43,11 +61,16 @@ def optimize(cost: ArrayLike, price: ArrayLike, cap: ArrayLike, demand: ArrayLik
              risk_aversion: float = 0.0, alpha: float = 0.05,
              salvage: ArrayLike | None = None) -> np.ndarray:
     """Whole rooms to buy per item. demand has one row per scenario, one column per item."""
+    relaxed = plan_relaxed(cost, price, cap, demand, budget, risk_aversion, alpha, salvage)
+    return whole_rooms(relaxed, cost, cap, budget)
+
+
+def whole_rooms(relaxed: ArrayLike, cost: ArrayLike, cap: ArrayLike, budget: float) -> np.ndarray:
+    """Round a fractional plan down to whole rooms, within cap and budget."""
     # shortcut: rounds the fractional plan down, losing at most one room per item
     # (~0.06% profit in tests) for a 100x faster solve; use an integer solve if exact counts matter.
-    relaxed = plan_relaxed(cost, price, cap, demand, budget, risk_aversion, alpha, salvage)
     cost = np.asarray(cost, dtype=float)
-    buy = np.minimum(np.floor(relaxed + 1e-6), np.floor(np.asarray(cap, dtype=float)))
+    buy = np.minimum(np.floor(np.asarray(relaxed, dtype=float) + 1e-6), np.floor(np.asarray(cap, dtype=float)))
     # solver tolerance can leave a hair over budget: drop the dearest room until it fits
     while cost @ buy > budget and buy.any():
         buy[np.argmax(np.where(buy > 0, cost, -np.inf))] -= 1
@@ -58,16 +81,28 @@ def plan_relaxed(cost: ArrayLike, price: ArrayLike, cap: ArrayLike, demand: Arra
                  budget: float, risk_aversion: float = 0.0, alpha: float = 0.05,
                  salvage: ArrayLike | None = None) -> np.ndarray:
     """Optimal plan when fractional rooms are allowed."""
+    return solve_relaxed(cost, price, cap, demand, budget, risk_aversion, alpha, salvage).buy
+
+
+def solve_relaxed(cost: ArrayLike, price: ArrayLike, cap: ArrayLike, demand: ArrayLike,
+                  budget: float, risk_aversion: float = 0.0, alpha: float = 0.05,
+                  salvage: ArrayLike | None = None) -> Solution:
+    """Optimal fractional plan with its shadow prices: what money, a forced room or more allotment is worth."""
     cost, price, cap = (np.asarray(a, dtype=float) for a in (cost, price, cap))
     demand = np.atleast_2d(np.asarray(demand, dtype=float))
     salvage = np.zeros(cost.size) if salvage is None else np.asarray(salvage, dtype=float)
     _validate(cost, price, cap, demand, salvage, budget, risk_aversion, alpha)
 
-    c, constraints, bounds = _model(cost, price, cap, demand, salvage, budget, risk_aversion, alpha)
-    res = milp(c, constraints=constraints, bounds=bounds)  # no integrality given = plain LP
-    if not res.success:
+    c, a_ub, b_ub, lower, upper = _model(cost, price, cap, demand, salvage, budget, risk_aversion, alpha)
+    res = linprog(c, A_ub=a_ub, b_ub=b_ub, bounds=np.column_stack([lower, upper]), method="highs")
+    if res.status != 0:
         raise RuntimeError(f"optimizer found no plan: {res.message}")
-    return res.x[: cost.size]
+    n, budget_row = cost.size, demand.size  # rows: one sales cap per scenario and item, then the budget
+    # HiGHS reports how the minimised objective moves; the plan maximises its negative, hence the signs
+    return Solution(buy=res.x[:n], objective=float(-res.fun),
+                    budget_value=max(0.0, float(-res.ineqlin.marginals[budget_row])),
+                    forced_room_cost=np.maximum(res.lower.marginals[:n], 0.0),
+                    extra_room_value=np.maximum(-res.upper.marginals[:n], 0.0))
 
 
 def _validate(cost, price, cap, demand, salvage, budget, risk_aversion, alpha) -> None:
@@ -91,7 +126,11 @@ def _validate(cost, price, cap, demand, salvage, budget, risk_aversion, alpha) -
 
 
 def _model(cost, price, cap, demand, salvage, budget, risk_aversion, alpha):
-    """Variables in order: buy x (n), sales y (S*n, scenario-major), eta (1), shortfall u (S)."""
+    """Minimise c @ v subject to a_ub @ v <= b_ub and lower <= v <= upper.
+
+    Variables in order: buy x (n), sales y (S*n, scenario-major), eta (1), shortfall u (S).
+    Rows in order: sales caps y <= x (S*n), the budget (1), the CVaR tail (S).
+    """
     # shortcut: S*n sales variables is fine for hundreds of items x a few hundred scenarios;
     # reformulate (or sample fewer scenarios per item) before scaling to TBO's full catalogue.
     n_scen, n = demand.shape
@@ -112,10 +151,9 @@ def _model(cost, price, cap, demand, salvage, budget, risk_aversion, alpha):
     tail = sparse.hstack([sparse.kron(sparse.coo_matrix(np.ones((n_scen, 1))), hold[None, :]),
                           sparse.kron(sparse.identity(n_scen), margin[None, :]),
                           -np.ones((n_scen, 1)), sparse.identity(n_scen)])
-    constraints = [LinearConstraint(sales_cap, -np.inf, 0),
-                   LinearConstraint(spend, -np.inf, budget),
-                   LinearConstraint(tail, 0, np.inf)]
+    a_ub = sparse.vstack([sales_cap, spend, -tail]).tocsr()
+    b_ub = np.concatenate([np.zeros(n_scen * n), [budget], np.zeros(n_scen)])
 
     lower = np.concatenate([np.zeros(n + n_scen * n), [-np.inf], np.zeros(n_scen)])
     upper = np.concatenate([cap, demand.ravel(), [np.inf], np.full(n_scen, np.inf)])
-    return c, constraints, Bounds(lower, upper)
+    return c, a_ub, b_ub, lower, upper

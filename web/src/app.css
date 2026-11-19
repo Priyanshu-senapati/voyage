@@ -315,7 +315,7 @@
 }
 
 .btn-danger-outline {
-  border-color: #fda29b;
+  border-color: var(--danger-line);
   background: var(--panel);
   color: var(--danger);
 }
@@ -401,7 +401,7 @@ kbd {
   gap: 2px;
   padding: 3px;
   border-radius: var(--radius);
-  background: #eceef2;
+  background: var(--track);
 }
 
 .segmented button {
@@ -461,13 +461,13 @@ input[type='range']:disabled {
 input[type='range']::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 2px;
-  background: linear-gradient(to right, var(--accent) var(--fill), #e4e7ec var(--fill));
+  background: linear-gradient(to right, var(--accent) var(--fill), var(--border) var(--fill));
 }
 
 input[type='range']::-moz-range-track {
   height: 4px;
   border-radius: 2px;
-  background: linear-gradient(to right, var(--accent) var(--fill), #e4e7ec var(--fill));
+  background: linear-gradient(to right, var(--accent) var(--fill), var(--border) var(--fill));
 }
 
 input[type='range']::-webkit-slider-thumb {
@@ -511,7 +511,7 @@ input[type='range']:active::-webkit-slider-thumb {
 }
 
 .badge-neutral {
-  background: #f2f4f7;
+  background: var(--fill-muted);
   color: var(--ink-2);
 }
 
@@ -935,7 +935,7 @@ input[type='range']:active::-webkit-slider-thumb {
   margin-right: 10px;
   overflow: hidden;
   border-radius: 3px;
-  background: #eceef2;
+  background: var(--track);
   vertical-align: middle;
 }
 
@@ -1063,7 +1063,7 @@ input[type='range']:active::-webkit-slider-thumb {
   height: 8px;
   overflow: hidden;
   border-radius: 4px;
-  background: #f2f4f7;
+  background: var(--fill-muted);
 }
 
 .bar {
@@ -1219,7 +1219,7 @@ input[type='range']:active::-webkit-slider-thumb {
   height: 6px;
   overflow: hidden;
   border-radius: 3px;
-  background: #eceef2;
+  background: var(--track);
 }
 
 .progress-approved {
@@ -1501,7 +1501,7 @@ input[type='range']:active::-webkit-slider-thumb {
 }
 
 .tip-muted {
-  color: #c5c9d2;
+  color: var(--on-dark-muted);
 }
 
 .curve-table summary {
@@ -1693,7 +1693,7 @@ input[type='range']:active::-webkit-slider-thumb {
 }
 
 .toast-error {
-  border-color: #fda29b;
+  border-color: var(--danger-line);
 }
 
 .toast-error > svg {

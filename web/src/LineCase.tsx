@@ -57,7 +57,7 @@ export function LineCase({ line, unsaved, base }: { line: PlanLine; unsaved: boo
       <dl className="case-stats">
         <div>
           <dt>Expected profit</dt>
-          <dd className="pos">{inr(line.expected_profit)}</dd>
+          <dd className={line.expected_profit > 0 ? 'pos' : undefined}>{inr(line.expected_profit)}</dd>
           {base !== undefined && <WhatIfDelta value={line.expected_profit - (base?.expected_profit ?? 0)} format={inr} />}
         </div>
         <div>

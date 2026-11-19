@@ -1,0 +1,12 @@
+{
+  "name": "voyance-deck",
+  "private": true,
+  "description": "Builds the Voyance pitch decks (deck/*.pptx) with pptxgenjs",
+  "scripts": {
+    "build": "node build_round1.js"
+  },
+  "dependencies": {
+    "jszip": "3.10.2",
+    "pptxgenjs": "3.12.0"
+  }
+}

@@ -1,4 +1,5 @@
-"""Builds deck/assets/teaser_goa_christmas.gif from the frames that teaser/capture.mjs wrote.
+"""Builds docs/demo-goa-christmas.gif (shown at the top of the repo README) from the frames that
+teaser/capture.mjs wrote.
 
 Run from anywhere:  python deck/teaser/make_gif.py   (needs Pillow)
 Shrinks the file to 3 MB or less by cutting colours, then blend frames.
@@ -9,7 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FRAMES_DIR = os.path.join(HERE, "..", "renders", "teaser")
-OUT = os.path.join(HERE, "..", "assets", "teaser_goa_christmas.gif")
+OUT = os.path.join(HERE, "..", "..", "docs", "demo-goa-christmas.gif")
 MAX_BYTES = 3 * 1024 * 1024
 
 W, H = 960, 540

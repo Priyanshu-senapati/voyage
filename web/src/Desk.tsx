@@ -9,6 +9,10 @@ import { BuyList } from './BuyList'
 import { WhyPanel } from './WhyPanel'
 import { RiskCurve } from './RiskCurve'
 import { MobileDecide } from './MobileDecide'
+import { PlansPage } from './PlansPage'
+import { MarketsPage } from './MarketsPage'
+import { AuditPage } from './AuditPage'
+import { go, useRoute } from './route'
 
 interface Props {
   session: Session
@@ -33,6 +37,7 @@ export function Desk({ session, onSignOut }: Props) {
   const { plan, me } = desk
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [tab, setTab] = useState<'why' | 'curve'>('why')
+  const route = useRoute()
 
   const lines = plan?.lines ?? []
   const selected = lines.find((line) => line.id === selectedId) ?? lines[0] ?? null
@@ -51,8 +56,10 @@ export function Desk({ session, onSignOut }: Props) {
 
   return (
     <div className="app">
-      <TopBar viewer={viewer} onSignOut={() => onSignOut()} />
+      <TopBar viewer={viewer} active={route} onSignOut={() => onSignOut()} />
       <main className="desk">
+        {route === 'desk' ? (
+        <>
         <PlanStrip
           plan={plan}
           plans={desk.plans}
@@ -148,8 +155,24 @@ export function Desk({ session, onSignOut }: Props) {
             </aside>
           </div>
         )}
+        </>
+        ) : route === 'plans' ? (
+          <PlansPage
+            plans={desk.plans}
+            openId={desk.saved?.id ?? null}
+            onOpen={(id) => {
+              setSelectedId(null)
+              desk.openPlan(id)
+              go('desk')
+            }}
+          />
+        ) : route === 'markets' ? (
+          <MarketsPage api={desk.api} />
+        ) : (
+          <AuditPage api={desk.api} me={me} />
+        )}
       </main>
-      {plan && selected && rule && (
+      {route === 'desk' && plan && selected && rule && (
         <MobileDecide line={selected} busy={desk.deciding === selected.id} canDecide={rule.canDecide} onDecide={decide} />
       )}
       {desk.notice && <Toast notice={desk.notice} onDismiss={desk.dismissNotice} />}

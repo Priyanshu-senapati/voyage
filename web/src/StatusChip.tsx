@@ -1,5 +1,5 @@
 import { Check, Clock, PencilLine, X } from 'lucide-react'
-import type { Decision } from './types'
+import type { Decision, PlanSummary } from './types'
 
 const LABEL: Record<Decision, string> = { pending: 'Pending', approved: 'Approved', rejected: 'Rejected' }
 const ICON = { pending: Clock, approved: Check, rejected: X }
@@ -20,4 +20,15 @@ export function StatusChip({ decision, unsaved = false }: { decision: Decision; 
       {LABEL[decision]}
     </span>
   )
+}
+
+const PLAN_LABEL: Record<PlanSummary['status'], string> = {
+  empty: 'No lines', pending: 'Pending', approved: 'Approved', rejected: 'Rejected', mixed: 'In review',
+}
+
+export function PlanStatusChip({ status }: { status: PlanSummary['status'] }) {
+  if (status === 'pending' || status === 'approved' || status === 'rejected') {
+    return <StatusChip decision={status} />
+  }
+  return <span className="chip chip-pending">{PLAN_LABEL[status]}</span>
 }

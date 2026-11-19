@@ -3,6 +3,8 @@
 Decides what hotel inventory a travel distributor should buy ahead, within a maximum budget:
 which hotel, which week, how many room-nights, the expected profit and the worst case.
 
+**Live demo:** https://voyance-1029341879804.asia-south1.run.app (simulated data; the sign-in page offers four demo people, and the data resets when the service restarts).
+
 **Status:** Round 1 prototype. Runs on simulated data; no TBO data yet. Compared with 119,390 real hotel
 bookings (`out/calibration.json`): the Christmas-week peak matches (1.45× vs our 1.47×); real demand swings
 less from year to year (about 22%) than we simulate (35%), so our test is the harder one; real early December

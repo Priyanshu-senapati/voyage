@@ -3,7 +3,12 @@ import { KEYS } from '../keys'
 
 async function signIn(page: Page, name: keyof typeof KEYS) {
   await page.goto('/')
-  await page.getByLabel('API key').fill(KEYS[name])
+  // a hosted demo makes its own keys at deploy time and hands them out in /config.js
+  const served = await page.evaluate(
+    (who) => (window as { __VOYANCE__?: { demoKeys?: Record<string, string> } }).__VOYANCE__?.demoKeys?.[who],
+    name,
+  )
+  await page.getByLabel('API key').fill(served ?? KEYS[name])
   await page.getByRole('button', { name: 'Sign in', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible()
   await expect(page.getByRole('slider').first()).toBeEnabled()
@@ -113,4 +118,37 @@ test("another company can't see the plans", async ({ page }) => {
   await expect(page.getByRole('banner')).toContainText('Other Distributor')
   await expect(page.getByText('Preview, not saved')).toBeVisible()
   await expect(page.getByText('Created by')).toHaveCount(0)
+})
+
+test('the plans page lists saved plans and opens one on the Buy Desk', async ({ page }) => {
+  await signIn(page, 'ravi')
+  await page.getByRole('link', { name: 'Plans' }).click()
+  const plans = page.getByRole('table', { name: 'Plans' }).locator('tbody tr')
+  await expect(plans).toHaveCount(2)
+  await plans.filter({ hasText: '#1' }).click()
+  await expect(page).toHaveURL(/#\/$/)
+  await expect(page.getByText('Created by Asha')).toBeVisible()
+})
+
+test('the markets page shows every hotel-week and filters by city', async ({ page }) => {
+  await signIn(page, 'asha')
+  await page.getByRole('link', { name: 'Markets' }).click()
+  const markets = page.getByRole('table', { name: 'Markets' }).locator('tbody tr')
+  await expect(markets).toHaveCount(40)
+  await page.getByRole('button', { name: 'Goa' }).click()
+  await expect(markets).toHaveCount(8)
+})
+
+test('the audit log is for admins only', async ({ page }) => {
+  await signIn(page, 'ravi')
+  await page.getByRole('link', { name: 'Audit log' }).click()
+  await expect(page.getByRole('heading', { name: 'Admins only' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Sign out' }).click()
+  await signIn(page, 'meera')
+  await page.goto('/#/audit')
+  const log = page.getByRole('table', { name: 'Audit log' })
+  await expect(log).toContainText('Created a plan')
+  await expect(log).toContainText('Approved a line')
+  await expect(log).toContainText('Rejected a line')
 })

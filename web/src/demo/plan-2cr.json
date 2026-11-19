@@ -40,7 +40,9 @@
     ],
     "event_week": true,
     "margin": 0.2551
-   }
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -85148.72
   },
   {
    "id": 2,
@@ -72,7 +74,9 @@
     ],
     "event_week": true,
     "margin": 0.1779
-   }
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -109740.1
   },
   {
    "id": 3,
@@ -104,7 +108,9 @@
     ],
     "event_week": false,
     "margin": 0.2284
-   }
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -98854.06
   },
   {
    "id": 4,
@@ -136,7 +142,9 @@
     ],
     "event_week": false,
     "margin": 0.25
-   }
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -50704.83
   },
   {
    "id": 5,
@@ -168,7 +176,9 @@
     ],
     "event_week": false,
     "margin": 0.2476
-   }
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -124122.24
   },
   {
    "id": 6,
@@ -200,7 +210,9 @@
     ],
     "event_week": false,
     "margin": 0.2346
-   }
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -98903.64
   },
   {
    "id": 7,
@@ -232,7 +244,9 @@
     ],
     "event_week": false,
     "margin": 0.2443
-   }
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -52745.2
   },
   {
    "id": 8,
@@ -264,7 +278,9 @@
     ],
     "event_week": false,
     "margin": 0.1712
-   }
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -125512.66
   },
   {
    "id": 9,
@@ -296,7 +312,9 @@
     ],
     "event_week": false,
     "margin": 0.2265
-   }
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -94533.77
   },
   {
    "id": 10,
@@ -328,7 +346,9 @@
     ],
     "event_week": true,
     "margin": 0.2134
-   }
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -204498.23
   },
   {
    "id": 11,
@@ -360,7 +380,9 @@
     ],
     "event_week": false,
     "margin": 0.1793
-   }
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -56499.73
   },
   {
    "id": 12,
@@ -392,7 +414,9 @@
     ],
     "event_week": true,
     "margin": 0.2171
-   }
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -82548.58
   },
   {
    "id": 13,
@@ -424,7 +448,9 @@
     ],
     "event_week": false,
     "margin": 0.1679
-   }
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -138753.88
   },
   {
    "id": 14,
@@ -456,7 +482,9 @@
     ],
     "event_week": false,
     "margin": 0.2267
-   }
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -99431.77
   },
   {
    "id": 15,
@@ -488,7 +516,9 @@
     ],
     "event_week": false,
     "margin": 0.1625
-   }
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -84772.16
   },
   {
    "id": 16,
@@ -520,7 +550,9 @@
     ],
     "event_week": true,
     "margin": 0.2037
-   }
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -105880.31
   },
   {
    "id": 17,
@@ -552,7 +584,9 @@
     ],
     "event_week": true,
     "margin": 0.2352
-   }
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -37586.47
   },
   {
    "id": 18,
@@ -584,7 +618,9 @@
     ],
     "event_week": false,
     "margin": 0.2111
-   }
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -47608.25
   },
   {
    "id": 19,
@@ -616,7 +652,9 @@
     ],
     "event_week": false,
     "margin": 0.1291
-   }
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -83208.77
   },
   {
    "id": 20,
@@ -648,7 +686,9 @@
     ],
     "event_week": false,
     "margin": 0.1981
-   }
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -76844.88
   },
   {
    "id": 21,
@@ -680,7 +720,9 @@
     ],
     "event_week": false,
     "margin": 0.2508
-   }
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -38930.76
   },
   {
    "id": 22,
@@ -712,7 +754,9 @@
     ],
     "event_week": false,
     "margin": 0.1932
-   }
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -46114.87
   },
   {
    "id": 23,
@@ -744,7 +788,9 @@
     ],
     "event_week": false,
     "margin": 0.2433
-   }
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -39193.78
   },
   {
    "id": 24,
@@ -776,7 +822,9 @@
     ],
     "event_week": false,
     "margin": 0.1974
-   }
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -82110.93
   },
   {
    "id": 25,
@@ -808,7 +856,9 @@
     ],
     "event_week": false,
     "margin": 0.1705
-   }
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -66398.22
   },
   {
    "id": 26,
@@ -840,7 +890,9 @@
     ],
     "event_week": false,
     "margin": 0.149
-   }
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -17934.78
   },
   {
    "id": 27,
@@ -872,7 +924,9 @@
     ],
     "event_week": false,
     "margin": 0.1127
-   }
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -46017.27
   },
   {
    "id": 28,
@@ -904,7 +958,9 @@
     ],
     "event_week": false,
     "margin": 0.1391
-   }
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -49839.42
   },
   {
    "id": 29,
@@ -936,7 +992,9 @@
     ],
     "event_week": false,
     "margin": 0.1766
-   }
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -2801.28
   },
   {
    "id": 30,
@@ -968,7 +1026,9 @@
     ],
     "event_week": false,
     "margin": 0.1938
-   }
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -33884.3
   },
   {
    "id": 31,
@@ -1000,7 +1060,9 @@
     ],
     "event_week": false,
     "margin": 0.1661
-   }
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -38193.06
   },
   {
    "id": 32,
@@ -1032,7 +1094,9 @@
     ],
     "event_week": false,
     "margin": 0.1315
-   }
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -33515.93
   },
   {
    "id": 33,
@@ -1064,7 +1128,9 @@
     ],
     "event_week": false,
     "margin": 0.1117
-   }
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -26645.48
   },
   {
    "id": 34,
@@ -1096,7 +1162,9 @@
     ],
     "event_week": false,
     "margin": 0.2007
-   }
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -47250.83
   },
   {
    "id": 35,
@@ -1128,7 +1196,9 @@
     ],
     "event_week": false,
     "margin": 0.1141
-   }
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -55267.54
   },
   {
    "id": 36,
@@ -1160,7 +1230,9 @@
     ],
     "event_week": false,
     "margin": 0.1411
-   }
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -25064.58
   },
   {
    "id": 37,
@@ -1192,7 +1264,9 @@
     ],
     "event_week": false,
     "margin": 0.1854
-   }
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -27876.03
   },
   {
    "id": 38,
@@ -1224,7 +1298,9 @@
     ],
     "event_week": false,
     "margin": 0.2429
-   }
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -12255.02
   },
   {
    "id": 39,
@@ -1256,7 +1332,9 @@
     ],
     "event_week": false,
     "margin": 0.1081
-   }
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -36104.36
   },
   {
    "id": 40,
@@ -1288,7 +1366,9 @@
     ],
     "event_week": false,
     "margin": 0.134
-   }
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -10537.7
   }
  ]
 }

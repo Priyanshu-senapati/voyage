@@ -20,5 +20,12 @@ export default function App() {
   }, [])
 
   if (!session) return <Landing error={signInError} onStart={start} />
-  return <Desk key={session.mode === 'live' ? session.key : 'demo'} session={session} onSignOut={signOut} />
+  return (
+    <Desk
+      key={session.mode === 'live' ? session.key : 'demo'}
+      session={session}
+      onSignOut={signOut}
+      onStart={start}
+    />
+  )
 }

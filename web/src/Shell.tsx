@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
-import { Building2, FileText, Gauge, History, Info, ListChecks, LogOut, Menu, ScrollText, ShieldCheck, Target, X } from 'lucide-react'
+import { Building2, FileText, FileSearch, Gauge, History, Info, ListChecks, LogOut, Menu, ScrollText, ShieldCheck, Target, X } from 'lucide-react'
 import { ROUTES, type Route } from './route'
+import type { DemoPerson } from './demoKeys'
 
 const ICONS: Record<Route, typeof Target> = {
   desk: Target,
@@ -8,6 +9,7 @@ const ICONS: Record<Route, typeof Target> = {
   queue: ListChecks,
   position: Gauge,
   exposure: ShieldCheck,
+  report: FileSearch,
   markets: Building2,
   replay: History,
   audit: ScrollText,
@@ -17,7 +19,7 @@ const ICONS: Record<Route, typeof Target> = {
 const NAV_GROUPS: { label: string; routes: Route[] }[] = [
   { label: 'Plan', routes: ['desk', 'plans'] },
   { label: 'Monitor', routes: ['queue', 'position', 'exposure'] },
-  { label: 'Analyze', routes: ['replay', 'markets'] },
+  { label: 'Analyze', routes: ['report', 'replay', 'markets'] },
   { label: 'Admin', routes: ['audit'] },
 ]
 const ROUTE_BY_KEY = Object.fromEntries(ROUTES.map((r) => [r.route, r])) as Record<Route, (typeof ROUTES)[number]>
@@ -36,10 +38,15 @@ interface Props {
   viewer: { name: string; detail: string }
   onSignOut: () => void
   children: ReactNode
+  people?: DemoPerson[]
+  currentName?: string
+  onSwitch?: (key: string) => void
 }
 
-export function Shell({ active, viewer, onSignOut, children }: Props) {
+export function Shell({ active, viewer, onSignOut, children, people, currentName, onSwitch }: Props) {
   const [open, setOpen] = useState(false)
+  const canSwitch = people && people.length > 1 && onSwitch
+  const currentIsPerson = people?.some((p) => p.name === currentName) ?? false
 
   return (
     <div className="shell">
@@ -76,6 +83,30 @@ export function Shell({ active, viewer, onSignOut, children }: Props) {
           ))}
         </nav>
         <div className="sidebar-foot">
+          {canSwitch && (
+            <label className="role-switch">
+              <span>View as</span>
+              <select
+                className="select select-sm"
+                value={currentIsPerson ? currentName : ''}
+                onChange={(e) => {
+                  const person = people?.find((p) => p.name === e.target.value)
+                  if (person) onSwitch?.(person.key)
+                }}
+              >
+                {!currentIsPerson && (
+                  <option value="" disabled>
+                    Switch demo person…
+                  </option>
+                )}
+                {people?.map((p) => (
+                  <option key={p.name} value={p.name}>
+                    {p.label} · {p.role}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <p className="sim-note">
             <Info size={14} strokeWidth={2} aria-hidden="true" />
             Simulated data for one December. No real TBO data.

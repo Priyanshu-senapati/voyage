@@ -1,6 +1,6 @@
 import type { PlanLine } from './types'
 import { SEASON_YEAR } from './cities'
-import { count, inr, percent, sum, weekLabel } from './format'
+import { capital, count, inr, percent, sum, weekLabel } from './format'
 import { Badge, Delta, DecisionBadge, InfoTip } from './ui'
 
 const PAST = [3, 2, 1].map((back) => `Dec ${SEASON_YEAR - back}`)
@@ -23,9 +23,14 @@ function reasons(line: PlanLine): string[] {
     out.push(`${count(searches)} searches found this hotel sold out in past Decembers: demand that booking data never shows.`)
   }
   if (why.event_week) out.push('A festival, match or concert falls in this week this season.')
+  if (why.week_vs_typical != null && why.week_vs_typical >= 1.15) {
+    out.push(`Demand runs about ${why.week_vs_typical.toFixed(1)}× a typical December week for this hotel.`)
+  }
   out.push(`Each room earns a ${percent(why.margin)} margin.`)
   return out
 }
+
+const pricePct = (change: number) => `${change > 0 ? '+' : '−'}${Math.round(Math.abs(change) * 100)}%`
 
 // `base` is the same hotel-week in the plan without the what-if: null when the what-if dropped it
 export function LineCase({ line, unsaved, base }: { line: PlanLine; unsaved: boolean; base?: PlanLine | null }) {
@@ -51,7 +56,12 @@ export function LineCase({ line, unsaved, base }: { line: PlanLine; unsaved: boo
       </header>
 
       <p className="case-ask">
-        Buy <strong>{line.rooms} rooms</strong> at {inr(line.unit_cost)} each and sell at {inr(line.unit_price)}.
+        Buy <strong>{line.rooms} rooms</strong> at {inr(line.unit_cost)} each, and sell at{' '}
+        <strong>{inr(why.selling_price ?? line.unit_price)}</strong>
+        {why.selling_price != null && why.price_change != null && Math.abs(why.price_change) >= 0.005 && (
+          <span className="muted"> ({pricePct(why.price_change)} on the usual {inr(line.unit_price)})</span>
+        )}
+        .
       </p>
 
       <dl className="case-stats">
@@ -83,7 +93,20 @@ export function LineCase({ line, unsaved, base }: { line: PlanLine; unsaved: boo
             <WhatIfDelta value={line.rooms - (base?.rooms ?? 0)} format={(v) => `${v} rooms`} better="none" />
           )}
         </div>
+        {why.sell_out_chance != null && (
+          <div>
+            <dt>
+              Chance it sells out
+              <InfoTip label="sell-out chance">
+                How often every room bought sells, across the planner's own 200 scenarios for this line.
+              </InfoTip>
+            </dt>
+            <dd>{percent(why.sell_out_chance)}</dd>
+          </div>
+        )}
       </dl>
+
+      {why.why_not_more && <p className="case-whynot">Why not more rooms? {capital(why.why_not_more)}.</p>}
 
       <section className="case-section">
         <h3>Why the planner picked it</h3>

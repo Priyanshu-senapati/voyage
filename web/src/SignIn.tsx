@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { ApiError, apiFor } from './api/client'
 import type { Session } from './session'
+import { demoPeople } from './demoKeys'
 import { BrandMark } from './Shell'
 
 interface Props {
@@ -9,38 +10,11 @@ interface Props {
   onStart: (session: Session) => void
 }
 
-// Hosted demo only. The server's /config.js sets window.__VOYANCE__.demoKeys at run time (deploy/server.py);
-// VITE_DEMO_KEYS='{"asha":"vy_…",…}' does the same at build time for dev and tests. These keys are public.
-const DEMO_PEOPLE = [
-  { name: 'asha', label: 'Asha', role: 'Buyer', does: 'Makes plans' },
-  { name: 'ravi', label: 'Ravi', role: 'Approver', does: 'Approves lines' },
-  { name: 'meera', label: 'Meera', role: 'Admin', does: 'Sees the audit log' },
-  { name: 'zed', label: 'Zed', role: 'Admin', does: 'At another company' },
-]
-
-declare global {
-  interface Window {
-    __VOYANCE__?: { demoKeys?: Record<string, string> }
-  }
-}
-
-function demoKeys(): Record<string, string> {
-  let built: Record<string, string> = {}
-  try {
-    built = JSON.parse(import.meta.env.VITE_DEMO_KEYS ?? '{}')
-  } catch {
-    // ignore a malformed build setting
-  }
-  return { ...built, ...window.__VOYANCE__?.demoKeys }
-}
-
-const DEMO_KEYS = demoKeys()
-
 export function SignIn({ error, onStart }: Props) {
   const [key, setKey] = useState('')
   const [checking, setChecking] = useState<string | null>(null)
   const [problem, setProblem] = useState(error)
-  const people = DEMO_PEOPLE.filter((p) => DEMO_KEYS[p.name])
+  const people = demoPeople()
 
   async function signInWith(candidate: string, who: string) {
     setChecking(who)
@@ -80,7 +54,7 @@ export function SignIn({ error, onStart }: Props) {
                     type="button"
                     className="person"
                     disabled={checking !== null}
-                    onClick={() => signInWith(DEMO_KEYS[p.name], p.name)}
+                    onClick={() => signInWith(p.key, p.name)}
                   >
                     <span className="avatar" aria-hidden="true">
                       {p.label[0]}

@@ -23,7 +23,7 @@ function useFrontier(api: Api | null, draft: Draft, whatIf: WhatIf): Curve {
   const { budget } = draft
   const cache = useRef(new Map<string, FrontierPoint[]>())
   const capped = draft.cityCap !== null || draft.hotelCap !== null
-  const key = `${budget}|${draft.cityCap}|${draft.hotelCap}|${whatIf.demand}|${whatIf.cost}|${whatIf.event}`
+  const key = `${budget}|${draft.cityCap}|${draft.hotelCap}|${whatIf.demand}|${whatIf.cost}|${whatIf.event}|${whatIf.cancel}`
   const [curve, setCurve] = useState<Curve>({ status: 'loading' })
 
   useEffect(() => {

@@ -1,9 +1,9 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { ChevronRight, X } from 'lucide-react'
 import type { useDesk } from './useDesk'
-import { PLANNER_EVENT_GUESS, draftOf, whatIfActive } from './useDesk'
+import { PLANNER_CANCEL, PLANNER_EVENT_GUESS, draftOf, whatIfActive } from './useDesk'
 import type { Plan, PlanLine } from './types'
-import { count, inr, riskWord, sum, weekLabel } from './format'
+import { count, inr, percent, riskWord, sum, weekLabel } from './format'
 import { Badge, Delta, InfoTip, Segmented } from './ui'
 import { LineCase } from './LineCase'
 import { RiskCurve } from './RiskCurve'
@@ -212,6 +212,18 @@ function Settings({ desk }: { desk: Desk }) {
           disabled={!usable}
           ends={['No boost', '3× demand']}
           onChange={(event) => desk.setWhatIf({ ...whatIf, event })}
+        />
+        <Slider
+          label="Cancellations"
+          info="Share of agent bookings that later cancel. Left alone, the planner uses 41%, measured on real bookings."
+          output={whatIf.cancel === null ? 'Planner’s rate' : percent(whatIf.cancel)}
+          min={0}
+          max={0.8}
+          step={0.01}
+          value={whatIf.cancel ?? PLANNER_CANCEL}
+          disabled={!usable}
+          ends={['None', '80%']}
+          onChange={(cancel) => desk.setWhatIf({ ...whatIf, cancel })}
         />
       </div>
       </>
@@ -435,6 +447,13 @@ function BuyTable({ plan, base, onOpen }: { plan: Plan; base: Plan | null; onOpe
             <th scope="col" className="hide-sm">Week</th>
             <th scope="col" className="num">Rooms</th>
             <th scope="col" className="hide-md">Buy by</th>
+            <th scope="col" className="num hide-md">
+              Sell at
+              <InfoTip label="recommended selling price">
+                The price per room-night to list at: the base rate moved the way real agent rates move with demand.
+                Busy weeks carry a higher rate; the buying cost and the profit figures are unchanged.
+              </InfoTip>
+            </th>
             <th scope="col" className="num">Expected profit</th>
             <th scope="col" className="num hide-sm">
               Bad-season profit
@@ -487,6 +506,21 @@ function Row({ line, baseRooms, onOpen }: { line: PlanLine; baseRooms: number | 
         )}
       </td>
       <td className="hide-md">{shortDate(line.buy_by)}</td>
+      <td className="num hide-md">
+        {line.why.selling_price != null ? (
+          <>
+            {inr(line.why.selling_price)}
+            {line.why.price_change != null && Math.abs(line.why.price_change) >= 0.005 && (
+              <span className={`row-delta ${line.why.price_change > 0 ? 'delta-good' : 'delta-bad'}`}>
+                {line.why.price_change > 0 ? '+' : '−'}
+                {Math.round(Math.abs(line.why.price_change) * 100)}%
+              </span>
+            )}
+          </>
+        ) : (
+          <span className="muted">{inr(line.unit_price)}</span>
+        )}
+      </td>
       <td className="num strong">{inr(line.expected_profit)}</td>
       <td className="num hide-sm">{inr(line.worst_case_profit)}</td>
       <td className="chevron-col">
@@ -509,7 +543,12 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
       ref={ref}
       className="sheet"
       aria-label={title}
-      onClose={onClose}
+      // Escape only; the dialog's own `close` event also fires on React's unmount cleanup, which would
+      // re-trigger onClose and fight the parent's state (the sheet would never stay open under StrictMode)
+      onCancel={(e) => {
+        e.preventDefault()
+        onClose()
+      }}
       onClick={(e) => e.target === ref.current && onClose()}
     >
       <div className="sheet-body">

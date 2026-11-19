@@ -347,6 +347,26 @@ export interface components {
              * @description Why the plan stops at this many rooms, in money
              */
             why_not_more?: string | null;
+            /**
+             * Week Vs Typical
+             * @description Expected demand / the same hotel's typical (median) December week this season
+             */
+            week_vs_typical?: number | null;
+            /**
+             * Price Change
+             * @description selling_price / unit_price - 1
+             */
+            price_change?: number | null;
+            /**
+             * Selling Price
+             * @description Recommended price per room-night: unit_price moved the way real agent rates move with demand (profits stay at unit_price)
+             */
+            selling_price?: number | null;
+            /**
+             * Stay Share
+             * @description Share of expected demand the plan counts on after early cancellations (late ones are already in expected_sold)
+             */
+            stay_share?: number | null;
         };
         /** MarketItem */
         MarketItem: {
@@ -585,6 +605,11 @@ export interface components {
              * @description Demand multiple in this season's event weeks; leave out for the planner's own guess (1.5)
              */
             event_lift?: number | null;
+            /**
+             * Cancel Rate
+             * @description Share of agent bookings that cancel; leave out for the rate measured on real agent bookings (41%). Saved plans use it
+             */
+            cancel_rate?: number | null;
             /** Budget Inr */
             budget_inr: number;
             /** Risk Aversion */
@@ -808,6 +833,11 @@ export interface components {
              * @description Demand multiple in this season's event weeks; leave out for the planner's own guess (1.5)
              */
             event_lift?: number | null;
+            /**
+             * Cancel Rate
+             * @description Share of agent bookings that cancel; leave out for the rate measured on real agent bookings (41%). Saved plans use it
+             */
+            cancel_rate?: number | null;
             /**
              * Budget Inr
              * @description Maximum spend in INR (up to ₹1,000 crore)
@@ -1137,6 +1167,8 @@ export interface operations {
                 cost_change?: number;
                 /** @description Demand multiple in this season's event weeks; leave out for the planner's own guess (1.5) */
                 event_lift?: number | null;
+                /** @description Share of agent bookings that cancel; leave out for the rate measured on real agent bookings (41%). Saved plans use it */
+                cancel_rate?: number | null;
                 /** @description Maximum spend in INR (up to ₹1,000 crore) */
                 budget_inr: number;
                 /** @description Limit to these cities; leave out for all */

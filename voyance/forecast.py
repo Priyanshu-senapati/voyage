@@ -10,6 +10,7 @@ from dataclasses import dataclass
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
+from scipy.stats import norm
 
 from voyance.calibrate import AGENT_CHANNEL
 
@@ -144,12 +145,34 @@ def scenarios_from_range(low: np.ndarray, likely: np.ndarray, high: np.ndarray, 
     Straight lines between the three quantiles, carried on past them at the same slope, never below zero. The
     scenarios are evenly spaced quantiles, not random draws, so the same range always gives the same scenarios.
     """
+    return _from_quantile_levels(low, likely, high, ((np.arange(n) + 0.5) / n)[:, None])
+
+
+def correlated_scenarios(low: np.ndarray, likely: np.ndarray, high: np.ndarray, n: int, rho: float,
+                         seed) -> np.ndarray:
+    """n random demand scenarios per item (n x items) on the same range, with items correlated by `rho`.
+
+    Gaussian copula: each scenario's level for item j is Phi(sqrt(rho) Z + sqrt(1 - rho) e_j), one common shock
+    Z per scenario. rho = 0 makes items independent; rho = 1 gives random draws that move together (not the
+    evenly spaced quantiles of scenarios_from_range).
+    """
+    if not 0 <= rho <= 1:
+        raise ValueError("rho must be in [0, 1]")
+    rng = np.random.default_rng(seed)
+    common = rng.standard_normal((n, 1))
+    own = rng.standard_normal((n, np.size(low)))
+    u = norm.cdf(np.sqrt(rho) * common + np.sqrt(1 - rho) * own)
+    return _from_quantile_levels(low, likely, high, u)
+
+
+def _from_quantile_levels(low: np.ndarray, likely: np.ndarray, high: np.ndarray, u: np.ndarray) -> np.ndarray:
+    """Demand at quantile levels u (scenarios x 1, or scenarios x items): straight lines between the three
+    quantiles, carried on past them at the same slope, never below zero."""
     knots = np.array(QUANTILES)
-    values = np.column_stack([low, likely, high])
-    u = (np.arange(n) + 0.5) / n
-    lower = values[:, [0]] + (u - knots[0]) * (values[:, [1]] - values[:, [0]]) / (knots[1] - knots[0])
-    upper = values[:, [1]] + (u - knots[1]) * (values[:, [2]] - values[:, [1]]) / (knots[2] - knots[1])
-    return np.clip(np.where(u <= knots[1], lower, upper), 0, None).T
+    low, likely, high = (np.asarray(a, dtype=float) for a in (low, likely, high))
+    lower = low + (u - knots[0]) * (likely - low) / (knots[1] - knots[0])
+    upper = likely + (u - knots[1]) * (high - likely) / (knots[2] - knots[1])
+    return np.clip(np.where(u <= knots[1], lower, upper), 0, None)
 
 
 def wape(forecast: np.ndarray, actual: np.ndarray) -> float:

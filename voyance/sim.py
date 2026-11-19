@@ -145,12 +145,22 @@ def even_split(world: World, budget: float) -> np.ndarray:
 def stay_factors(cancel_rate: float, late_share: float = LATE_CANCEL_SHARE) -> tuple[float, float]:
     """(keep, paid) for bookings of which `cancel_rate` cancel. Early cancellations hand the room back in time to
     sell it again, so they act like demand that never came: `keep` is the share of demand left. Late ones leave a
-    booked room empty: `paid` is the share of booked rooms stayed in and paid for. keep x paid = 1 - cancel_rate."""
+    booked room empty: `paid` is the share of booked rooms stayed in and paid for. keep x paid = 1 - cancel_rate.
+    Demand here means gross bookings, cancelled ones included; a forecast of stays should use rate 0."""
     if not (0 <= cancel_rate < 1 and 0 <= late_share <= 1):
         raise ValueError("cancel_rate must be in [0, 1) and late_share in [0, 1]")
     keep = 1 - cancel_rate * (1 - late_share)
     # shortcut: a late cancellation pays nothing (no cancellation fees); add fees if TBO's contracts have them
     return keep, 1 - cancel_rate * late_share / keep
+
+
+def kept_rooms(buy: np.ndarray, demand: np.ndarray, cancel_rate: float | np.ndarray,
+               late_share: float | np.ndarray = LATE_CANCEL_SHARE) -> np.ndarray:
+    """Room-nights stayed in and paid for: paid x min(buy, demand x keep) (stay_factors), broadcast like numpy,
+    the rates too (one per season, say). Early cancellations of a sold-out room are resold; with spare stock
+    every cancellation is lost."""
+    keep, paid = np.vectorize(stay_factors, otypes=[float, float])(cancel_rate, late_share)
+    return paid * np.minimum(buy, np.asarray(demand, dtype=float) * keep)
 
 
 def repeat_past_bookings(world: World, budget: float, stay_share: float = 1.0) -> np.ndarray:
@@ -183,8 +193,24 @@ def _assumed_lift(true_lift: np.ndarray, lift: float = ASSUMED_EVENT_LIFT) -> np
     return np.where(true_lift > 1, lift, 1.0)
 
 
-def evaluate(world: World, buy: np.ndarray, test_demand: np.ndarray) -> dict[str, float]:
-    """Score a plan on unseen seasons: spend, mean and worst-5% profit, rooms unsold and missed."""
+def evaluate(world: World, buy: np.ndarray, test_demand: np.ndarray, cancel_rates: float | np.ndarray | None = None,
+             late_shares: float | np.ndarray = LATE_CANCEL_SHARE) -> dict[str, float]:
+    """Score a plan on unseen seasons: spend, mean and worst-5% profit, rooms unsold and missed.
+
+    With `cancel_rates` (one per test season, or one for all), test_demand is gross bookings and only the
+    room-nights kept earn (kept_rooms, `late_shares` of cancellations too late to resell): unsold = bought - kept,
+    missed = bookings that would have stayed - kept."""
+    if cancel_rates is not None:
+        cancel, late = (np.reshape(r, (-1, 1)) for r in (cancel_rates, late_shares))  # one row per season
+        kept = kept_rooms(buy, test_demand, cancel, late)
+        p = kept @ world.price - world.cost @ buy
+        return {
+            "spend": float(world.cost @ buy),
+            "mean_profit": float(p.mean()),
+            "worst_5pct_profit": cvar(p, WORST_SHARE),
+            "unsold_rooms": float((buy - kept).sum(axis=1).mean()),
+            "missed_rooms": float(np.maximum(test_demand * (1 - cancel) - kept, 0).sum(axis=1).mean()),
+        }
     p = profits(buy, world.cost, world.price, test_demand)
     return {
         "spend": float(world.cost @ buy),

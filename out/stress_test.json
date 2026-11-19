@@ -1,0 +1,626 @@
+{
+  "worlds": 100,
+  "risk_aversion": 0.3,
+  "rows": [
+    {
+      "stress": "As designed",
+      "budget_lakh": 40,
+      "means": {
+        "ours": {
+          "spend": 3940124.475956389,
+          "mean_profit": 1130762.5122225462,
+          "worst_5pct_profit": 945754.3723288608,
+          "unsold_rooms": 4.628209366473074,
+          "missed_rooms": 2674.1903777422267
+        },
+        "rebuy": {
+          "spend": 3875254.140597709,
+          "mean_profit": 910681.8623799231,
+          "worst_5pct_profit": 906278.0752455785,
+          "unsold_rooms": 0.029365993717461594,
+          "missed_rooms": 2682.881534369471
+        },
+        "raw": {
+          "spend": 3924201.8817058783,
+          "mean_profit": 1103097.3108812217,
+          "worst_5pct_profit": 1016963.8458369793,
+          "unsold_rooms": 1.2071598485859687,
+          "missed_rooms": 2671.5793282243394
+        }
+      },
+      "profit_vs_rebuy": 0.24166578794868832,
+      "worst_case_vs_rebuy": 0.04355870252359928,
+      "profit_vs_raw_optimizer": 0.02507956557270896,
+      "worlds_where_ours_earns_more_than_rebuy": 1.0
+    },
+    {
+      "stress": "As designed",
+      "budget_lakh": 200,
+      "means": {
+        "ours": {
+          "spend": 13249905.95787426,
+          "mean_profit": 2426452.6716990103,
+          "worst_5pct_profit": 1662867.188349132,
+          "unsold_rooms": 94.99553998336368,
+          "missed_rooms": 1280.9677083591173
+        },
+        "rebuy": {
+          "spend": 14832709.17675359,
+          "mean_profit": 2346064.3197803255,
+          "worst_5pct_profit": 1394617.5015506626,
+          "unsold_rooms": 147.01681726783826,
+          "missed_rooms": 1085.5889856435917
+        },
+        "raw": {
+          "spend": 9640455.812067078,
+          "mean_profit": 2169831.80797454,
+          "worst_5pct_profit": 1857522.3899730465,
+          "unsold_rooms": 17.04899459335007,
+          "missed_rooms": 1777.0711629691034
+        }
+      },
+      "profit_vs_rebuy": 0.03426519522116589,
+      "worst_case_vs_rebuy": 0.1923464222270299,
+      "profit_vs_raw_optimizer": 0.1182676292150111,
+      "worlds_where_ours_earns_more_than_rebuy": 0.79
+    },
+    {
+      "stress": "Look-to-book 30% too low (counts too much lost demand)",
+      "budget_lakh": 40,
+      "means": {
+        "ours": {
+          "spend": 3943957.337236979,
+          "mean_profit": 1116701.8866954527,
+          "worst_5pct_profit": 868806.8617339093,
+          "unsold_rooms": 8.063800444585013,
+          "missed_rooms": 2677.935968820339
+        },
+        "rebuy": {
+          "spend": 3875254.140597709,
+          "mean_profit": 910681.8623799231,
+          "worst_5pct_profit": 906278.0752455785,
+          "unsold_rooms": 0.029365993717461594,
+          "missed_rooms": 2682.881534369471
+        },
+        "raw": {
+          "spend": 3924201.8817058783,
+          "mean_profit": 1103097.3108812217,
+          "worst_5pct_profit": 1016963.8458369793,
+          "unsold_rooms": 1.2071598485859687,
+          "missed_rooms": 2671.5793282243394
+        }
+      },
+      "profit_vs_rebuy": 0.22622612003837306,
+      "worst_case_vs_rebuy": -0.04134626505393002,
+      "profit_vs_raw_optimizer": 0.012333069512573624,
+      "worlds_where_ours_earns_more_than_rebuy": 0.99
+    },
+    {
+      "stress": "Look-to-book 30% too low (counts too much lost demand)",
+      "budget_lakh": 200,
+      "means": {
+        "ours": {
+          "spend": 14723692.155699482,
+          "mean_profit": 2180129.1587532028,
+          "worst_5pct_profit": 1173497.6716231524,
+          "unsold_rooms": 171.91841147559444,
+          "missed_rooms": 1122.8505798513477
+        },
+        "rebuy": {
+          "spend": 14832709.17675359,
+          "mean_profit": 2346064.3197803255,
+          "worst_5pct_profit": 1394617.5015506626,
+          "unsold_rooms": 147.01681726783826,
+          "missed_rooms": 1085.5889856435917
+        },
+        "raw": {
+          "spend": 9640455.812067078,
+          "mean_profit": 2169831.80797454,
+          "worst_5pct_profit": 1857522.3899730465,
+          "unsold_rooms": 17.04899459335007,
+          "missed_rooms": 1777.0711629691034
+        }
+      },
+      "profit_vs_rebuy": -0.07072916101578164,
+      "worst_case_vs_rebuy": -0.1585523125026389,
+      "profit_vs_raw_optimizer": 0.004745690767744337,
+      "worlds_where_ours_earns_more_than_rebuy": 0.11
+    },
+    {
+      "stress": "Look-to-book 30% too high (counts too little)",
+      "budget_lakh": 40,
+      "means": {
+        "ours": {
+          "spend": 3936829.3404828785,
+          "mean_profit": 1132339.0286380695,
+          "worst_5pct_profit": 980129.151652311,
+          "unsold_rooms": 3.260752778416637,
+          "missed_rooms": 2674.13292115417
+        },
+        "rebuy": {
+          "spend": 3875254.140597709,
+          "mean_profit": 910681.8623799231,
+          "worst_5pct_profit": 906278.0752455785,
+          "unsold_rooms": 0.029365993717461594,
+          "missed_rooms": 2682.881534369471
+        },
+        "raw": {
+          "spend": 3924201.8817058783,
+          "mean_profit": 1103097.3108812217,
+          "worst_5pct_profit": 1016963.8458369793,
+          "unsold_rooms": 1.2071598485859687,
+          "missed_rooms": 2671.5793282243394
+        }
+      },
+      "profit_vs_rebuy": 0.2433969264292586,
+      "worst_case_vs_rebuy": 0.08148831845757787,
+      "profit_vs_raw_optimizer": 0.02650873813978194,
+      "worlds_where_ours_earns_more_than_rebuy": 1.0
+    },
+    {
+      "stress": "Look-to-book 30% too high (counts too little)",
+      "budget_lakh": 200,
+      "means": {
+        "ours": {
+          "spend": 12458258.291460032,
+          "mean_profit": 2471718.0450428794,
+          "worst_5pct_profit": 1837778.9111579508,
+          "unsold_rooms": 64.87429071801837,
+          "missed_rooms": 1376.9864590937716
+        },
+        "rebuy": {
+          "spend": 14832709.17675359,
+          "mean_profit": 2346064.3197803255,
+          "worst_5pct_profit": 1394617.5015506626,
+          "unsold_rooms": 147.01681726783826,
+          "missed_rooms": 1085.5889856435917
+        },
+        "raw": {
+          "spend": 9640455.812067078,
+          "mean_profit": 2169831.80797454,
+          "worst_5pct_profit": 1857522.3899730465,
+          "unsold_rooms": 17.04899459335007,
+          "missed_rooms": 1777.0711629691034
+        }
+      },
+      "profit_vs_rebuy": 0.053559369282049074,
+      "worst_case_vs_rebuy": 0.317765558738895,
+      "profit_vs_raw_optimizer": 0.13912886517694623,
+      "worlds_where_ours_earns_more_than_rebuy": 0.96
+    },
+    {
+      "stress": "Agents retry: 50% duplicate sold-out searches",
+      "budget_lakh": 40,
+      "means": {
+        "ours": {
+          "spend": 3942442.1601019814,
+          "mean_profit": 1112232.9911310426,
+          "worst_5pct_profit": 853340.7647940463,
+          "unsold_rooms": 8.780208164329377,
+          "missed_rooms": 2679.262376540082
+        },
+        "rebuy": {
+          "spend": 3875254.140597709,
+          "mean_profit": 910681.8623799231,
+          "worst_5pct_profit": 906278.0752455785,
+          "unsold_rooms": 0.029365993717461594,
+          "missed_rooms": 2682.881534369471
+        },
+        "raw": {
+          "spend": 3924201.8817058783,
+          "mean_profit": 1103097.3108812217,
+          "worst_5pct_profit": 1016963.8458369793,
+          "unsold_rooms": 1.2071598485859687,
+          "missed_rooms": 2671.5793282243394
+        }
+      },
+      "profit_vs_rebuy": 0.2213189227513519,
+      "worst_case_vs_rebuy": -0.05841177437420364,
+      "profit_vs_raw_optimizer": 0.008281844366498259,
+      "worlds_where_ours_earns_more_than_rebuy": 0.99
+    },
+    {
+      "stress": "Agents retry: 50% duplicate sold-out searches",
+      "budget_lakh": 200,
+      "means": {
+        "ours": {
+          "spend": 14971320.080973951,
+          "mean_profit": 2119479.5661110557,
+          "worst_5pct_profit": 1072976.156386791,
+          "unsold_rooms": 187.40940590774954,
+          "missed_rooms": 1098.711574283503
+        },
+        "rebuy": {
+          "spend": 14832709.17675359,
+          "mean_profit": 2346064.3197803255,
+          "worst_5pct_profit": 1394617.5015506626,
+          "unsold_rooms": 147.01681726783826,
+          "missed_rooms": 1085.5889856435917
+        },
+        "raw": {
+          "spend": 9640455.812067078,
+          "mean_profit": 2169831.80797454,
+          "worst_5pct_profit": 1857522.3899730465,
+          "unsold_rooms": 17.04899459335007,
+          "missed_rooms": 1777.0711629691034
+        }
+      },
+      "profit_vs_rebuy": -0.09658079352678883,
+      "worst_case_vs_rebuy": -0.23063050966034881,
+      "profit_vs_raw_optimizer": -0.023205596709583887,
+      "worlds_where_ours_earns_more_than_rebuy": 0.09
+    },
+    {
+      "stress": "Only half of sold-out searches logged",
+      "budget_lakh": 40,
+      "means": {
+        "ours": {
+          "spend": 3932402.9548911583,
+          "mean_profit": 1129047.6110521213,
+          "worst_5pct_profit": 1009064.8272079815,
+          "unsold_rooms": 2.0979391176400544,
+          "missed_rooms": 2673.0401074933934
+        },
+        "rebuy": {
+          "spend": 3875254.140597709,
+          "mean_profit": 910681.8623799231,
+          "worst_5pct_profit": 906278.0752455785,
+          "unsold_rooms": 0.029365993717461594,
+          "missed_rooms": 2682.881534369471
+        },
+        "raw": {
+          "spend": 3924201.8817058783,
+          "mean_profit": 1103097.3108812217,
+          "worst_5pct_profit": 1016963.8458369793,
+          "unsold_rooms": 1.2071598485859687,
+          "missed_rooms": 2671.5793282243394
+        }
+      },
+      "profit_vs_rebuy": 0.23978269217038517,
+      "worst_case_vs_rebuy": 0.11341635064331701,
+      "profit_vs_raw_optimizer": 0.02352494192028165,
+      "worlds_where_ours_earns_more_than_rebuy": 1.0
+    },
+    {
+      "stress": "Only half of sold-out searches logged",
+      "budget_lakh": 200,
+      "means": {
+        "ours": {
+          "spend": 11531402.79538089,
+          "mean_profit": 2450001.1074037673,
+          "worst_5pct_profit": 1959767.2304754206,
+          "unsold_rooms": 39.217332521718326,
+          "missed_rooms": 1499.2295008974718
+        },
+        "rebuy": {
+          "spend": 14832709.17675359,
+          "mean_profit": 2346064.3197803255,
+          "worst_5pct_profit": 1394617.5015506626,
+          "unsold_rooms": 147.01681726783826,
+          "missed_rooms": 1085.5889856435917
+        },
+        "raw": {
+          "spend": 9640455.812067078,
+          "mean_profit": 2169831.80797454,
+          "worst_5pct_profit": 1857522.3899730465,
+          "unsold_rooms": 17.04899459335007,
+          "missed_rooms": 1777.0711629691034
+        }
+      },
+      "profit_vs_rebuy": 0.044302616406175055,
+      "worst_case_vs_rebuy": 0.405236366456303,
+      "profit_vs_raw_optimizer": 0.12912028406973852,
+      "worlds_where_ours_earns_more_than_rebuy": 0.88
+    },
+    {
+      "stress": "Noisy search logs (log-normal, sigma 0.5)",
+      "budget_lakh": 40,
+      "means": {
+        "ours": {
+          "spend": 3938034.831500929,
+          "mean_profit": 1120677.2546768233,
+          "worst_5pct_profit": 914463.758543731,
+          "unsold_rooms": 5.7124408034373335,
+          "missed_rooms": 2675.8646091791907
+        },
+        "rebuy": {
+          "spend": 3875254.140597709,
+          "mean_profit": 910681.8623799231,
+          "worst_5pct_profit": 906278.0752455785,
+          "unsold_rooms": 0.029365993717461594,
+          "missed_rooms": 2682.881534369471
+        },
+        "raw": {
+          "spend": 3924201.8817058783,
+          "mean_profit": 1103097.3108812217,
+          "worst_5pct_profit": 1016963.8458369793,
+          "unsold_rooms": 1.2071598485859687,
+          "missed_rooms": 2671.5793282243394
+        }
+      },
+      "profit_vs_rebuy": 0.23059138539128288,
+      "worst_case_vs_rebuy": 0.009032198308377204,
+      "profit_vs_raw_optimizer": 0.01593689298504186,
+      "worlds_where_ours_earns_more_than_rebuy": 0.99
+    },
+    {
+      "stress": "Noisy search logs (log-normal, sigma 0.5)",
+      "budget_lakh": 200,
+      "means": {
+        "ours": {
+          "spend": 13220733.074328275,
+          "mean_profit": 2354029.708086586,
+          "worst_5pct_profit": 1566191.6004614837,
+          "unsold_rooms": 103.66858242653379,
+          "missed_rooms": 1293.660750802287
+        },
+        "rebuy": {
+          "spend": 14832709.17675359,
+          "mean_profit": 2346064.3197803255,
+          "worst_5pct_profit": 1394617.5015506626,
+          "unsold_rooms": 147.01681726783826,
+          "missed_rooms": 1085.5889856435917
+        },
+        "raw": {
+          "spend": 9640455.812067078,
+          "mean_profit": 2169831.80797454,
+          "worst_5pct_profit": 1857522.3899730465,
+          "unsold_rooms": 17.04899459335007,
+          "missed_rooms": 1777.0711629691034
+        }
+      },
+      "profit_vs_rebuy": 0.003395213097570293,
+      "worst_case_vs_rebuy": 0.12302591837550403,
+      "profit_vs_raw_optimizer": 0.08489040460881991,
+      "worlds_where_ours_earns_more_than_rebuy": 0.59
+    },
+    {
+      "stress": "Event weeks: no lift assumed",
+      "budget_lakh": 40,
+      "means": {
+        "ours": {
+          "spend": 3939822.9785572137,
+          "mean_profit": 1104438.9322074847,
+          "worst_5pct_profit": 875411.6359989387,
+          "unsold_rooms": 8.150226115721857,
+          "missed_rooms": 2676.822394491475
+        },
+        "rebuy": {
+          "spend": 3875254.140597709,
+          "mean_profit": 910681.8623799231,
+          "worst_5pct_profit": 906278.0752455785,
+          "unsold_rooms": 0.029365993717461594,
+          "missed_rooms": 2682.881534369471
+        },
+        "raw": {
+          "spend": 3924201.8817058783,
+          "mean_profit": 1103097.3108812217,
+          "worst_5pct_profit": 1016963.8458369793,
+          "unsold_rooms": 1.2071598485859687,
+          "missed_rooms": 2671.5793282243394
+        }
+      },
+      "profit_vs_rebuy": 0.21276043570386705,
+      "worst_case_vs_rebuy": -0.03405846405174906,
+      "profit_vs_raw_optimizer": 0.0012162311638592715,
+      "worlds_where_ours_earns_more_than_rebuy": 0.99
+    },
+    {
+      "stress": "Event weeks: no lift assumed",
+      "budget_lakh": 200,
+      "means": {
+        "ours": {
+          "spend": 13410825.040780857,
+          "mean_profit": 2119629.4452080536,
+          "worst_5pct_profit": 1261874.1070292743,
+          "unsold_rooms": 140.7097643532362,
+          "missed_rooms": 1297.8319327289894
+        },
+        "rebuy": {
+          "spend": 14832709.17675359,
+          "mean_profit": 2346064.3197803255,
+          "worst_5pct_profit": 1394617.5015506626,
+          "unsold_rooms": 147.01681726783826,
+          "missed_rooms": 1085.5889856435917
+        },
+        "raw": {
+          "spend": 9640455.812067078,
+          "mean_profit": 2169831.80797454,
+          "worst_5pct_profit": 1857522.3899730465,
+          "unsold_rooms": 17.04899459335007,
+          "missed_rooms": 1777.0711629691034
+        }
+      },
+      "profit_vs_rebuy": -0.09651690819519998,
+      "worst_case_vs_rebuy": -0.09518265357618994,
+      "profit_vs_raw_optimizer": -0.023136522647508206,
+      "worlds_where_ours_earns_more_than_rebuy": 0.05
+    },
+    {
+      "stress": "Event weeks: 2.2x lift assumed (top of range)",
+      "budget_lakh": 40,
+      "means": {
+        "ours": {
+          "spend": 3938957.2606793325,
+          "mean_profit": 1130208.3112591375,
+          "worst_5pct_profit": 907336.1994266164,
+          "unsold_rooms": 4.941864998281819,
+          "missed_rooms": 2675.6140333740354
+        },
+        "rebuy": {
+          "spend": 3875254.140597709,
+          "mean_profit": 910681.8623799231,
+          "worst_5pct_profit": 906278.0752455785,
+          "unsold_rooms": 0.029365993717461594,
+          "missed_rooms": 2682.881534369471
+        },
+        "raw": {
+          "spend": 3924201.8817058783,
+          "mean_profit": 1103097.3108812217,
+          "worst_5pct_profit": 1016963.8458369793,
+          "unsold_rooms": 1.2071598485859687,
+          "missed_rooms": 2671.5793282243394
+        }
+      },
+      "profit_vs_rebuy": 0.2410572318916253,
+      "worst_case_vs_rebuy": 0.001167549133030965,
+      "profit_vs_raw_optimizer": 0.02457716115385855,
+      "worlds_where_ours_earns_more_than_rebuy": 1.0
+    },
+    {
+      "stress": "Event weeks: 2.2x lift assumed (top of range)",
+      "budget_lakh": 200,
+      "means": {
+        "ours": {
+          "spend": 13710768.749142168,
+          "mean_profit": 2426258.259716388,
+          "worst_5pct_profit": 1527602.3753913234,
+          "unsold_rooms": 108.63867984048201,
+          "missed_rooms": 1223.5008482162355
+        },
+        "rebuy": {
+          "spend": 14832709.17675359,
+          "mean_profit": 2346064.3197803255,
+          "worst_5pct_profit": 1394617.5015506626,
+          "unsold_rooms": 147.01681726783826,
+          "missed_rooms": 1085.5889856435917
+        },
+        "raw": {
+          "spend": 9640455.812067078,
+          "mean_profit": 2169831.80797454,
+          "worst_5pct_profit": 1857522.3899730465,
+          "unsold_rooms": 17.04899459335007,
+          "missed_rooms": 1777.0711629691034
+        }
+      },
+      "profit_vs_rebuy": 0.03418232793531062,
+      "worst_case_vs_rebuy": 0.09535580450754133,
+      "profit_vs_raw_optimizer": 0.11817803149508288,
+      "worlds_where_ours_earns_more_than_rebuy": 0.75
+    },
+    {
+      "stress": "Demand falls 20% this season",
+      "budget_lakh": 40,
+      "means": {
+        "ours": {
+          "spend": 3940124.475956389,
+          "mean_profit": 1069055.3310180777,
+          "worst_5pct_profit": 802442.7633448481,
+          "unsold_rooms": 12.348182275104698,
+          "missed_rooms": 2021.6159169757075
+        },
+        "rebuy": {
+          "spend": 3875254.140597709,
+          "mean_profit": 909882.1046508808,
+          "worst_5pct_profit": 891625.2024580219,
+          "unsold_rooms": 0.13280748727858102,
+          "missed_rooms": 2022.6905421878814
+        },
+        "raw": {
+          "spend": 3924201.8817058783,
+          "mean_profit": 1082215.5247050433,
+          "worst_5pct_profit": 942440.2629085482,
+          "unsold_rooms": 3.902534028235377,
+          "missed_rooms": 2013.9802687288384
+        }
+      },
+      "profit_vs_rebuy": 0.17493829755918888,
+      "worst_case_vs_rebuy": -0.10002233995552923,
+      "profit_vs_raw_optimizer": -0.01216041849940419,
+      "worlds_where_ours_earns_more_than_rebuy": 0.99
+    },
+    {
+      "stress": "Demand falls 20% this season",
+      "budget_lakh": 200,
+      "means": {
+        "ours": {
+          "spend": 13249905.95787426,
+          "mean_profit": 1622322.6915312943,
+          "worst_5pct_profit": 651924.2870168916,
+          "unsold_rooms": 198.5086391397694,
+          "missed_rooms": 724.1863738403722
+        },
+        "rebuy": {
+          "spend": 14832709.17675359,
+          "mean_profit": 1153829.6083465358,
+          "worst_5pct_profit": -34052.0935907077,
+          "unsold_rooms": 301.0071804142927,
+          "missed_rooms": 579.2849151148955
+        },
+        "raw": {
+          "spend": 9640455.812067078,
+          "mean_profit": 1945068.6126874753,
+          "worst_5pct_profit": 1482243.9925782788,
+          "unsold_rooms": 46.18504798954833,
+          "missed_rooms": 1145.9127826901513
+        }
+      },
+      "profit_vs_rebuy": 0.4060331610454335,
+      "worst_case_vs_rebuy": null,
+      "profit_vs_raw_optimizer": -0.16593035281683322,
+      "worlds_where_ours_earns_more_than_rebuy": 0.99
+    },
+    {
+      "stress": "Everything wrong at once, towards over-buying",
+      "budget_lakh": 40,
+      "means": {
+        "ours": {
+          "spend": 3949138.9474419206,
+          "mean_profit": 864980.2919250558,
+          "worst_5pct_profit": 376832.85847553494,
+          "unsold_rooms": 40.27848352131481,
+          "missed_rooms": 2050.9362182219174
+        },
+        "rebuy": {
+          "spend": 3875254.140597709,
+          "mean_profit": 909882.1046508808,
+          "worst_5pct_profit": 891625.2024580219,
+          "unsold_rooms": 0.13280748727858102,
+          "missed_rooms": 2022.6905421878814
+        },
+        "raw": {
+          "spend": 3924201.8817058783,
+          "mean_profit": 1082215.5247050433,
+          "worst_5pct_profit": 942440.2629085482,
+          "unsold_rooms": 3.902534028235377,
+          "missed_rooms": 2013.9802687288384
+        }
+      },
+      "profit_vs_rebuy": -0.049349044778777884,
+      "worst_case_vs_rebuy": -0.5773640567396632,
+      "profit_vs_raw_optimizer": -0.20073195017156564,
+      "worlds_where_ours_earns_more_than_rebuy": 0.54
+    },
+    {
+      "stress": "Everything wrong at once, towards over-buying",
+      "budget_lakh": 200,
+      "means": {
+        "ours": {
+          "spend": 17262113.923467554,
+          "mean_profit": -463681.0747788743,
+          "worst_5pct_profit": -1994871.6229766498,
+          "unsold_rooms": 590.0287615682026,
+          "missed_rooms": 476.36649626880535
+        },
+        "rebuy": {
+          "spend": 14832709.17675359,
+          "mean_profit": 1153829.6083465358,
+          "worst_5pct_profit": -34052.0935907077,
+          "unsold_rooms": 301.0071804142927,
+          "missed_rooms": 579.2849151148955
+        },
+        "raw": {
+          "spend": 9640455.812067078,
+          "mean_profit": 1945068.6126874753,
+          "worst_5pct_profit": 1482243.9925782788,
+          "unsold_rooms": 46.18504798954833,
+          "missed_rooms": 1145.9127826901513
+        }
+      },
+      "profit_vs_rebuy": -1.4018626939582006,
+      "worst_case_vs_rebuy": null,
+      "profit_vs_raw_optimizer": -1.2383880299925318,
+      "worlds_where_ours_earns_more_than_rebuy": 0.01
+    }
+  ]
+}

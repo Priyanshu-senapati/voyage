@@ -1,0 +1,48 @@
+{
+  "machine": {
+    "cpus": 16,
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.14.2"
+  },
+  "scenarios": 200,
+  "risk_aversion": 0.3,
+  "sizes": [
+    {
+      "hotel_weeks": 40,
+      "seconds": 0.284,
+      "runs": 3,
+      "lp_columns": 8241
+    },
+    {
+      "hotel_weeks": 100,
+      "seconds": 1.523,
+      "runs": 3,
+      "lp_columns": 20301
+    },
+    {
+      "hotel_weeks": 200,
+      "seconds": 5.57,
+      "runs": 3,
+      "lp_columns": 40401
+    },
+    {
+      "hotel_weeks": 400,
+      "seconds": 18.108,
+      "runs": 3,
+      "lp_columns": 80601
+    },
+    {
+      "hotel_weeks": 1000,
+      "seconds": 100.989,
+      "runs": 3,
+      "lp_columns": 201201
+    }
+  ],
+  "parallel": {
+    "cities": 16,
+    "hotel_weeks_per_city": 400,
+    "workers": 16,
+    "one_by_one_seconds": 286.37,
+    "parallel_seconds": 132.43
+  }
+}

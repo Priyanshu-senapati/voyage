@@ -175,6 +175,32 @@ class PlanOut(PlanSummary):
     exposure: list[ExposureOut]
 
 
+class PositionLineOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    city: str
+    week: str
+    hotel: str
+    line_id: int | None
+    rooms: int
+    forecast: float = Field(description="Expected demand when the plan was made")
+    on_books: float = Field(description="Room-nights booked so far")
+    expected_by_now: float = Field(description="Forecast x the typical share booked by this many days out")
+    pace: float = Field(description="on_books / expected_by_now: 1.3 = running 30% ahead")
+    projected_demand: float
+    gap: float = Field(description="Projected demand - rooms bought: > 0 short of rooms, < 0 more than demand")
+    status: Literal["short", "on_pace", "over", "started"]
+    note: str
+
+
+class PositionOut(BaseModel):
+    """How each saved line is booking up. Flags only: the buyer decides whether to buy more or release."""
+
+    model_config = ConfigDict(from_attributes=True)
+    as_of: date
+    lines: list[PositionLineOut]
+    summary: dict[str, int]
+
+
 class ReplayDriver(BaseModel):
     label: str = Field(description='What moved the forecast, in plain words, e.g. "already booked"')
     room_nights: float = Field(description="How far it moved it (SHAP value)")

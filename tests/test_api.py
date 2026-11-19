@@ -347,6 +347,17 @@ def test_caps_are_shares_of_the_budget(api, caps):
     assert new_plan(client, keys["buyer"], **caps).status_code == 422
 
 
+def test_position_reads_each_saved_line_against_its_bookings(api):
+    client, keys = api
+    plan = new_plan(client, keys["buyer"]).json()
+    decide(client, keys["approver"], plan, plan["lines"][-1]["id"], "rejected")
+    body = client.get(f"/v1/plans/{plan['id']}/position?as_of=2027-10-01", headers=auth(keys["buyer"])).json()
+    assert body["as_of"] == "2027-10-01" and len(body["lines"]) == len(plan["lines"]) - 1
+    assert {line["status"] for line in body["lines"]} <= {"short", "on_pace", "over", "started"}
+    assert sum(body["summary"].values()) == len(body["lines"])
+    assert client.get(f"/v1/plans/{plan['id']}/position", headers=auth(keys["other"])).status_code == 404
+
+
 def test_replay_serves_the_real_bookings_week_by_week(api):
     client, keys = api
     assert client.get("/v1/replay").status_code == 401

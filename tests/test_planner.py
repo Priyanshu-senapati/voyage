@@ -208,6 +208,16 @@ def test_a_cap_that_does_not_bind_changes_nothing():
     assert build_plan(WORLD, 4e6, 0.3, max_city_share=1.0).lines == build_plan(WORLD, 4e6, 0.3).lines
 
 
+def test_every_line_says_why_not_more_and_how_likely_all_its_rooms_sell():
+    tight = build_plan(WORLD, 3e6, 0.3)
+    for line in tight.lines:
+        assert 0 <= line.why["sell_out_chance"] <= 1 and line.why["why_not_more"]
+    budget_bound = [line for line in tight.lines if line.limited_by == "budget"]
+    assert budget_bound and all("rest of the plan" in line.why["why_not_more"] for line in budget_bound)
+    roomy = build_plan(WORLD, 1e10, 0.3)
+    assert all("would sell" in line.why["why_not_more"] for line in roomy.lines if line.limited_by == "demand")
+
+
 def test_reasons_mention_sold_out_searches_and_event_weeks():
     reasons = " ".join(line.reason for line in build_plan(WORLD, budget=2e7, risk_aversion=0.0).lines)
     assert "sold-out searches" in reasons

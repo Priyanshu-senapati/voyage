@@ -133,6 +133,9 @@ def build_plan(world: World, budget: float, risk_aversion: float, cities: list[s
         at_cap = buy[j] >= np.floor(cap[j])  # whole rooms bought, after rounding and the budget trim
         limited_by = ("hotel" if at_cap else "cap" if cap_reason else
                       "budget" if hurdle > HURDLE_EPS else "demand")
+        why["sell_out_chance"] = float((demand[:, j] >= buy[j]).mean())  # every room bought sells
+        why["why_not_more"] = _why_not_more(limited_by, demand[:, j], buy[j], cost[j], price[j], hurdle,
+                                            float(solution.extra_room_value[j]), cap_reason, risk_aversion)
         lines.append(PlanLine(world.city[i], world.week[i], world.hotel[i], int(buy[j]), float(cost[j]),
                               float(price[j]), float(sold[j]), float(line_profit[j]), _reason(why), why,
                               cvar(line_scenarios[:, j], WORST_SHARE), buy_by[j].item(),
@@ -148,6 +151,27 @@ def build_plan(world: World, budget: float, risk_aversion: float, cities: list[s
         exposure=exposure,
         caps_cost=caps_cost,
     )
+
+
+def _why_not_more(limited_by: str, demand: np.ndarray, rooms: float, cost: float, price: float, hurdle: float,
+                  extra_room_value: float, cap_reason: str | None, risk_aversion: float) -> str:
+    """Why the plan stops at this many rooms, in money: what one more room would do."""
+    if limited_by == "hotel":
+        return f"the hotel's allotment is full; one more room would be worth about ₹{extra_room_value:,.0f}"
+    if limited_by == "cap":
+        return cap_reason or "a city or hotel cap is full"
+    next_sells = float((demand > rooms).mean())
+    earns = float(price * np.clip(demand - rooms, 0, 1).mean() - cost)  # one more whole room, on average
+    if limited_by == "budget":
+        return (f"one more room here would make about ₹{earns:,.0f}; the same ₹{cost:,.0f} makes "
+                f"₹{hurdle * cost:,.0f} in the rest of the plan")
+    if earns < 0:
+        tail = f" and lose about ₹{-earns:,.0f}"
+    elif risk_aversion > 0:
+        tail = f", making about ₹{earns:,.0f}: not enough for the bad-season risk it adds"
+    else:  # the optimum is a fraction of a room more; plans buy whole rooms
+        tail = f", making about ₹{earns:,.0f}: about break-even, so the plan rounds down"
+    return f"one more room would sell only {next_sells:.0%} of the time{tail}"
 
 
 def _risk_adjusted(buy: np.ndarray, cost: np.ndarray, price: np.ndarray, demand: np.ndarray,

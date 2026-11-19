@@ -79,6 +79,9 @@ class LineWhy(BaseModel):
     soldout_searches_past: list[float] = Field(description="Searches that found nothing left, oldest first")
     event_week: bool
     margin: float = Field(description="(price - cost) / price")
+    sell_out_chance: float | None = Field(None, description="Chance every room bought sells (plans from before "
+                                          "this field have none)")
+    why_not_more: str | None = Field(None, description="Why the plan stops at this many rooms, in money")
 
 
 class PreviewLine(BaseModel):

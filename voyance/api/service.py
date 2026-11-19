@@ -2,6 +2,7 @@
 
 import csv
 import io
+import json
 import threading
 import time
 from collections import defaultdict, deque
@@ -9,6 +10,8 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import asdict
 from datetime import date
+from functools import cache
+from importlib import resources
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session, selectinload
@@ -215,6 +218,17 @@ def decide_line(session: Session, principal: Principal, plan_id: int, line_id: i
     session.commit()
     session.refresh(line)
     return line
+
+
+REPLAY_SOURCE = ("Hotel booking demand dataset (Antonio, de Almeida, Nunes 2019, CC BY 4.0): agent bookings at "
+                 "2 hotels in Portugal, decided walk-forward; contract cost assumed")
+
+
+@cache
+def replay() -> dict:
+    """The real-bookings replay made by scripts/forecast_backtest.py and shipped in the package."""
+    data = json.loads(resources.files("voyance").joinpath("data/replay_2017.json").read_text(encoding="utf-8"))
+    return {"source": REPLAY_SOURCE, **data}
 
 
 def action_queue(plan: Plan, as_of: date) -> QueueOut:

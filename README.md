@@ -26,7 +26,7 @@ Needs Python 3.11+.
 
 ```bash
 python -m pip install -e ".[test]"
-python -m pytest                   # 171 tests, about 40 s
+python -m pytest                   # 185 tests, about 60 s
 python scripts/proof_chart.py      # about 3.5 min; writes out/proof_chart.png and out/proof_results.csv
 python scripts/calibrate.py        # downloads 16 MB once; writes out/calibration.json
 python scripts/forecast_backtest.py  # forecast + buying decisions vs re-buying last year on real 2017 bookings
@@ -82,6 +82,7 @@ There are no database migrations yet: after pulling a schema change, delete `voy
 | `voyance/calibrate.py` | Demand facts measured on real bookings (December shape, year-to-year swing, buy-ahead days) |
 | `voyance/forecast.py` | Forecast from the booking curve: LightGBM low / likely / high, with SHAP reasons |
 | `voyance/backtest.py` | Scores buying strategies on real outcomes: re-buy last year, the forecast, the optimizer |
+| `voyance/replay.py` | Decision memory: each real hotel-week's belief, decision and outcome (shipped as `voyance/data/replay_2017.json`) |
 | `scripts/proof_chart.py` | Round 1 chart: expected profit by budget |
 | `scripts/calibrate.py` | Checks the simulator against the real bookings dataset |
 | `scripts/seed_demo.py` | Demo companies and API keys |

@@ -347,6 +347,17 @@ def test_caps_are_shares_of_the_budget(api, caps):
     assert new_plan(client, keys["buyer"], **caps).status_code == 422
 
 
+def test_replay_serves_the_real_bookings_week_by_week(api):
+    client, keys = api
+    assert client.get("/v1/replay").status_code == 401
+    body = client.get("/v1/replay", headers=auth(keys["buyer"])).json()
+    assert body["assumptions"]["lead_days"] == 120 and body["weeks"]
+    for name in ("voyance", "rebuy_last_year"):
+        assert body["weeks"][-1]["running_profit"][name] == pytest.approx(body["totals"][name]["profit"])
+    assert body["totals"]["voyance"]["profit"] > body["totals"]["rebuy_last_year"]["profit"]
+    assert "2 hotels" in body["source"]
+
+
 def queue(client, key, plan_id, as_of=None):
     return client.get(f"/v1/plans/{plan_id}/queue" + (f"?as_of={as_of}" if as_of else ""), headers=auth(key))
 

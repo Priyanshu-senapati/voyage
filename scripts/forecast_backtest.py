@@ -2,8 +2,9 @@
 
 Run from the project root:  python scripts/forecast_backtest.py
 Uses the real bookings dataset (downloaded once by scripts/calibrate.py, checked by SHA-256). Learns on weeks
-before 2017 and scores Jan-Aug 2017. Writes out/forecast_backtest.json (accuracy at every lead) and
-out/decision_backtest.json (profit, unsold and turned-away rooms per strategy, lead and assumed margin).
+before 2017 and scores Jan-Aug 2017. Writes out/forecast_backtest.json (accuracy at every lead),
+out/decision_backtest.json (profit, unsold and turned-away rooms per strategy, lead and assumed margin) and
+voyance/data/replay_2017.json (week by week, what we believed, decided and saw; served at GET /v1/replay).
 """
 
 import io
@@ -19,9 +20,12 @@ sys.path.insert(0, str(ROOT))
 from voyance.backtest import decision_backtest  # noqa: E402
 from voyance.calibrate import DATASET_SHA256, DATASET_URL, fetch_verified  # noqa: E402
 from voyance.forecast import agent_bookings, backtest, booking_curves, with_history  # noqa: E402
+from voyance.replay import build_replay  # noqa: E402
 
 RAW = ROOT / "data" / "raw" / "hotels.csv"
 OUT = ROOT / "out"
+REPLAY = ROOT / "voyance" / "data" / "replay_2017.json"  # shipped in the package: the API serves it
+REPLAY_LEAD, REPLAY_MARGIN = 120, 0.20
 TEST_FROM = pd.Timestamp("2017-01-02")  # first Monday of 2017
 DECISION_LEADS = (90, 120, 150)  # buy-by dates fall 93-139 days ahead
 MARGINS = (0.15, 0.20, 0.30)     # assumed: contract cost = (1 - margin) x the week's agent rate
@@ -42,6 +46,12 @@ def main() -> None:
 
     decisions = decision_backtest(frame, TEST_FROM, DECISION_LEADS, MARGINS)
     _write("decision_backtest.json", decisions)
+    replay = build_replay(frame, TEST_FROM, lead=REPLAY_LEAD, margin=REPLAY_MARGIN)
+    REPLAY.write_text(json.dumps(replay, indent=1) + "\n", encoding="utf-8")
+    t = replay["totals"]
+    logging.info(f"\nreplay ({len(replay['weeks'])} hotel-weeks, {REPLAY_LEAD} days ahead, {REPLAY_MARGIN:.0%} margin): "
+                 f"Voyance {t['voyance']['profit']:,.0f} EUR vs re-buy {t['rebuy_last_year']['profit']:,.0f} EUR "
+                 f"-> {REPLAY.relative_to(ROOT)}")
     logging.info("\nprofit vs re-buying last year [95% interval] | rooms unsold / room-nights turned away")
     logging.info("lead  margin  likely forecast     optimizer risk 0    optimizer risk 0.3  | re-buy         likely")
     for row in decisions["results"]:

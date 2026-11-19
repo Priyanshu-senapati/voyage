@@ -175,6 +175,49 @@ class PlanOut(PlanSummary):
     exposure: list[ExposureOut]
 
 
+class ReplayDriver(BaseModel):
+    label: str = Field(description='What moved the forecast, in plain words, e.g. "already booked"')
+    room_nights: float = Field(description="How far it moved it (SHAP value)")
+
+
+class ReplayForecast(BaseModel):
+    low: float
+    likely: float
+    high: float
+    drivers: list[ReplayDriver]
+
+
+class ReplayOutcome(BaseModel):
+    rooms: float
+    sold: float
+    unsold: float
+    turned_away: float
+    profit: float
+
+
+class ReplayWeek(BaseModel):
+    week: date
+    hotel: str
+    decided_on: date
+    forecast: ReplayForecast = Field(description="What we believed on decided_on")
+    on_books: float
+    last_year: float
+    actual: float = Field(description="Room-nights the week's agent bookings really came to")
+    rate: float = Field(description="Average agent rate that week (EUR)")
+    strategies: dict[str, ReplayOutcome] = Field(description="voyance (buy the likely forecast) and "
+                                                 "rebuy_last_year")
+    running_profit: dict[str, float]
+
+
+class ReplayOut(BaseModel):
+    """Decision memory on real bookings: what we believed, decided and saw, week by week."""
+
+    source: str
+    assumptions: dict[str, float | str]
+    weeks: list[ReplayWeek]
+    totals: dict[str, dict[str, float]]
+
+
 class QueueItem(BaseModel):
     action: QueueAction
     city: str

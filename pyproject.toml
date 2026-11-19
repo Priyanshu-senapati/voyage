@@ -5,6 +5,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["voyance*"]
 
+[tool.setuptools.package-data]
+voyance = ["data/*.json"]  # the real-bookings replay the API serves
+
 [project]
 name = "voyance"
 version = "0.1.0"

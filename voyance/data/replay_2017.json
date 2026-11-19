@@ -1,0 +1,3289 @@
+{
+ "assumptions": {
+  "lead_days": 120,
+  "margin": 0.2,
+  "test_from": "2017-01-02"
+ },
+ "weeks": [
+  {
+   "week": "2017-01-02",
+   "hotel": "City Hotel",
+   "decided_on": "2016-09-04",
+   "forecast": {
+    "low": 423.85220000618796,
+    "likely": 565.8474832913034,
+    "high": 612.2610064573371,
+    "drivers": [
+     {
+      "label": "season",
+      "room_nights": -347.1667967286062
+     },
+     {
+      "label": "already booked",
+      "room_nights": -209.83877213335074
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 41.36852658946475
+     }
+    ]
+   },
+   "on_books": 277.0,
+   "last_year": 325.0,
+   "actual": 900.0,
+   "rate": 93.09971111111112,
+   "strategies": {
+    "voyance": {
+     "rooms": 565.0,
+     "sold": 565.0,
+     "unsold": 0.0,
+     "turned_away": 335.0,
+     "profit": 10520.267355555552
+    },
+    "rebuy_last_year": {
+     "rooms": 325.0,
+     "sold": 325.0,
+     "unsold": 0.0,
+     "turned_away": 575.0,
+     "profit": 6051.4812222222245
+    }
+   },
+   "running_profit": {
+    "voyance": 10520.267355555552,
+    "rebuy_last_year": 6051.4812222222245
+   }
+  },
+  {
+   "week": "2017-01-02",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-09-04",
+   "forecast": {
+    "low": 354.94062877283795,
+    "likely": 494.96956362397935,
+    "high": 593.2699738627808,
+    "drivers": [
+     {
+      "label": "season",
+      "room_nights": -302.31187459645145
+     },
+     {
+      "label": "already booked",
+      "room_nights": -247.91450246493463
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 41.51719578627541
+     }
+    ]
+   },
+   "on_books": 125.0,
+   "last_year": 352.0,
+   "actual": 551.0,
+   "rate": 53.347422867513615,
+   "strategies": {
+    "voyance": {
+     "rooms": 494.0,
+     "sold": 494.0,
+     "unsold": 0.0,
+     "turned_away": 57.0,
+     "profit": 5270.725379310345
+    },
+    "rebuy_last_year": {
+     "rooms": 352.0,
+     "sold": 352.0,
+     "unsold": 0.0,
+     "turned_away": 199.0,
+     "profit": 3755.6585698729577
+    }
+   },
+   "running_profit": {
+    "voyance": 15790.992734865897,
+    "rebuy_last_year": 9807.139792095182
+   }
+  },
+  {
+   "week": "2017-01-09",
+   "hotel": "City Hotel",
+   "decided_on": "2016-09-11",
+   "forecast": {
+    "low": 382.7993683295049,
+    "likely": 524.3382804407624,
+    "high": 609.4535128023105,
+    "drivers": [
+     {
+      "label": "season",
+      "room_nights": -356.16160009662184
+     },
+     {
+      "label": "already booked",
+      "room_nights": -259.62994987276636
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 44.54462431675847
+     }
+    ]
+   },
+   "on_books": 96.0,
+   "last_year": 374.0,
+   "actual": 757.0,
+   "rate": 80.26725231175693,
+   "strategies": {
+    "voyance": {
+     "rooms": 524.0,
+     "sold": 524.0,
+     "unsold": 0.0,
+     "turned_away": 233.0,
+     "profit": 8412.008042272122
+    },
+    "rebuy_last_year": {
+     "rooms": 374.0,
+     "sold": 374.0,
+     "unsold": 0.0,
+     "turned_away": 383.0,
+     "profit": 6003.990472919417
+    }
+   },
+   "running_profit": {
+    "voyance": 24203.00077713802,
+    "rebuy_last_year": 15811.130265014599
+   }
+  },
+  {
+   "week": "2017-01-09",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-09-11",
+   "forecast": {
+    "low": 330.6512365047379,
+    "likely": 511.5903982236055,
+    "high": 594.9392609538914,
+    "drivers": [
+     {
+      "label": "season",
+      "room_nights": -304.2651445981797
+     },
+     {
+      "label": "already booked",
+      "room_nights": -251.6730001589863
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 41.16923076686907
+     }
+    ]
+   },
+   "on_books": 127.0,
+   "last_year": 302.0,
+   "actual": 427.0,
+   "rate": 43.7424355971897,
+   "strategies": {
+    "voyance": {
+     "rooms": 511.0,
+     "sold": 427.0,
+     "unsold": 84.0,
+     "turned_away": 0.0,
+     "profit": 796.1123278688538
+    },
+    "rebuy_last_year": {
+     "rooms": 302.0,
+     "sold": 302.0,
+     "unsold": 0.0,
+     "turned_away": 125.0,
+     "profit": 2642.043110070257
+    }
+   },
+   "running_profit": {
+    "voyance": 24999.113105006873,
+    "rebuy_last_year": 18453.173375084858
+   }
+  },
+  {
+   "week": "2017-01-16",
+   "hotel": "City Hotel",
+   "decided_on": "2016-09-18",
+   "forecast": {
+    "low": 374.582338790492,
+    "likely": 487.1915537154216,
+    "high": 596.697855070788,
+    "drivers": [
+     {
+      "label": "season",
+      "room_nights": -342.4865777995575
+     },
+     {
+      "label": "already booked",
+      "room_nights": -277.40688332432734
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 48.02961946032465
+     }
+    ]
+   },
+   "on_books": 64.0,
+   "last_year": 429.0,
+   "actual": 843.0,
+   "rate": 86.95814946619217,
+   "strategies": {
+    "voyance": {
+     "rooms": 487.0,
+     "sold": 487.0,
+     "unsold": 0.0,
+     "turned_away": 356.0,
+     "profit": 8469.723758007116
+    },
+    "rebuy_last_year": {
+     "rooms": 429.0,
+     "sold": 429.0,
+     "unsold": 0.0,
+     "turned_away": 414.0,
+     "profit": 7461.00922419929
+    }
+   },
+   "running_profit": {
+    "voyance": 33468.83686301399,
+    "rebuy_last_year": 25914.182599284148
+   }
+  },
+  {
+   "week": "2017-01-16",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-09-18",
+   "forecast": {
+    "low": 282.63883780902677,
+    "likely": 380.7723912425178,
+    "high": 568.0114490315449,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -316.04934108922026
+     },
+     {
+      "label": "season",
+      "room_nights": -253.83837761267318
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 38.94781324156423
+     }
+    ]
+   },
+   "on_books": 38.0,
+   "last_year": 230.0,
+   "actual": 399.0,
+   "rate": 58.920701754385966,
+   "strategies": {
+    "voyance": {
+     "rooms": 380.0,
+     "sold": 380.0,
+     "unsold": 0.0,
+     "turned_away": 19.0,
+     "profit": 4477.9733333333315
+    },
+    "rebuy_last_year": {
+     "rooms": 230.0,
+     "sold": 230.0,
+     "unsold": 0.0,
+     "turned_away": 169.0,
+     "profit": 2710.3522807017525
+    }
+   },
+   "running_profit": {
+    "voyance": 37946.81019634732,
+    "rebuy_last_year": 28624.5348799859
+   }
+  },
+  {
+   "week": "2017-01-23",
+   "hotel": "City Hotel",
+   "decided_on": "2016-09-25",
+   "forecast": {
+    "low": 365.53031803602937,
+    "likely": 521.4622552004446,
+    "high": 664.3990212201644,
+    "drivers": [
+     {
+      "label": "season",
+      "room_nights": -333.08989484606053
+     },
+     {
+      "label": "already booked",
+      "room_nights": -285.25758855944474
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 48.61445006854609
+     }
+    ]
+   },
+   "on_books": 62.0,
+   "last_year": 361.0,
+   "actual": 633.0,
+   "rate": 88.21527646129542,
+   "strategies": {
+    "voyance": {
+     "rooms": 521.0,
+     "sold": 521.0,
+     "unsold": 0.0,
+     "turned_away": 112.0,
+     "profit": 9192.031807266976
+    },
+    "rebuy_last_year": {
+     "rooms": 361.0,
+     "sold": 361.0,
+     "unsold": 0.0,
+     "turned_away": 272.0,
+     "profit": 6369.142960505527
+    }
+   },
+   "running_profit": {
+    "voyance": 47138.84200361429,
+    "rebuy_last_year": 34993.67784049142
+   }
+  },
+  {
+   "week": "2017-01-23",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-09-25",
+   "forecast": {
+    "low": 303.51834643644173,
+    "likely": 463.5215512963856,
+    "high": 620.3045316216126,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -290.224367849976
+     },
+     {
+      "label": "season",
+      "room_nights": -270.8651848829199
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -41.41190698405225
+     }
+    ]
+   },
+   "on_books": 63.0,
+   "last_year": 290.0,
+   "actual": 475.0,
+   "rate": 51.126273684210524,
+   "strategies": {
+    "voyance": {
+     "rooms": 463.0,
+     "sold": 463.0,
+     "unsold": 0.0,
+     "turned_away": 12.0,
+     "profit": 4734.292943157892
+    },
+    "rebuy_last_year": {
+     "rooms": 290.0,
+     "sold": 290.0,
+     "unsold": 0.0,
+     "turned_away": 185.0,
+     "profit": 2965.3238736842104
+    }
+   },
+   "running_profit": {
+    "voyance": 51873.13494677219,
+    "rebuy_last_year": 37959.00171417563
+   }
+  },
+  {
+   "week": "2017-01-30",
+   "hotel": "City Hotel",
+   "decided_on": "2016-10-02",
+   "forecast": {
+    "low": 480.3670207105768,
+    "likely": 756.0647128775013,
+    "high": 966.9850146496651,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -311.53412447346585
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 81.88864633498578
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 67.699324029035
+     }
+    ]
+   },
+   "on_books": 73.0,
+   "last_year": 704.0,
+   "actual": 801.0,
+   "rate": 87.88724094881397,
+   "strategies": {
+    "voyance": {
+     "rooms": 756.0,
+     "sold": 756.0,
+     "unsold": 0.0,
+     "turned_away": 45.0,
+     "profit": 13288.550831460678
+    },
+    "rebuy_last_year": {
+     "rooms": 704.0,
+     "sold": 704.0,
+     "unsold": 0.0,
+     "turned_away": 97.0,
+     "profit": 12374.523525593002
+    }
+   },
+   "running_profit": {
+    "voyance": 65161.685778232866,
+    "rebuy_last_year": 50333.525239768634
+   }
+  },
+  {
+   "week": "2017-01-30",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-10-02",
+   "forecast": {
+    "low": 543.3350533469443,
+    "likely": 588.5446969769158,
+    "high": 705.1748661084943,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -237.34686089936804
+     },
+     {
+      "label": "season",
+      "room_nights": -75.19163760202453
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -65.97812051885532
+     }
+    ]
+   },
+   "on_books": 165.0,
+   "last_year": 577.0,
+   "actual": 563.0,
+   "rate": 52.54936056838366,
+   "strategies": {
+    "voyance": {
+     "rooms": 588.0,
+     "sold": 563.0,
+     "unsold": 25.0,
+     "turned_away": 0.0,
+     "profit": 4866.070788632325
+    },
+    "rebuy_last_year": {
+     "rooms": 577.0,
+     "sold": 563.0,
+     "unsold": 14.0,
+     "turned_away": 0.0,
+     "profit": 5328.505161634101
+    }
+   },
+   "running_profit": {
+    "voyance": 70027.7565668652,
+    "rebuy_last_year": 55662.030401402735
+   }
+  },
+  {
+   "week": "2017-02-06",
+   "hotel": "City Hotel",
+   "decided_on": "2016-10-09",
+   "forecast": {
+    "low": 536.3657723106144,
+    "likely": 858.7624961678276,
+    "high": 1056.351015256961,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -279.84190391419617
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 91.45809355735828
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 76.2300087203507
+     }
+    ]
+   },
+   "on_books": 57.0,
+   "last_year": 779.0,
+   "actual": 946.0,
+   "rate": 90.61665961945032,
+   "strategies": {
+    "voyance": {
+     "rooms": 858.0,
+     "sold": 858.0,
+     "unsold": 0.0,
+     "turned_away": 88.0,
+     "profit": 15549.818790697667
+    },
+    "rebuy_last_year": {
+     "rooms": 779.0,
+     "sold": 779.0,
+     "unsold": 0.0,
+     "turned_away": 167.0,
+     "profit": 14118.075568710366
+    }
+   },
+   "running_profit": {
+    "voyance": 85577.57535756286,
+    "rebuy_last_year": 69780.1059701131
+   }
+  },
+  {
+   "week": "2017-02-06",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-10-09",
+   "forecast": {
+    "low": 558.9695337722769,
+    "likely": 614.4309489502255,
+    "high": 767.4490367775489,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -222.50414778800487
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -73.18788283294076
+     },
+     {
+      "label": "season",
+      "room_nights": -60.63902531675357
+     }
+    ]
+   },
+   "on_books": 186.0,
+   "last_year": 513.0,
+   "actual": 526.0,
+   "rate": 53.74148288973384,
+   "strategies": {
+    "voyance": {
+     "rooms": 614.0,
+     "sold": 526.0,
+     "unsold": 88.0,
+     "turned_away": 0.0,
+     "profit": 1870.2036045627392
+    },
+    "rebuy_last_year": {
+     "rooms": 513.0,
+     "sold": 513.0,
+     "unsold": 0.0,
+     "turned_away": 13.0,
+     "profit": 5513.876144486694
+    }
+   },
+   "running_profit": {
+    "voyance": 87447.7789621256,
+    "rebuy_last_year": 75293.9821145998
+   }
+  },
+  {
+   "week": "2017-02-13",
+   "hotel": "City Hotel",
+   "decided_on": "2016-10-16",
+   "forecast": {
+    "low": 540.9572280197764,
+    "likely": 884.6160925368071,
+    "high": 1058.535680633667,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -248.67472705012787
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 90.99426831784402
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 76.82583604463811
+     }
+    ]
+   },
+   "on_books": 135.0,
+   "last_year": 743.0,
+   "actual": 1169.0,
+   "rate": 92.11380667236953,
+   "strategies": {
+    "voyance": {
+     "rooms": 884.0,
+     "sold": 884.0,
+     "unsold": 0.0,
+     "turned_away": 285.0,
+     "profit": 16285.72101967493
+    },
+    "rebuy_last_year": {
+     "rooms": 743.0,
+     "sold": 743.0,
+     "unsold": 0.0,
+     "turned_away": 426.0,
+     "profit": 13688.111671514118
+    }
+   },
+   "running_profit": {
+    "voyance": 103733.49998180053,
+    "rebuy_last_year": 88982.09378611392
+   }
+  },
+  {
+   "week": "2017-02-13",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-10-16",
+   "forecast": {
+    "low": 598.7642754125432,
+    "likely": 611.7653139426837,
+    "high": 761.2011085405771,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -216.8409917471134
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -70.65232773654273
+     },
+     {
+      "label": "season",
+      "room_nights": -68.06231107479324
+     }
+    ]
+   },
+   "on_books": 226.0,
+   "last_year": 468.0,
+   "actual": 852.0,
+   "rate": 58.52029342723005,
+   "strategies": {
+    "voyance": {
+     "rooms": 611.0,
+     "sold": 611.0,
+     "unsold": 0.0,
+     "turned_away": 241.0,
+     "profit": 7151.179856807506
+    },
+    "rebuy_last_year": {
+     "rooms": 468.0,
+     "sold": 468.0,
+     "unsold": 0.0,
+     "turned_away": 384.0,
+     "profit": 5477.499464788729
+    }
+   },
+   "running_profit": {
+    "voyance": 110884.67983860803,
+    "rebuy_last_year": 94459.59325090266
+   }
+  },
+  {
+   "week": "2017-02-20",
+   "hotel": "City Hotel",
+   "decided_on": "2016-10-23",
+   "forecast": {
+    "low": 626.4670163260994,
+    "likely": 985.9572043797002,
+    "high": 1187.5222828715912,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -165.85713942123877
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 80.81904593753944
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 76.83013048286645
+     }
+    ]
+   },
+   "on_books": 330.0,
+   "last_year": 857.0,
+   "actual": 1174.0,
+   "rate": 89.8343611584327,
+   "strategies": {
+    "voyance": {
+     "rooms": 985.0,
+     "sold": 985.0,
+     "unsold": 0.0,
+     "turned_away": 189.0,
+     "profit": 17697.369148211248
+    },
+    "rebuy_last_year": {
+     "rooms": 857.0,
+     "sold": 857.0,
+     "unsold": 0.0,
+     "turned_away": 317.0,
+     "profit": 15397.609502555366
+    }
+   },
+   "running_profit": {
+    "voyance": 128582.04898681928,
+    "rebuy_last_year": 109857.20275345803
+   }
+  },
+  {
+   "week": "2017-02-20",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-10-23",
+   "forecast": {
+    "low": 563.5835897684603,
+    "likely": 710.8628090177133,
+    "high": 809.4348330523542,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -194.6666826418603
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -74.65671841258485
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 61.38533367641216
+     }
+    ]
+   },
+   "on_books": 263.0,
+   "last_year": 716.0,
+   "actual": 843.0,
+   "rate": 57.60832740213523,
+   "strategies": {
+    "voyance": {
+     "rooms": 710.0,
+     "sold": 710.0,
+     "unsold": 0.0,
+     "turned_away": 133.0,
+     "profit": 8180.382491103206
+    },
+    "rebuy_last_year": {
+     "rooms": 716.0,
+     "sold": 716.0,
+     "unsold": 0.0,
+     "turned_away": 127.0,
+     "profit": 8249.512483985767
+    }
+   },
+   "running_profit": {
+    "voyance": 136762.43147792248,
+    "rebuy_last_year": 118106.7152374438
+   }
+  },
+  {
+   "week": "2017-02-27",
+   "hotel": "City Hotel",
+   "decided_on": "2016-10-30",
+   "forecast": {
+    "low": 591.414532450304,
+    "likely": 1058.2556019422432,
+    "high": 1221.55910861738,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -189.66871718802525
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 99.36900201224921
+     },
+     {
+      "label": "season",
+      "room_nights": 90.85823142085268
+     }
+    ]
+   },
+   "on_books": 237.0,
+   "last_year": 940.0,
+   "actual": 1212.0,
+   "rate": 89.8489603960396,
+   "strategies": {
+    "voyance": {
+     "rooms": 1058.0,
+     "sold": 1058.0,
+     "unsold": 0.0,
+     "turned_away": 154.0,
+     "profit": 19012.040019801992
+    },
+    "rebuy_last_year": {
+     "rooms": 940.0,
+     "sold": 940.0,
+     "unsold": 0.0,
+     "turned_away": 272.0,
+     "profit": 16891.60455445545
+    }
+   },
+   "running_profit": {
+    "voyance": 155774.47149772447,
+    "rebuy_last_year": 134998.31979189924
+   }
+  },
+  {
+   "week": "2017-02-27",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-10-30",
+   "forecast": {
+    "low": 975.1120838419649,
+    "likely": 1002.1545446420574,
+    "high": 1028.5237729600863,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 148.88264509600322
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -87.25962062185474
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 29.902794525231357
+     }
+    ]
+   },
+   "on_books": 975.0,
+   "last_year": 508.0,
+   "actual": 946.0,
+   "rate": 56.58503171247357,
+   "strategies": {
+    "voyance": {
+     "rooms": 1002.0,
+     "sold": 946.0,
+     "unsold": 56.0,
+     "turned_away": 0.0,
+     "profit": 8170.878579281183
+    },
+    "rebuy_last_year": {
+     "rooms": 508.0,
+     "sold": 508.0,
+     "unsold": 0.0,
+     "turned_away": 438.0,
+     "profit": 5749.039221987317
+    }
+   },
+   "running_profit": {
+    "voyance": 163945.35007700566,
+    "rebuy_last_year": 140747.35901388654
+   }
+  },
+  {
+   "week": "2017-03-06",
+   "hotel": "City Hotel",
+   "decided_on": "2016-11-06",
+   "forecast": {
+    "low": 579.9503196956223,
+    "likely": 1153.7518279092055,
+    "high": 1387.6660204344275,
+    "drivers": [
+     {
+      "label": "season",
+      "room_nights": 131.61675131233292
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 115.91384246385516
+     },
+     {
+      "label": "already booked",
+      "room_nights": -98.73554215578963
+     }
+    ]
+   },
+   "on_books": 370.0,
+   "last_year": 1183.0,
+   "actual": 1181.0,
+   "rate": 88.44991532599492,
+   "strategies": {
+    "voyance": {
+     "rooms": 1153.0,
+     "sold": 1153.0,
+     "unsold": 0.0,
+     "turned_away": 28.0,
+     "profit": 20396.550474174423
+    },
+    "rebuy_last_year": {
+     "rooms": 1183.0,
+     "sold": 1181.0,
+     "unsold": 2.0,
+     "turned_away": 0.0,
+     "profit": 20750.35013547841
+    }
+   },
+   "running_profit": {
+    "voyance": 184341.90055118006,
+    "rebuy_last_year": 161497.70914936496
+   }
+  },
+  {
+   "week": "2017-03-06",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-11-06",
+   "forecast": {
+    "low": 499.0267855554644,
+    "likely": 869.0217980892957,
+    "high": 966.3038729914415,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -102.10501372684381
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 88.20513763787527
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -77.39230345929656
+     }
+    ]
+   },
+   "on_books": 381.0,
+   "last_year": 829.0,
+   "actual": 879.0,
+   "rate": 56.80457337883959,
+   "strategies": {
+    "voyance": {
+     "rooms": 869.0,
+     "sold": 869.0,
+     "unsold": 0.0,
+     "turned_away": 10.0,
+     "profit": 9872.634853242322
+    },
+    "rebuy_last_year": {
+     "rooms": 829.0,
+     "sold": 829.0,
+     "unsold": 0.0,
+     "turned_away": 50.0,
+     "profit": 9418.198266211606
+    }
+   },
+   "running_profit": {
+    "voyance": 194214.53540442238,
+    "rebuy_last_year": 170915.90741557657
+   }
+  },
+  {
+   "week": "2017-03-13",
+   "hotel": "City Hotel",
+   "decided_on": "2016-11-13",
+   "forecast": {
+    "low": 580.9751781737228,
+    "likely": 1192.9430660361265,
+    "high": 1369.3287105957934,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -160.48614718084775
+     },
+     {
+      "label": "season",
+      "room_nights": 160.30850085746258
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 121.02572211950836
+     }
+    ]
+   },
+   "on_books": 237.0,
+   "last_year": 1158.0,
+   "actual": 1394.0,
+   "rate": 90.22877331420374,
+   "strategies": {
+    "voyance": {
+     "rooms": 1192.0,
+     "sold": 1192.0,
+     "unsold": 0.0,
+     "turned_away": 202.0,
+     "profit": 21510.539558106175
+    },
+    "rebuy_last_year": {
+     "rooms": 1158.0,
+     "sold": 1158.0,
+     "unsold": 0.0,
+     "turned_away": 236.0,
+     "profit": 20896.98389956959
+    }
+   },
+   "running_profit": {
+    "voyance": 215725.07496252854,
+    "rebuy_last_year": 191812.89131514617
+   }
+  },
+  {
+   "week": "2017-03-13",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-11-13",
+   "forecast": {
+    "low": 896.9420114641592,
+    "likely": 991.5131324195115,
+    "high": 1051.6055155601537,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": -99.55935785661096
+     },
+     {
+      "label": "already booked",
+      "room_nights": 94.20598277614359
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 55.25252485641746
+     }
+    ]
+   },
+   "on_books": 843.0,
+   "last_year": 895.0,
+   "actual": 859.0,
+   "rate": 57.85942956926659,
+   "strategies": {
+    "voyance": {
+     "rooms": 991.0,
+     "sold": 859.0,
+     "unsold": 132.0,
+     "turned_away": 0.0,
+     "profit": 3830.2942374854465
+    },
+    "rebuy_last_year": {
+     "rooms": 895.0,
+     "sold": 859.0,
+     "unsold": 36.0,
+     "turned_away": 0.0,
+     "profit": 8273.898428405118
+    }
+   },
+   "running_profit": {
+    "voyance": 219555.36920001399,
+    "rebuy_last_year": 200086.7897435513
+   }
+  },
+  {
+   "week": "2017-03-20",
+   "hotel": "City Hotel",
+   "decided_on": "2016-11-20",
+   "forecast": {
+    "low": 748.2728643751703,
+    "likely": 1184.4699960492,
+    "high": 1368.5762653016147,
+    "drivers": [
+     {
+      "label": "days ahead",
+      "room_nights": 105.46826103702283
+     },
+     {
+      "label": "season",
+      "room_nights": 102.76998664932741
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 88.04693429300053
+     }
+    ]
+   },
+   "on_books": 523.0,
+   "last_year": 1088.0,
+   "actual": 1275.0,
+   "rate": 95.85040784313726,
+   "strategies": {
+    "voyance": {
+     "rooms": 1184.0,
+     "sold": 1184.0,
+     "unsold": 0.0,
+     "turned_away": 91.0,
+     "profit": 22697.376577254894
+    },
+    "rebuy_last_year": {
+     "rooms": 1088.0,
+     "sold": 1088.0,
+     "unsold": 0.0,
+     "turned_away": 187.0,
+     "profit": 20857.048746666667
+    }
+   },
+   "running_profit": {
+    "voyance": 242252.7457772689,
+    "rebuy_last_year": 220943.83849021795
+   }
+  },
+  {
+   "week": "2017-03-20",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-11-20",
+   "forecast": {
+    "low": 586.8648357882903,
+    "likely": 843.3449999441701,
+    "high": 1004.8626969020467,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -87.16964378696012
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -87.03910065655576
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 81.00765350216543
+     }
+    ]
+   },
+   "on_books": 445.0,
+   "last_year": 785.0,
+   "actual": 658.0,
+   "rate": 52.39414893617021,
+   "strategies": {
+    "voyance": {
+     "rooms": 843.0,
+     "sold": 658.0,
+     "unsold": 185.0,
+     "turned_away": 0.0,
+     "profit": -859.2640425531936
+    },
+    "rebuy_last_year": {
+     "rooms": 785.0,
+     "sold": 658.0,
+     "unsold": 127.0,
+     "turned_away": 0.0,
+     "profit": 1571.8244680851058
+    }
+   },
+   "running_profit": {
+    "voyance": 241393.4817347157,
+    "rebuy_last_year": 222515.66295830306
+   }
+  },
+  {
+   "week": "2017-03-27",
+   "hotel": "City Hotel",
+   "decided_on": "2016-11-27",
+   "forecast": {
+    "low": 600.929667278144,
+    "likely": 1111.3991385585289,
+    "high": 1378.6745886542337,
+    "drivers": [
+     {
+      "label": "days ahead",
+      "room_nights": 114.86623694329276
+     },
+     {
+      "label": "season",
+      "room_nights": 113.81902370568214
+     },
+     {
+      "label": "already booked",
+      "room_nights": -95.9721569869254
+     }
+    ]
+   },
+   "on_books": 393.0,
+   "last_year": 1175.0,
+   "actual": 1225.0,
+   "rate": 104.03691428571429,
+   "strategies": {
+    "voyance": {
+     "rooms": 1111.0,
+     "sold": 1111.0,
+     "unsold": 0.0,
+     "turned_away": 114.0,
+     "profit": 23117.00235428571
+    },
+    "rebuy_last_year": {
+     "rooms": 1175.0,
+     "sold": 1175.0,
+     "unsold": 0.0,
+     "turned_away": 50.0,
+     "profit": 24448.67485714286
+    }
+   },
+   "running_profit": {
+    "voyance": 264510.48408900143,
+    "rebuy_last_year": 246964.3378154459
+   }
+  },
+  {
+   "week": "2017-03-27",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-11-27",
+   "forecast": {
+    "low": 348.2549403479718,
+    "likely": 690.9577729533339,
+    "high": 950.7158283550673,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -225.27105573723028
+     },
+     {
+      "label": "season",
+      "room_nights": 93.10143059555978
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 89.55419986148772
+     }
+    ]
+   },
+   "on_books": 130.0,
+   "last_year": 451.0,
+   "actual": 662.0,
+   "rate": 69.82802114803626,
+   "strategies": {
+    "voyance": {
+     "rooms": 690.0,
+     "sold": 662.0,
+     "unsold": 28.0,
+     "turned_away": 0.0,
+     "profit": 7681.082326283991
+    },
+    "rebuy_last_year": {
+     "rooms": 451.0,
+     "sold": 451.0,
+     "unsold": 0.0,
+     "turned_away": 211.0,
+     "profit": 6298.487507552869
+    }
+   },
+   "running_profit": {
+    "voyance": 272191.5664152854,
+    "rebuy_last_year": 253262.82532299877
+   }
+  },
+  {
+   "week": "2017-04-03",
+   "hotel": "City Hotel",
+   "decided_on": "2016-12-04",
+   "forecast": {
+    "low": 695.2412894392878,
+    "likely": 1207.1014221190499,
+    "high": 1386.5722398602945,
+    "drivers": [
+     {
+      "label": "season",
+      "room_nights": 124.97715902887519
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 116.16817415593088
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 83.54808498739402
+     }
+    ]
+   },
+   "on_books": 417.0,
+   "last_year": 1148.0,
+   "actual": 1285.0,
+   "rate": 119.88245136186771,
+   "strategies": {
+    "voyance": {
+     "rooms": 1207.0,
+     "sold": 1207.0,
+     "unsold": 0.0,
+     "turned_away": 78.0,
+     "profit": 28939.623758754882
+    },
+    "rebuy_last_year": {
+     "rooms": 1148.0,
+     "sold": 1148.0,
+     "unsold": 0.0,
+     "turned_away": 137.0,
+     "profit": 27525.010832684813
+    }
+   },
+   "running_profit": {
+    "voyance": 301131.19017404027,
+    "rebuy_last_year": 280787.8361556836
+   }
+  },
+  {
+   "week": "2017-04-03",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-12-04",
+   "forecast": {
+    "low": 835.446355680775,
+    "likely": 1013.123849199033,
+    "high": 1076.7253062639625,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": -92.53132466789346
+     },
+     {
+      "label": "already booked",
+      "room_nights": 71.9543416177262
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 63.42694585966241
+     }
+    ]
+   },
+   "on_books": 768.0,
+   "last_year": 985.0,
+   "actual": 1103.0,
+   "rate": 75.88478694469629,
+   "strategies": {
+    "voyance": {
+     "rooms": 1013.0,
+     "sold": 1013.0,
+     "unsold": 0.0,
+     "turned_away": 90.0,
+     "profit": 15374.257834995471
+    },
+    "rebuy_last_year": {
+     "rooms": 985.0,
+     "sold": 985.0,
+     "unsold": 0.0,
+     "turned_away": 118.0,
+     "profit": 14949.303028105162
+    }
+   },
+   "running_profit": {
+    "voyance": 316505.4480090357,
+    "rebuy_last_year": 295737.1391837888
+   }
+  },
+  {
+   "week": "2017-04-10",
+   "hotel": "City Hotel",
+   "decided_on": "2016-12-11",
+   "forecast": {
+    "low": 914.4107881559554,
+    "likely": 1312.4500026967569,
+    "high": 1380.8846841950594,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": 100.52386345910907
+     },
+     {
+      "label": "season",
+      "room_nights": 91.9605398096372
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 90.94560096915018
+     }
+    ]
+   },
+   "on_books": 649.0,
+   "last_year": 1177.0,
+   "actual": 1287.0,
+   "rate": 129.8475912975913,
+   "strategies": {
+    "voyance": {
+     "rooms": 1312.0,
+     "sold": 1287.0,
+     "unsold": 25.0,
+     "turned_away": 0.0,
+     "profit": 30825.81817404818
+    },
+    "rebuy_last_year": {
+     "rooms": 1177.0,
+     "sold": 1177.0,
+     "unsold": 0.0,
+     "turned_away": 110.0,
+     "profit": 30566.122991452983
+    }
+   },
+   "running_profit": {
+    "voyance": 347331.2661830839,
+    "rebuy_last_year": 326303.2621752418
+   }
+  },
+  {
+   "week": "2017-04-10",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-12-11",
+   "forecast": {
+    "low": 511.4226478927947,
+    "likely": 814.7029985911015,
+    "high": 1015.8035072652491,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": -112.24890532059432
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -98.44415660474532
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 88.6858903499923
+     }
+    ]
+   },
+   "on_books": 370.0,
+   "last_year": 667.0,
+   "actual": 806.0,
+   "rate": 93.5439330024814,
+   "strategies": {
+    "voyance": {
+     "rooms": 814.0,
+     "sold": 806.0,
+     "unsold": 8.0,
+     "turned_away": 0.0,
+     "profit": 14480.600828784118
+    },
+    "rebuy_last_year": {
+     "rooms": 667.0,
+     "sold": 667.0,
+     "unsold": 0.0,
+     "turned_away": 139.0,
+     "profit": 12478.760662531015
+    }
+   },
+   "running_profit": {
+    "voyance": 361811.867011868,
+    "rebuy_last_year": 338782.0228377728
+   }
+  },
+  {
+   "week": "2017-04-17",
+   "hotel": "City Hotel",
+   "decided_on": "2016-12-18",
+   "forecast": {
+    "low": 813.7991929431561,
+    "likely": 1325.5960406269287,
+    "high": 1381.6731653970319,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": 97.2442786596816
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 93.23725045824682
+     },
+     {
+      "label": "season",
+      "room_nights": 88.5824427366229
+     }
+    ]
+   },
+   "on_books": 637.0,
+   "last_year": 1283.0,
+   "actual": 1230.0,
+   "rate": 121.44913821138212,
+   "strategies": {
+    "voyance": {
+     "rooms": 1325.0,
+     "sold": 1230.0,
+     "unsold": 95.0,
+     "turned_away": 0.0,
+     "profit": 20646.35349593495
+    },
+    "rebuy_last_year": {
+     "rooms": 1283.0,
+     "sold": 1230.0,
+     "unsold": 53.0,
+     "turned_away": 0.0,
+     "profit": 24727.044539837385
+    }
+   },
+   "running_profit": {
+    "voyance": 382458.2205078029,
+    "rebuy_last_year": 363509.0673776102
+   }
+  },
+  {
+   "week": "2017-04-17",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-12-18",
+   "forecast": {
+    "low": 819.3589033630047,
+    "likely": 953.2158893511712,
+    "high": 1087.7182835106453,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": -103.42394679959031
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 63.605694971071685
+     },
+     {
+      "label": "season",
+      "room_nights": 58.124346688771524
+     }
+    ]
+   },
+   "on_books": 693.0,
+   "last_year": 763.0,
+   "actual": 1055.0,
+   "rate": 80.16571563981043,
+   "strategies": {
+    "voyance": {
+     "rooms": 953.0,
+     "sold": 953.0,
+     "unsold": 0.0,
+     "turned_away": 102.0,
+     "profit": 15279.585400947857
+    },
+    "rebuy_last_year": {
+     "rooms": 763.0,
+     "sold": 763.0,
+     "unsold": 0.0,
+     "turned_away": 292.0,
+     "profit": 12233.288206635065
+    }
+   },
+   "running_profit": {
+    "voyance": 397737.80590875074,
+    "rebuy_last_year": 375742.35558424523
+   }
+  },
+  {
+   "week": "2017-04-24",
+   "hotel": "City Hotel",
+   "decided_on": "2016-12-25",
+   "forecast": {
+    "low": 819.3381078461509,
+    "likely": 1278.0270213080405,
+    "high": 1381.8568664382049,
+    "drivers": [
+     {
+      "label": "season",
+      "room_nights": 112.5429010283381
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 107.44511428397092
+     },
+     {
+      "label": "same week last year",
+      "room_nights": 82.74372016065533
+     }
+    ]
+   },
+   "on_books": 561.0,
+   "last_year": 1239.0,
+   "actual": 1105.0,
+   "rate": 126.45779185520361,
+   "strategies": {
+    "voyance": {
+     "rooms": 1278.0,
+     "sold": 1105.0,
+     "unsold": 173.0,
+     "turned_away": 0.0,
+     "profit": 10445.41360723981
+    },
+    "rebuy_last_year": {
+     "rooms": 1239.0,
+     "sold": 1105.0,
+     "unsold": 134.0,
+     "turned_away": 0.0,
+     "profit": 14390.896713122173
+    }
+   },
+   "running_profit": {
+    "voyance": 408183.2195159906,
+    "rebuy_last_year": 390133.25229736743
+   }
+  },
+  {
+   "week": "2017-04-24",
+   "hotel": "Resort Hotel",
+   "decided_on": "2016-12-25",
+   "forecast": {
+    "low": 689.0478236311989,
+    "likely": 974.4355496313844,
+    "high": 1069.6035249407669,
+    "drivers": [
+     {
+      "label": "season",
+      "room_nights": 93.81729905028939
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 88.82476290541933
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -79.30538790371541
+     }
+    ]
+   },
+   "on_books": 528.0,
+   "last_year": 1027.0,
+   "actual": 836.0,
+   "rate": 82.93751196172248,
+   "strategies": {
+    "voyance": {
+     "rooms": 974.0,
+     "sold": 836.0,
+     "unsold": 138.0,
+     "turned_away": 0.0,
+     "profit": 4710.850679425836
+    },
+    "rebuy_last_year": {
+     "rooms": 1027.0,
+     "sold": 836.0,
+     "unsold": 191.0,
+     "turned_away": 0.0,
+     "profit": 1194.300172248797
+    }
+   },
+   "running_profit": {
+    "voyance": 412894.0701954164,
+    "rebuy_last_year": 391327.55246961623
+   }
+  },
+  {
+   "week": "2017-05-01",
+   "hotel": "City Hotel",
+   "decided_on": "2017-01-01",
+   "forecast": {
+    "low": 737.1301746172635,
+    "likely": 1194.8136903844836,
+    "high": 1387.75981033371,
+    "drivers": [
+     {
+      "label": "days ahead",
+      "room_nights": 113.76564568172643
+     },
+     {
+      "label": "season",
+      "room_nights": 102.58304196379918
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 88.10675475559755
+     }
+    ]
+   },
+   "on_books": 570.0,
+   "last_year": 1165.0,
+   "actual": 1315.0,
+   "rate": 125.97989353612166,
+   "strategies": {
+    "voyance": {
+     "rooms": 1194.0,
+     "sold": 1194.0,
+     "unsold": 0.0,
+     "turned_away": 121.0,
+     "profit": 30083.998576425845
+    },
+    "rebuy_last_year": {
+     "rooms": 1165.0,
+     "sold": 1165.0,
+     "unsold": 0.0,
+     "turned_away": 150.0,
+     "profit": 29353.31519391635
+    }
+   },
+   "running_profit": {
+    "voyance": 442978.0687718422,
+    "rebuy_last_year": 420680.8676635326
+   }
+  },
+  {
+   "week": "2017-05-01",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-01-01",
+   "forecast": {
+    "low": 621.4660015787848,
+    "likely": 808.4333836462257,
+    "high": 1102.3070131969905,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": -104.02098018775128
+     },
+     {
+      "label": "already booked",
+      "room_nights": -87.30889674022018
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 77.7341157823748
+     }
+    ]
+   },
+   "on_books": 492.0,
+   "last_year": 1111.0,
+   "actual": 982.0,
+   "rate": 74.09967413441956,
+   "strategies": {
+    "voyance": {
+     "rooms": 808.0,
+     "sold": 808.0,
+     "unsold": 0.0,
+     "turned_away": 174.0,
+     "profit": 11974.507340122196
+    },
+    "rebuy_last_year": {
+     "rooms": 1111.0,
+     "sold": 982.0,
+     "unsold": 129.0,
+     "turned_away": 0.0,
+     "profit": 6906.089629327893
+    }
+   },
+   "running_profit": {
+    "voyance": 454952.5761119644,
+    "rebuy_last_year": 427586.9572928605
+   }
+  },
+  {
+   "week": "2017-05-08",
+   "hotel": "City Hotel",
+   "decided_on": "2017-01-08",
+   "forecast": {
+    "low": 681.4093272915275,
+    "likely": 1210.770094638266,
+    "high": 1402.6946834543592,
+    "drivers": [
+     {
+      "label": "days ahead",
+      "room_nights": 115.38242250527645
+     },
+     {
+      "label": "season",
+      "room_nights": 102.59773068141975
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 101.0292311383221
+     }
+    ]
+   },
+   "on_books": 490.0,
+   "last_year": 1300.0,
+   "actual": 1182.0,
+   "rate": 134.94258037225043,
+   "strategies": {
+    "voyance": {
+     "rooms": 1210.0,
+     "sold": 1182.0,
+     "unsold": 28.0,
+     "turned_away": 0.0,
+     "profit": 28877.712199661575
+    },
+    "rebuy_last_year": {
+     "rooms": 1300.0,
+     "sold": 1182.0,
+     "unsold": 118.0,
+     "turned_away": 0.0,
+     "profit": 19161.846412859537
+    }
+   },
+   "running_profit": {
+    "voyance": 483830.288311626,
+    "rebuy_last_year": 446748.80370572
+   }
+  },
+  {
+   "week": "2017-05-08",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-01-08",
+   "forecast": {
+    "low": 812.5501758704429,
+    "likely": 953.130642485597,
+    "high": 1135.8355035776378,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": -93.46602959558861
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 67.51624647899193
+     },
+     {
+      "label": "season",
+      "room_nights": 63.23413657486891
+     }
+    ]
+   },
+   "on_books": 685.0,
+   "last_year": 841.0,
+   "actual": 1072.0,
+   "rate": 75.90090485074627,
+   "strategies": {
+    "voyance": {
+     "rooms": 953.0,
+     "sold": 953.0,
+     "unsold": 0.0,
+     "turned_away": 119.0,
+     "profit": 14466.712464552234
+    },
+    "rebuy_last_year": {
+     "rooms": 841.0,
+     "sold": 841.0,
+     "unsold": 0.0,
+     "turned_away": 231.0,
+     "profit": 12766.532195895525
+    }
+   },
+   "running_profit": {
+    "voyance": 498297.00077617826,
+    "rebuy_last_year": 459515.3359016155
+   }
+  },
+  {
+   "week": "2017-05-15",
+   "hotel": "City Hotel",
+   "decided_on": "2017-01-15",
+   "forecast": {
+    "low": 806.1614893165646,
+    "likely": 1301.3461339801358,
+    "high": 1391.8272991205135,
+    "drivers": [
+     {
+      "label": "days ahead",
+      "room_nights": 103.39156692760744
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 99.64451932314184
+     },
+     {
+      "label": "season",
+      "room_nights": 92.48664936413343
+     }
+    ]
+   },
+   "on_books": 665.0,
+   "last_year": 1271.0,
+   "actual": 1235.0,
+   "rate": 140.58155465587043,
+   "strategies": {
+    "voyance": {
+     "rooms": 1301.0,
+     "sold": 1235.0,
+     "unsold": 66.0,
+     "turned_away": 0.0,
+     "profit": 27300.937914170034
+    },
+    "rebuy_last_year": {
+     "rooms": 1271.0,
+     "sold": 1235.0,
+     "unsold": 36.0,
+     "turned_away": 0.0,
+     "profit": 30674.895225910906
+    }
+   },
+   "running_profit": {
+    "voyance": 525597.9386903483,
+    "rebuy_last_year": 490190.2311275264
+   }
+  },
+  {
+   "week": "2017-05-15",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-01-15",
+   "forecast": {
+    "low": 745.7115680467705,
+    "likely": 888.6029267920709,
+    "high": 1142.9282322981624,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": -106.3434265224122
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 68.81325406884991
+     },
+     {
+      "label": "season",
+      "room_nights": 66.43878015927838
+     }
+    ]
+   },
+   "on_books": 646.0,
+   "last_year": 1175.0,
+   "actual": 1030.0,
+   "rate": 72.97817475728155,
+   "strategies": {
+    "voyance": {
+     "rooms": 888.0,
+     "sold": 888.0,
+     "unsold": 0.0,
+     "turned_away": 142.0,
+     "profit": 12960.923836893198
+    },
+    "rebuy_last_year": {
+     "rooms": 1175.0,
+     "sold": 1030.0,
+     "unsold": 145.0,
+     "turned_away": 0.0,
+     "profit": 6568.035728155344
+    }
+   },
+   "running_profit": {
+    "voyance": 538558.8625272415,
+    "rebuy_last_year": 496758.2668556817
+   }
+  },
+  {
+   "week": "2017-05-22",
+   "hotel": "City Hotel",
+   "decided_on": "2017-01-22",
+   "forecast": {
+    "low": 1095.3135985878869,
+    "likely": 1254.7067718812136,
+    "high": 1364.7708148987763,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 195.6875796250325
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 64.12759306182463
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 47.688591678345524
+     }
+    ]
+   },
+   "on_books": 1092.0,
+   "last_year": 1138.0,
+   "actual": 1327.0,
+   "rate": 130.95110022607383,
+   "strategies": {
+    "voyance": {
+     "rooms": 1254.0,
+     "sold": 1254.0,
+     "unsold": 0.0,
+     "turned_away": 73.0,
+     "profit": 32842.53593669931
+    },
+    "rebuy_last_year": {
+     "rooms": 1138.0,
+     "sold": 1138.0,
+     "unsold": 0.0,
+     "turned_away": 189.0,
+     "profit": 29804.470411454386
+    }
+   },
+   "running_profit": {
+    "voyance": 571401.3984639407,
+    "rebuy_last_year": 526562.7372671361
+   }
+  },
+  {
+   "week": "2017-05-22",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-01-22",
+   "forecast": {
+    "low": 914.3034708907221,
+    "likely": 966.5997211960785,
+    "high": 1190.1362216548512,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 120.21812701764249
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -94.42380220933912
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 46.30073541538124
+     }
+    ]
+   },
+   "on_books": 876.0,
+   "last_year": 583.0,
+   "actual": 1086.0,
+   "rate": 84.8525138121547,
+   "strategies": {
+    "voyance": {
+     "rooms": 966.0,
+     "sold": 966.0,
+     "unsold": 0.0,
+     "turned_away": 120.0,
+     "profit": 16393.50566850828
+    },
+    "rebuy_last_year": {
+     "rooms": 583.0,
+     "sold": 583.0,
+     "unsold": 0.0,
+     "turned_away": 503.0,
+     "profit": 9893.80311049724
+    }
+   },
+   "running_profit": {
+    "voyance": 587794.904132449,
+    "rebuy_last_year": 536456.5403776333
+   }
+  },
+  {
+   "week": "2017-05-29",
+   "hotel": "City Hotel",
+   "decided_on": "2017-01-29",
+   "forecast": {
+    "low": 971.3727363597778,
+    "likely": 1305.7912897070462,
+    "high": 1374.7504236196444,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 125.82800407256657
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 102.57398604134352
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 91.62071360551379
+     }
+    ]
+   },
+   "on_books": 810.0,
+   "last_year": 1009.0,
+   "actual": 1164.0,
+   "rate": 131.355,
+   "strategies": {
+    "voyance": {
+     "rooms": 1305.0,
+     "sold": 1164.0,
+     "unsold": 141.0,
+     "turned_away": 0.0,
+     "profit": 15762.600000000006
+    },
+    "rebuy_last_year": {
+     "rooms": 1009.0,
+     "sold": 1009.0,
+     "unsold": 0.0,
+     "turned_away": 155.0,
+     "profit": 26507.43899999997
+    }
+   },
+   "running_profit": {
+    "voyance": 603557.5041324489,
+    "rebuy_last_year": 562963.9793776333
+   }
+  },
+  {
+   "week": "2017-05-29",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-01-29",
+   "forecast": {
+    "low": 1025.9721765459508,
+    "likely": 1094.113075641932,
+    "high": 1287.3947889082071,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 197.33087417449818
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -66.37543826388013
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 35.44096544238504
+     }
+    ]
+   },
+   "on_books": 1049.0,
+   "last_year": 1364.0,
+   "actual": 1129.0,
+   "rate": 99.30901682905227,
+   "strategies": {
+    "voyance": {
+     "rooms": 1094.0,
+     "sold": 1094.0,
+     "unsold": 0.0,
+     "turned_away": 35.0,
+     "profit": 21728.812882196624
+    },
+    "rebuy_last_year": {
+     "rooms": 1364.0,
+     "sold": 1129.0,
+     "unsold": 235.0,
+     "turned_away": 0.0,
+     "profit": 3753.8808361381525
+    }
+   },
+   "running_profit": {
+    "voyance": 625286.3170146456,
+    "rebuy_last_year": 566717.8602137715
+   }
+  },
+  {
+   "week": "2017-06-05",
+   "hotel": "City Hotel",
+   "decided_on": "2017-02-05",
+   "forecast": {
+    "low": 686.1005812068958,
+    "likely": 1179.9189519834254,
+    "high": 1348.5436458947124,
+    "drivers": [
+     {
+      "label": "days ahead",
+      "room_nights": 123.40357799203137
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 91.80990678366184
+     },
+     {
+      "label": "season",
+      "room_nights": 76.06158837327831
+     }
+    ]
+   },
+   "on_books": 460.0,
+   "last_year": 1020.0,
+   "actual": 1258.0,
+   "rate": 138.04359300476946,
+   "strategies": {
+    "voyance": {
+     "rooms": 1179.0,
+     "sold": 1179.0,
+     "unsold": 0.0,
+     "turned_away": 79.0,
+     "profit": 32550.67923052465
+    },
+    "rebuy_last_year": {
+     "rooms": 1020.0,
+     "sold": 1020.0,
+     "unsold": 0.0,
+     "turned_away": 238.0,
+     "profit": 28160.89297297297
+    }
+   },
+   "running_profit": {
+    "voyance": 657836.9962451702,
+    "rebuy_last_year": 594878.7531867444
+   }
+  },
+  {
+   "week": "2017-06-05",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-02-05",
+   "forecast": {
+    "low": 923.2300805827589,
+    "likely": 986.29630775483,
+    "high": 1070.1985824948497,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 135.11789144858164
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -102.7157131527093
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 55.54265081768441
+     }
+    ]
+   },
+   "on_books": 895.0,
+   "last_year": 1044.0,
+   "actual": 1007.0,
+   "rate": 101.92198609731877,
+   "strategies": {
+    "voyance": {
+     "rooms": 986.0,
+     "sold": 986.0,
+     "unsold": 0.0,
+     "turned_away": 21.0,
+     "profit": 20099.01565839126
+    },
+    "rebuy_last_year": {
+     "rooms": 1044.0,
+     "sold": 1007.0,
+     "unsold": 37.0,
+     "turned_away": 0.0,
+     "profit": 17510.197211519364
+    }
+   },
+   "running_profit": {
+    "voyance": 677936.0119035615,
+    "rebuy_last_year": 612388.9503982638
+   }
+  },
+  {
+   "week": "2017-06-12",
+   "hotel": "City Hotel",
+   "decided_on": "2017-02-12",
+   "forecast": {
+    "low": 1010.2527851370006,
+    "likely": 1367.0296618967893,
+    "high": 1405.3762014698093,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 175.29855321195876
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 99.21304303292966
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 97.99430225617351
+     }
+    ]
+   },
+   "on_books": 893.0,
+   "last_year": 1242.0,
+   "actual": 1248.0,
+   "rate": 126.51336538461538,
+   "strategies": {
+    "voyance": {
+     "rooms": 1367.0,
+     "sold": 1248.0,
+     "unsold": 119.0,
+     "turned_away": 0.0,
+     "profit": 19533.663615384605
+    },
+    "rebuy_last_year": {
+     "rooms": 1242.0,
+     "sold": 1242.0,
+     "unsold": 0.0,
+     "turned_away": 6.0,
+     "profit": 31425.919961538457
+    }
+   },
+   "running_profit": {
+    "voyance": 697469.6755189461,
+    "rebuy_last_year": 643814.8703598022
+   }
+  },
+  {
+   "week": "2017-06-12",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-02-12",
+   "forecast": {
+    "low": 1002.343167356163,
+    "likely": 1020.1158598794054,
+    "high": 1083.9511197027284,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 156.76978471920802
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -98.67459432337502
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 52.37125913822082
+     }
+    ]
+   },
+   "on_books": 969.0,
+   "last_year": 963.0,
+   "actual": 961.0,
+   "rate": 109.84227887617067,
+   "strategies": {
+    "voyance": {
+     "rooms": 1020.0,
+     "sold": 961.0,
+     "unsold": 59.0,
+     "turned_away": 0.0,
+     "profit": 15927.130437044747
+    },
+    "rebuy_last_year": {
+     "rooms": 963.0,
+     "sold": 961.0,
+     "unsold": 2.0,
+     "turned_away": 0.0,
+     "profit": 20935.93835379812
+    }
+   },
+   "running_profit": {
+    "voyance": 713396.8059559909,
+    "rebuy_last_year": 664750.8087136003
+   }
+  },
+  {
+   "week": "2017-06-19",
+   "hotel": "City Hotel",
+   "decided_on": "2017-02-19",
+   "forecast": {
+    "low": 1117.5148238157567,
+    "likely": 1312.5545271206859,
+    "high": 1404.7122900746622,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 197.00737172499663
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 73.77118448374988
+     },
+     {
+      "label": "same week last year",
+      "room_nights": 69.58907622447279
+     }
+    ]
+   },
+   "on_books": 1026.0,
+   "last_year": 1226.0,
+   "actual": 1303.0,
+   "rate": 128.4780199539524,
+   "strategies": {
+    "voyance": {
+     "rooms": 1312.0,
+     "sold": 1303.0,
+     "unsold": 9.0,
+     "turned_away": 0.0,
+     "profit": 32556.330256331537
+    },
+    "rebuy_last_year": {
+     "rooms": 1226.0,
+     "sold": 1226.0,
+     "unsold": 0.0,
+     "turned_away": 77.0,
+     "profit": 31502.810492709134
+    }
+   },
+   "running_profit": {
+    "voyance": 745953.1362123224,
+    "rebuy_last_year": 696253.6192063094
+   }
+  },
+  {
+   "week": "2017-06-19",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-02-19",
+   "forecast": {
+    "low": 920.5753878165173,
+    "likely": 1017.3835014631254,
+    "high": 1173.774723580252,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 139.72037461719623
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -98.35919822586118
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 55.63344135066381
+     }
+    ]
+   },
+   "on_books": 898.0,
+   "last_year": 1256.0,
+   "actual": 996.0,
+   "rate": 109.90283132530121,
+   "strategies": {
+    "voyance": {
+     "rooms": 1017.0,
+     "sold": 996.0,
+     "unsold": 21.0,
+     "turned_away": 0.0,
+     "profit": 20046.276433734936
+    },
+    "rebuy_last_year": {
+     "rooms": 1256.0,
+     "sold": 996.0,
+     "unsold": 260.0,
+     "turned_away": 0.0,
+     "profit": -967.1449156626622
+    }
+   },
+   "running_profit": {
+    "voyance": 765999.4126460573,
+    "rebuy_last_year": 695286.4742906467
+   }
+  },
+  {
+   "week": "2017-06-26",
+   "hotel": "City Hotel",
+   "decided_on": "2017-02-26",
+   "forecast": {
+    "low": 1045.2700254860904,
+    "likely": 1329.6030420123793,
+    "high": 1380.1614552252167,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 190.18724858616716
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 85.29140005755222
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 76.61941169075855
+     }
+    ]
+   },
+   "on_books": 983.0,
+   "last_year": 1336.0,
+   "actual": 1142.0,
+   "rate": 125.20771453590191,
+   "strategies": {
+    "voyance": {
+     "rooms": 1329.0,
+     "sold": 1142.0,
+     "unsold": 187.0,
+     "turned_away": 0.0,
+     "profit": 9866.36790542907
+    },
+    "rebuy_last_year": {
+     "rooms": 1336.0,
+     "sold": 1142.0,
+     "unsold": 194.0,
+     "turned_away": 0.0,
+     "profit": 9165.204704028001
+    }
+   },
+   "running_profit": {
+    "voyance": 775865.7805514864,
+    "rebuy_last_year": 704451.6789946747
+   }
+  },
+  {
+   "week": "2017-06-26",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-02-26",
+   "forecast": {
+    "low": 939.2556287342384,
+    "likely": 986.3227944573863,
+    "high": 1076.0894336791187,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 141.14240620102598
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -101.74329016601236
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 54.75283129982154
+     }
+    ]
+   },
+   "on_books": 922.0,
+   "last_year": 1011.0,
+   "actual": 1007.0,
+   "rate": 124.94996027805362,
+   "strategies": {
+    "voyance": {
+     "rooms": 986.0,
+     "sold": 986.0,
+     "unsold": 0.0,
+     "turned_away": 21.0,
+     "profit": 24640.13216683216
+    },
+    "rebuy_last_year": {
+     "rooms": 1011.0,
+     "sold": 1007.0,
+     "unsold": 4.0,
+     "turned_away": 0.0,
+     "profit": 24765.082127110218
+    }
+   },
+   "running_profit": {
+    "voyance": 800505.9127183186,
+    "rebuy_last_year": 729216.7611217849
+   }
+  },
+  {
+   "week": "2017-07-03",
+   "hotel": "City Hotel",
+   "decided_on": "2017-03-05",
+   "forecast": {
+    "low": 1180.9733599325382,
+    "likely": 1361.2247716353172,
+    "high": 1393.6743694712532,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 244.0607722110524
+     },
+     {
+      "label": "same week last year",
+      "room_nights": 76.04950982987803
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 67.21685599048584
+     }
+    ]
+   },
+   "on_books": 1179.0,
+   "last_year": 1245.0,
+   "actual": 1313.0,
+   "rate": 123.42753998476769,
+   "strategies": {
+    "voyance": {
+     "rooms": 1361.0,
+     "sold": 1313.0,
+     "unsold": 48.0,
+     "turned_away": 0.0,
+     "profit": 27672.45446458491
+    },
+    "rebuy_last_year": {
+     "rooms": 1245.0,
+     "sold": 1245.0,
+     "unsold": 0.0,
+     "turned_away": 68.0,
+     "profit": 30733.457456207136
+    }
+   },
+   "running_profit": {
+    "voyance": 828178.3671829036,
+    "rebuy_last_year": 759950.218577992
+   }
+  },
+  {
+   "week": "2017-07-03",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-03-05",
+   "forecast": {
+    "low": 895.693971445779,
+    "likely": 990.7531882296288,
+    "high": 1082.9809535176855,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 139.439561065395
+     },
+     {
+      "label": "the hotel",
+      "room_nights": -104.56214306000274
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 53.649279315002715
+     }
+    ]
+   },
+   "on_books": 872.0,
+   "last_year": 1079.0,
+   "actual": 904.0,
+   "rate": 142.74153761061947,
+   "strategies": {
+    "voyance": {
+     "rooms": 990.0,
+     "sold": 904.0,
+     "unsold": 86.0,
+     "turned_away": 0.0,
+     "profit": 15987.052212389375
+    },
+    "rebuy_last_year": {
+     "rooms": 1079.0,
+     "sold": 904.0,
+     "unsold": 175.0,
+     "turned_away": 0.0,
+     "profit": 5823.854734513268
+    }
+   },
+   "running_profit": {
+    "voyance": 844165.419395293,
+    "rebuy_last_year": 765774.0733125054
+   }
+  },
+  {
+   "week": "2017-07-10",
+   "hotel": "City Hotel",
+   "decided_on": "2017-03-12",
+   "forecast": {
+    "low": 1206.0056864719616,
+    "likely": 1352.5915743674545,
+    "high": 1387.8746423992627,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 284.9183526648519
+     },
+     {
+      "label": "same week last year",
+      "room_nights": 69.58599326300217
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 54.811079371855264
+     }
+    ]
+   },
+   "on_books": 1206.0,
+   "last_year": 1319.0,
+   "actual": 1339.0,
+   "rate": 120.38039581777446,
+   "strategies": {
+    "voyance": {
+     "rooms": 1352.0,
+     "sold": 1339.0,
+     "unsold": 13.0,
+     "turned_away": 0.0,
+     "profit": 30985.913883495145
+    },
+    "rebuy_last_year": {
+     "rooms": 1319.0,
+     "sold": 1319.0,
+     "unsold": 0.0,
+     "turned_away": 20.0,
+     "profit": 31756.34841672887
+    }
+   },
+   "running_profit": {
+    "voyance": 875151.3332787881,
+    "rebuy_last_year": 797530.4217292343
+   }
+  },
+  {
+   "week": "2017-07-10",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-03-12",
+   "forecast": {
+    "low": 792.3947564710014,
+    "likely": 912.6756042251412,
+    "high": 1065.066559658259,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": -107.67547984319994
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 79.16605804269469
+     },
+     {
+      "label": "already booked",
+      "room_nights": 55.383458367169176
+     }
+    ]
+   },
+   "on_books": 684.0,
+   "last_year": 849.0,
+   "actual": 1044.0,
+   "rate": 172.87728927203065,
+   "strategies": {
+    "voyance": {
+     "rooms": 912.0,
+     "sold": 912.0,
+     "unsold": 0.0,
+     "turned_away": 132.0,
+     "profit": 31532.817563218385
+    },
+    "rebuy_last_year": {
+     "rooms": 849.0,
+     "sold": 849.0,
+     "unsold": 0.0,
+     "turned_away": 195.0,
+     "profit": 29354.563718390782
+    }
+   },
+   "running_profit": {
+    "voyance": 906684.1508420066,
+    "rebuy_last_year": 826884.985447625
+   }
+  },
+  {
+   "week": "2017-07-17",
+   "hotel": "City Hotel",
+   "decided_on": "2017-03-19",
+   "forecast": {
+    "low": 1172.9132601093816,
+    "likely": 1329.0046226337604,
+    "high": 1370.512861691484,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 253.99491234996694
+     },
+     {
+      "label": "same week last year",
+      "room_nights": 72.27481360171022
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 65.94938776425715
+     }
+    ]
+   },
+   "on_books": 1171.0,
+   "last_year": 1373.0,
+   "actual": 1260.0,
+   "rate": 129.17621428571428,
+   "strategies": {
+    "voyance": {
+     "rooms": 1329.0,
+     "sold": 1260.0,
+     "unsold": 69.0,
+     "turned_away": 0.0,
+     "profit": 25421.878971428552
+    },
+    "rebuy_last_year": {
+     "rooms": 1373.0,
+     "sold": 1260.0,
+     "unsold": 113.0,
+     "turned_away": 0.0,
+     "profit": 20874.876228571404
+    }
+   },
+   "running_profit": {
+    "voyance": 932106.0298134352,
+    "rebuy_last_year": 847759.8616761965
+   }
+  },
+  {
+   "week": "2017-07-17",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-03-19",
+   "forecast": {
+    "low": 797.559212296652,
+    "likely": 963.5321352271777,
+    "high": 1065.414074339726,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": -109.41186589928854
+     },
+     {
+      "label": "already booked",
+      "room_nights": 90.10079977150856
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 77.46701221485834
+     }
+    ]
+   },
+   "on_books": 746.0,
+   "last_year": 973.0,
+   "actual": 940.0,
+   "rate": 179.88064893617022,
+   "strategies": {
+    "voyance": {
+     "rooms": 963.0,
+     "sold": 940.0,
+     "unsold": 23.0,
+     "turned_away": 0.0,
+     "profit": 30507.758059574466
+    },
+    "rebuy_last_year": {
+     "rooms": 973.0,
+     "sold": 940.0,
+     "unsold": 33.0,
+     "turned_away": 0.0,
+     "profit": 29068.712868085102
+    }
+   },
+   "running_profit": {
+    "voyance": 962613.7878730097,
+    "rebuy_last_year": 876828.5745442816
+   }
+  },
+  {
+   "week": "2017-07-24",
+   "hotel": "City Hotel",
+   "decided_on": "2017-03-26",
+   "forecast": {
+    "low": 1129.7146581305708,
+    "likely": 1301.742736102178,
+    "high": 1357.500804128141,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 222.66070655354503
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 75.43623971402766
+     },
+     {
+      "label": "same week last year",
+      "room_nights": 60.811277182400815
+     }
+    ]
+   },
+   "on_books": 1083.0,
+   "last_year": 1163.0,
+   "actual": 1336.0,
+   "rate": 128.01345808383235,
+   "strategies": {
+    "voyance": {
+     "rooms": 1301.0,
+     "sold": 1301.0,
+     "unsold": 0.0,
+     "turned_away": 35.0,
+     "profit": 33309.10179341317
+    },
+    "rebuy_last_year": {
+     "rooms": 1163.0,
+     "sold": 1163.0,
+     "unsold": 0.0,
+     "turned_away": 173.0,
+     "profit": 29775.930350299415
+    }
+   },
+   "running_profit": {
+    "voyance": 995922.8896664229,
+    "rebuy_last_year": 906604.504894581
+   }
+  },
+  {
+   "week": "2017-07-24",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-03-26",
+   "forecast": {
+    "low": 790.401938125896,
+    "likely": 928.5361195766594,
+    "high": 1059.3338359724735,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": -105.74262214482508
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 74.66048613923154
+     },
+     {
+      "label": "already booked",
+      "room_nights": 71.19286240161429
+     }
+    ]
+   },
+   "on_books": 732.0,
+   "last_year": 868.0,
+   "actual": 938.0,
+   "rate": 165.61027718550108,
+   "strategies": {
+    "voyance": {
+     "rooms": 928.0,
+     "sold": 928.0,
+     "unsold": 0.0,
+     "turned_away": 10.0,
+     "profit": 30737.267445628982
+    },
+    "rebuy_last_year": {
+     "rooms": 868.0,
+     "sold": 868.0,
+     "unsold": 0.0,
+     "turned_away": 70.0,
+     "profit": 28749.944119402993
+    }
+   },
+   "running_profit": {
+    "voyance": 1026660.1571120518,
+    "rebuy_last_year": 935354.4490139841
+   }
+  },
+  {
+   "week": "2017-07-31",
+   "hotel": "City Hotel",
+   "decided_on": "2017-04-02",
+   "forecast": {
+    "low": 1176.7306898855222,
+    "likely": 1317.5940512729007,
+    "high": 1361.1654333493216,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 182.0852802873206
+     },
+     {
+      "label": "same week last year",
+      "room_nights": 115.29078906644503
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 72.13524874388523
+     }
+    ]
+   },
+   "on_books": 1089.0,
+   "last_year": 1271.0,
+   "actual": 1263.0,
+   "rate": 134.19098178939032,
+   "strategies": {
+    "voyance": {
+     "rooms": 1317.0,
+     "sold": 1263.0,
+     "unsold": 54.0,
+     "turned_away": 0.0,
+     "profit": 28099.591586698312
+    },
+    "rebuy_last_year": {
+     "rooms": 1271.0,
+     "sold": 1263.0,
+     "unsold": 8.0,
+     "turned_away": 0.0,
+     "profit": 33037.81971654788
+    }
+   },
+   "running_profit": {
+    "voyance": 1054759.74869875,
+    "rebuy_last_year": 968392.2687305319
+   }
+  },
+  {
+   "week": "2017-07-31",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-04-02",
+   "forecast": {
+    "low": 810.6260756273348,
+    "likely": 893.972429158779,
+    "high": 1059.4414073250007,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": -129.51918290265846
+     },
+     {
+      "label": "same week last year",
+      "room_nights": 60.247464435839206
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 54.78017352447205
+     }
+    ]
+   },
+   "on_books": 772.0,
+   "last_year": 1053.0,
+   "actual": 914.0,
+   "rate": 198.27204595185995,
+   "strategies": {
+    "voyance": {
+     "rooms": 893.0,
+     "sold": 893.0,
+     "unsold": 0.0,
+     "turned_away": 21.0,
+     "profit": 35411.387407002156
+    },
+    "rebuy_last_year": {
+     "rooms": 1053.0,
+     "sold": 914.0,
+     "unsold": 139.0,
+     "turned_away": 0.0,
+     "profit": 14196.27849015317
+    }
+   },
+   "running_profit": {
+    "voyance": 1090171.136105752,
+    "rebuy_last_year": 982588.547220685
+   }
+  },
+  {
+   "week": "2017-08-07",
+   "hotel": "City Hotel",
+   "decided_on": "2017-04-09",
+   "forecast": {
+    "low": 1175.1330058260764,
+    "likely": 1323.349875987725,
+    "high": 1377.2922577141169,
+    "drivers": [
+     {
+      "label": "already booked",
+      "room_nights": 210.7190050322034
+     },
+     {
+      "label": "same week last year",
+      "room_nights": 116.66064996646328
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 61.06214370752787
+     }
+    ]
+   },
+   "on_books": 1177.0,
+   "last_year": 1412.0,
+   "actual": 1374.0,
+   "rate": 139.55342794759827,
+   "strategies": {
+    "voyance": {
+     "rooms": 1323.0,
+     "sold": 1323.0,
+     "unsold": 0.0,
+     "turned_away": 51.0,
+     "profit": 36925.83703493449
+    },
+    "rebuy_last_year": {
+     "rooms": 1412.0,
+     "sold": 1374.0,
+     "unsold": 38.0,
+     "turned_away": 0.0,
+     "profit": 34106.857790393
+    }
+   },
+   "running_profit": {
+    "voyance": 1127096.9731406865,
+    "rebuy_last_year": 1016695.4050110781
+   }
+  },
+  {
+   "week": "2017-08-07",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-04-09",
+   "forecast": {
+    "low": 817.6361243664622,
+    "likely": 906.2958552500321,
+    "high": 1059.3544544629442,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": -124.51970823987466
+     },
+     {
+      "label": "same week last year",
+      "room_nights": 64.16832238407807
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 53.52877567167234
+     }
+    ]
+   },
+   "on_books": 762.0,
+   "last_year": 970.0,
+   "actual": 989.0,
+   "rate": 191.52112234580386,
+   "strategies": {
+    "voyance": {
+     "rooms": 906.0,
+     "sold": 906.0,
+     "unsold": 0.0,
+     "turned_away": 83.0,
+     "profit": 34703.62736905966
+    },
+    "rebuy_last_year": {
+     "rooms": 970.0,
+     "sold": 970.0,
+     "unsold": 0.0,
+     "turned_away": 19.0,
+     "profit": 37155.09773508596
+    }
+   },
+   "running_profit": {
+    "voyance": 1161800.6005097462,
+    "rebuy_last_year": 1053850.502746164
+   }
+  },
+  {
+   "week": "2017-08-14",
+   "hotel": "City Hotel",
+   "decided_on": "2017-04-16",
+   "forecast": {
+    "low": 1014.9515984539679,
+    "likely": 1337.3183176377331,
+    "high": 1358.4466013435556,
+    "drivers": [
+     {
+      "label": "same week last year",
+      "room_nights": 133.799417033933
+     },
+     {
+      "label": "already booked",
+      "room_nights": 132.84908823868653
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 98.30938237560325
+     }
+    ]
+   },
+   "on_books": 875.0,
+   "last_year": 1368.0,
+   "actual": 1363.0,
+   "rate": 133.6654732208364,
+   "strategies": {
+    "voyance": {
+     "rooms": 1337.0,
+     "sold": 1337.0,
+     "unsold": 0.0,
+     "turned_away": 26.0,
+     "profit": 35742.14753925166
+    },
+    "rebuy_last_year": {
+     "rooms": 1368.0,
+     "sold": 1363.0,
+     "unsold": 5.0,
+     "turned_away": 0.0,
+     "profit": 35902.54610711665
+    }
+   },
+   "running_profit": {
+    "voyance": 1197542.748048998,
+    "rebuy_last_year": 1089753.0488532807
+   }
+  },
+  {
+   "week": "2017-08-14",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-04-16",
+   "forecast": {
+    "low": 884.9259121388873,
+    "likely": 903.44393556304,
+    "high": 1059.7049213713703,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": -118.60946375942345
+     },
+     {
+      "label": "same week last year",
+      "room_nights": 61.43566925287734
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 47.2004803044203
+     }
+    ]
+   },
+   "on_books": 829.0,
+   "last_year": 1051.0,
+   "actual": 976.0,
+   "rate": 193.45394467213114,
+   "strategies": {
+    "voyance": {
+     "rooms": 903.0,
+     "sold": 903.0,
+     "unsold": 0.0,
+     "turned_away": 73.0,
+     "profit": 34937.78240778687
+    },
+    "rebuy_last_year": {
+     "rooms": 1051.0,
+     "sold": 976.0,
+     "unsold": 75.0,
+     "turned_away": 0.0,
+     "profit": 26154.973319672106
+    }
+   },
+   "running_profit": {
+    "voyance": 1232480.5304567849,
+    "rebuy_last_year": 1115908.0221729528
+   }
+  },
+  {
+   "week": "2017-08-21",
+   "hotel": "City Hotel",
+   "decided_on": "2017-04-23",
+   "forecast": {
+    "low": 1038.1928073831937,
+    "likely": 1312.1185845555458,
+    "high": 1355.049990157372,
+    "drivers": [
+     {
+      "label": "same week last year",
+      "room_nights": 132.72165527292884
+     },
+     {
+      "label": "the hotel",
+      "room_nights": 103.37372338423486
+     },
+     {
+      "label": "already booked",
+      "room_nights": 97.66149501844647
+     }
+    ]
+   },
+   "on_books": 848.0,
+   "last_year": 1285.0,
+   "actual": 1101.0,
+   "rate": 130.61504995458674,
+   "strategies": {
+    "voyance": {
+     "rooms": 1312.0,
+     "sold": 1101.0,
+     "unsold": 211.0,
+     "turned_away": 0.0,
+     "profit": 6713.613567665743
+    },
+    "rebuy_last_year": {
+     "rooms": 1285.0,
+     "sold": 1101.0,
+     "unsold": 184.0,
+     "turned_away": 0.0,
+     "profit": 9534.8986466848
+    }
+   },
+   "running_profit": {
+    "voyance": 1239194.1440244506,
+    "rebuy_last_year": 1125442.9208196376
+   }
+  },
+  {
+   "week": "2017-08-21",
+   "hotel": "Resort Hotel",
+   "decided_on": "2017-04-23",
+   "forecast": {
+    "low": 773.7805034585487,
+    "likely": 905.6215010451432,
+    "high": 1045.933690425819,
+    "drivers": [
+     {
+      "label": "the hotel",
+      "room_nights": -113.98992427640889
+     },
+     {
+      "label": "same week last year",
+      "room_nights": 70.36400781394858
+     },
+     {
+      "label": "days ahead",
+      "room_nights": 65.9438839864936
+     }
+    ]
+   },
+   "on_books": 673.0,
+   "last_year": 961.0,
+   "actual": 1049.0,
+   "rate": 182.033422306959,
+   "strategies": {
+    "voyance": {
+     "rooms": 905.0,
+     "sold": 905.0,
+     "unsold": 0.0,
+     "turned_away": 144.0,
+     "profit": 32948.04943755959
+    },
+    "rebuy_last_year": {
+     "rooms": 961.0,
+     "sold": 961.0,
+     "unsold": 0.0,
+     "turned_away": 88.0,
+     "profit": 34986.82376739752
+    }
+   },
+   "running_profit": {
+    "voyance": 1272142.1934620102,
+    "rebuy_last_year": 1160429.7445870352
+   }
+  }
+ ],
+ "totals": {
+  "voyance": {
+   "profit": 1272142.1934620102,
+   "rooms": 67121.0,
+   "sold": 64950.0,
+   "unsold": 2171.0,
+   "turned_away": 4454.0
+  },
+  "rebuy_last_year": {
+   "profit": 1160429.7445870352,
+   "rooms": 63616.0,
+   "sold": 61129.0,
+   "unsold": 2487.0,
+   "turned_away": 8275.0
+  }
+ }
+}

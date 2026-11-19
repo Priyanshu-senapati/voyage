@@ -10,7 +10,8 @@ from voyance.api import service
 from voyance.api.auth import Principal, get_principal, get_session, require_role
 from voyance.api.db import utcnow
 from voyance.api.schemas import (AuditOut, ErrorOut, FrontierPoint, FrontierQuery, LineDecision, MarketItem, MeOut,
-                                PlanCreate, PlanLineOut, PlanOut, PlanPreview, PlanSummary, PreviewRequest, QueueOut)
+                                PlanCreate, PlanLineOut, PlanOut, PlanPreview, PlanSummary, PreviewRequest, QueueOut,
+                                ReplayOut)
 
 MAX_ID = 2**31 - 1
 Id = Annotated[int, Path(ge=1, le=MAX_ID)]
@@ -84,6 +85,14 @@ def export_plan(plan_id: Id, principal: Principal = Depends(get_principal),
     plan = service.get_plan(session, principal, plan_id)
     return Response(service.plan_csv(plan), media_type="text/csv",
                     headers={"Content-Disposition": f'attachment; filename="plan-{plan_id}.csv"'})
+
+
+@router.get("/replay", response_model=ReplayOut, summary="Real 2017 bookings, replayed week by week",
+            description="For each hotel-week: what the forecast believed on the day of the decision (and why), "
+            "what Voyance and re-buying last year would have bought, and what really happened, with running "
+            "profits. Two hotels in Portugal; the contract cost is an assumption (see `assumptions`).")
+def replay(_: Principal = Depends(get_principal)) -> dict:
+    return service.replay()
 
 
 @router.get("/plans/{plan_id}/queue", response_model=QueueOut, responses=_errors(404),

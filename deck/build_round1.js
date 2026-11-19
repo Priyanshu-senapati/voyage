@@ -5,6 +5,7 @@
 // (real API output), so the slides can't drift from the data.
 // Every other figure comes from docs/numbers.md. Change it there first, then here.
 // If deck/assets/buy_desk_mockup.png exists it is placed on slide 2; otherwise a sketch with the real rows is drawn.
+// If deck/assets/teaser_goa_christmas.gif exists it is placed on the cover; otherwise the ghost-bar chart is drawn.
 
 const path = require("path");
 const fs = require("fs");
@@ -23,6 +24,8 @@ const TESTS = 179; // `python -m pytest -q` on pitch/round1 after merging main, 
 const PLAN_SECONDS = "0.2 s"; // build_plan on the demo data, ₹40L–₹2 cr: 0.14–0.21 s best of 5, 19 Nov (docs/numbers.md)
 const DEMO = "https://voyance-1029341879804.asia-south1.run.app";
 const MOCKUP = path.join(__dirname, "assets", "buy_desk_mockup.png");
+// The cover's looping teaser of the live demo (deck/README.md, "Teaser GIF"); 16:9
+const TEASER = path.join(__dirname, "assets", "teaser_goa_christmas.gif");
 const REPO = "https://github.com/Priyanshu-senapati/voyage";
 const TEAM = "Priyanshu Senapati  ·  Gourab Dash  ·  Vinochan R";
 
@@ -304,23 +307,39 @@ function buyDeskSketch(slide, x, y, w, h) {
   });
   text(s, TEAM, { x: 0.8, y: 6.2, w: 6.6, h: 0.3, fontSize: 14, color: WHITE });
 
-  const gx = 7.9;
-  const gw = 4.0;
-  const g = ghostBars(s, {
-    x: gx, y: 1.45, w: gw, h: 4.6, demand: [0.55, 0.78, 1.28, 1.62], onInk: true,
-    weeks: ["1–7 Dec", "8–14", "15–21", "22–28"], weekColor: ON_INK_MUTED, name: "cover ghost",
-  });
-  text(s, "sold out", { x: gx + gw + 0.14, y: g.capY - 0.14, w: 0.85, h: 0.28, fontSize: 13, bold: true, color: ORANGE });
-  const bar3x = gx + 2 * (g.barW + g.gap);
-  const ghost3Top = g.base - 1.28 * (g.base - g.capY);
-  text(s, [
-    { text: "hidden demand", options: { bold: true, breakLine: true } },
-    { text: "searches that hit sold out", options: { color: ON_INK_MUTED } },
-  ], { x: bar3x - 2.55, y: ghost3Top - 0.04, w: 2.4, h: 0.56, fontSize: 13, color: BLUE_ON_INK, align: "right" });
+  if (fs.existsSync(TEASER)) {
+    const tx = 7.05;
+    const ty = 1.55;
+    const tw = 5.75;
+    const th = (tw * 9) / 16;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+      x: tx - 0.06, y: ty - 0.06, w: tw + 0.12, h: th + 0.12, rectRadius: 0.08,
+      fill: { color: INK }, line: { color: BAR_ON_INK, width: 1 }, objectName: "teaser frame",
+    });
+    s.addImage({ path: TEASER, x: tx, y: ty, w: tw, h: th, altText: "Looping clip of the live Buy Desk: Goa, Christmas week, from the buy list to an approved line" });
+    text(s, "The live Buy Desk  ·  simulated data", { x: tx - 0.06, y: ty + th + 0.2, w: tw + 0.12, h: 0.26, fontSize: 12, color: ON_INK_MUTED });
+  } else {
+    const gx = 7.9;
+    const gw = 4.0;
+    const g = ghostBars(s, {
+      x: gx, y: 1.45, w: gw, h: 4.6, demand: [0.55, 0.78, 1.28, 1.62], onInk: true,
+      weeks: ["1–7 Dec", "8–14", "15–21", "22–28"], weekColor: ON_INK_MUTED, name: "cover ghost",
+    });
+    text(s, "sold out", { x: gx + gw + 0.14, y: g.capY - 0.14, w: 0.85, h: 0.28, fontSize: 13, bold: true, color: ORANGE });
+    const bar3x = gx + 2 * (g.barW + g.gap);
+    const ghost3Top = g.base - 1.28 * (g.base - g.capY);
+    text(s, [
+      { text: "hidden demand", options: { bold: true, breakLine: true } },
+      { text: "searches that hit sold out", options: { color: ON_INK_MUTED } },
+    ], { x: bar3x - 2.55, y: ghost3Top - 0.04, w: 2.4, h: 0.56, fontSize: 13, color: BLUE_ON_INK, align: "right" });
+  }
   s.addNotes(
     "Voyance, from the French for clairvoyance. It's a pre-buy planner for TBO's hotel buyers: give it a budget and a " +
-    "risk level, and it returns a ranked list of rooms to buy ahead, each with a reason. The picture is the idea in one " +
-    "glance: booking history stops at the sold-out line, and the dashed part above it is demand nobody counted."
+    "risk level, and it returns a ranked list of rooms to buy ahead, each with a reason. " +
+    (fs.existsSync(TEASER)
+      ? "The loop on the right is the real Buy Desk on simulated data: Goa in Christmas week, 1,776 searches that hit sold out, buy 85 rooms by 5 August, and a second person approving the line. "
+      : "") +
+    "The idea in one glance: booking history stops at the sold-out line, and the demand above it is demand nobody counted."
   );
 }
 

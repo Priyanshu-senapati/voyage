@@ -2,8 +2,8 @@
 
 ## Concept
 **The ghost bar.** Demand above the "sold out" line is drawn as a dashed outline on top of a
-solid bookings bar. It's the demand booking data hides and Voyance sees. It appears large on the
-cover and small wherever hidden demand is explained.
+solid bookings bar. It's the demand booking data hides and Voyance sees. It appears small wherever hidden demand is explained (slides 2 and 4). The cover shows the live
+teaser GIF instead (see `README.md`); it falls back to a large ghost-bar chart if the GIF is missing.
 
 ## Palette (hex, no #)
 - **Dominant ground:** `12141C` ink on the cover and thank-you; `FFFFFF` on content slides, so the
@@ -37,7 +37,7 @@ No colour bars, stripes or title underlines.
 ## Slide map (Round 1)
 | # | Message | Layout | Visual |
 |---|---|---|---|
-| 0 | Voyance sees hotel demand before it sells out | Dark cover, text left, ghost-bar chart right | Large ghost-bar December chart |
+| 0 | Voyance sees hotel demand before it sells out | Dark cover, text left, teaser GIF right | Looping GIF of the live Buy Desk (Goa, Christmas week); ghost-bar chart only as a fallback |
 | 1 | Sold-out dates hide demand; Voyance buys ahead for it, and it pays | Three zones: problem + what's new / proof chart + stats / mockup + money model | Ghost-bar mini, proof chart, mockup |
 | 2 | Built for TBO's scale, with a buyer approving every buy | Pipeline diagram across the top, three cards below | 5-stage pipeline with "built" vs "Round 2" badges |
 | 3 | Thank you | Dark close | Ghost bar small, repo link |

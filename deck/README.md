@@ -8,6 +8,7 @@ Pitch decks for TBO VoyageHack 4.0. Lane C owns this folder.
 | `voyance_round1.pdf` | The same deck as a PDF, for anyone without PowerPoint |
 | `build_round1.js` | Builds the .pptx. Edit wording and layout here, never by hand in PowerPoint |
 | `render.ps1` | Uses PowerPoint to export the PDF and one PNG per slide into `renders/`, for checking |
+| `teaser/` | Scripts that make the cover's looping GIF of the live demo (`assets/teaser_goa_christmas.gif`) |
 | `brief.md` | The visual rules: palette, type, the "ghost bar" motif. Round 2 reuses them |
 
 Every number on a slide is listed, with its source, in [`docs/numbers.md`](../docs/numbers.md).
@@ -41,3 +42,23 @@ python -c "from PIL import Image; Image.open('<out-dir>/buy-desk.png').crop((520
 If the crop size changes, update `MOCKUP_RATIO` in `build_round1.js`. Keep the caption true: the
 screen shows one simulated December, so its totals (₹24.7L expected) aren't the 20-market averages
 on the chart. Without the PNG, the build draws a sketch from `docs/sample_plan_round1.json` instead.
+
+## Teaser GIF (`assets/teaser_goa_christmas.gif`)
+The cover plays a 13 s loop of the live Buy Desk telling one story: Goa, Christmas week (22–28 Dec, Hotel B):
+1,776 sold-out searches, buy 85 rooms by 5 Aug, then a second person approves the line. The PDF and
+`renders/` show its first frame. Without the file, the build draws the ghost-bar chart on the cover instead.
+
+To regenerate it (needs the installed Chrome and Python with Pillow):
+
+```bash
+cd deck
+npm install                      # once; adds playwright-core, which uses the installed Chrome
+node teaser/capture.mjs          # clicks through the hosted demo; writes renders/teaser/*.png + frames.json
+python teaser/make_gif.py        # writes assets/teaser_goa_christmas.gif (3 MB or less)
+node build_round1.js             # then rebuild the deck
+```
+
+`capture.mjs` takes the captions' numbers (searches, rooms, buy-by date) from the screen, so they follow the data.
+If the hosted demo is down, run `npm --prefix web run dev` in the repo root and pass its URL:
+`TEASER_URL=http://localhost:5173/ node teaser/capture.mjs`. To change the story, wording or timing,
+edit the steps in `capture.mjs` and the look (cursor, caption bar, colours) in `make_gif.py`.

@@ -51,11 +51,13 @@ and overspend on quiet weeks.
 | Profit from buying by the forecast | baseline | **+7% to +13%**, every 95% interval above zero |
 | Room-nights turned away | baseline | **35-46% fewer** |
 | Replay, 68 hotel-weeks (120 days ahead, 20% margin) | €1,160,430 | **€1,272,142** (+10%) |
-| **The planner itself** (risk 0.3; forecast range recalibrated walk-forward; weeks correlated within a month, as measured on 2016) | baseline | **+6% to +20%** at every lead (90-150 days) and margin (15-30%), every 95% interval above zero |
+| **The planner itself** (exploratory: risk 0.3; forecast range recalibrated walk-forward; weeks correlated within a month, as measured on 2016) | baseline | **+6% to +20%** at every lead (90-150 days) and margin (15-30%), every 95% interval above zero |
 
 The range had to be recalibrated first. As forecast, its 80% range caught the actual 72-79% of the time and the
 planner at risk 0.3 lost in 5 of 9 cases; rescaled month by month on finished weeks only, it catches 69-81% and
-wins in all 9. We also tried the classic hotel **pickup** forecast (bookings on the books + last year's pickup)
+wins in all 9. That rescaling was added after the plain planner won only 4 of 9, so it is exploratory until it
+is tested on new data. It earns about what buying the forecast earns (-0.4% to +6.2%) with 3-15% less money
+committed. We also tried the classic hotel **pickup** forecast (bookings on the books + last year's pickup)
 as a stronger baseline: here it did 12-61% *worse* than re-buying, because 2017's early bookings ran far ahead
 of what stayed, so re-buying stays the bar. Everything, including a plain newsvendor (`optimizer_risk_0`), is in
 `out/decision_backtest.json`.

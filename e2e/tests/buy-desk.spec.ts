@@ -87,13 +87,28 @@ test('the plan exports as CSV', async ({ page }) => {
 
 test('a what-if re-plans against the base plan and cannot be saved', async ({ page }) => {
   await signIn(page, 'asha')
+  await slider(page, 'Risk setting').fill('0.8') // an unsaved change, so there is something to save once the what-if is gone
   await slider(page, 'Demand vs forecast').fill('0.2')
   await expect(page.getByText('What-if', { exact: true })).toBeVisible()
   await expect(page.getByText('against the plan without the what-if').first()).toBeAttached()
   await expect(page.getByRole('button', { name: 'Save plan' })).toBeDisabled()
-  await expect(page.getByText('What-ifs are for exploring. Reset them to save a plan.')).toBeVisible()
+  await expect(
+    page.getByText("What-ifs explore a different December. Saved plans use the planner's own forecast."),
+  ).toBeVisible()
 
-  await page.getByRole('button', { name: 'Reset' }).click()
+  await page.getByRole('button', { name: 'Reset what-ifs' }).click()
+  await expect(page.getByText('What-if', { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Save plan' })).toBeEnabled()
+})
+
+test("putting the event-weeks slider back on the planner's guess lets the plan be saved", async ({ page }) => {
+  await signIn(page, 'asha')
+  await slider(page, 'Risk setting').fill('0.8') // an unsaved change, so there is something to save
+  await slider(page, 'Event weeks').fill('2')
+  await expect(page.getByRole('button', { name: 'Save plan' })).toBeDisabled()
+  await slider(page, 'Event weeks').fill('1.5')
+  await expect(page.getByText('Planner’s guess')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Save plan' })).toBeEnabled()
   await expect(page.getByText('What-if', { exact: true })).toHaveCount(0)
 })
 

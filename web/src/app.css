@@ -862,6 +862,13 @@ input[type='range']:active::-webkit-slider-thumb {
   vertical-align: -4px;
 }
 
+/* number columns sit on the right: their tips open leftwards so the panel doesn't clip them */
+.table th.num .infotip-body {
+  right: -6px;
+  left: auto;
+  transform: none;
+}
+
 .table td {
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
@@ -1314,6 +1321,7 @@ input[type='range']:active::-webkit-slider-thumb {
 
 .case-panel {
   padding: 24px 28px;
+  scroll-margin-top: 72px;
 }
 
 .decision-bar {
@@ -1711,6 +1719,13 @@ input[type='range']:active::-webkit-slider-thumb {
   }
 }
 
+/* a what-if adds room changes to each row: give it the space rank and buy-by took */
+@media (max-width: 1520px) {
+  .table-whatif .hide-md {
+    display: none;
+  }
+}
+
 @media (max-width: 1260px) {
   .plan-mode,
   .review-body {
@@ -1812,6 +1827,16 @@ input[type='range']:active::-webkit-slider-thumb {
 
   .case-stats {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  /* badges get their own row above the title, so the date line never squeezes */
+  .case-head {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .case-badges {
+    justify-content: flex-start;
   }
 
   .case-panel {

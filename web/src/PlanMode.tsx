@@ -358,7 +358,7 @@ function BuyTable({ plan, base, onOpen }: { plan: Plan; base: Plan | null; onOpe
   const baseRooms = new Map(base?.lines.map((l) => [lineKey(l), l.rooms]))
   return (
     <div className="panel table-panel list-scroll">
-      <table className="table" aria-label="Buy list">
+      <table className={`table${base ? ' table-whatif' : ''}`} aria-label="Buy list">
         <thead>
           <tr>
             <th scope="col" className="num-col hide-md">#</th>

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from voyance.backtest import _optimizer_buys, decision_backtest, outcome, strategy_names
+from voyance.backtest import _optimizer_buys, decision_backtest, outcome, pickup_buys, strategy_names
 from voyance.forecast import with_history
 
 WEEK = pd.Timestamp("2016-05-02")
@@ -33,7 +33,8 @@ def test_decision_backtest_scores_every_strategy_on_the_test_weeks_only():
     (row,) = result["results"]
     assert (row["lead"], row["margin"], row["hotel_weeks"]) == (120, 0.2, 40)
     assert tuple(row["strategies"]) == strategy_names() == (
-        "rebuy_last_year", "likely_forecast", "optimizer_risk_0", "optimizer_risk_0.3")
+        "rebuy_last_year", "pickup", "likely_forecast", "optimizer_risk_0", "optimizer_risk_0.3",
+        "optimizer_plan_risk_0.3")
     s = row["strategies"]
     assert s["likely_forecast"]["profit"] > s["rebuy_last_year"]["profit"]
     assert s["optimizer_risk_0"]["profit"] > s["rebuy_last_year"]["profit"]
@@ -41,6 +42,9 @@ def test_decision_backtest_scores_every_strategy_on_the_test_weeks_only():
     # and more caution buys fewer still
     assert s["optimizer_risk_0.3"]["rooms_bought"] <= s["optimizer_risk_0"]["rooms_bought"]
     assert s["optimizer_risk_0"]["unsold"] < s["likely_forecast"]["unsold"]
+    # one worst case for the whole plan is milder than one per week: it buys between the two
+    assert (s["optimizer_risk_0.3"]["rooms_bought"] <= s["optimizer_plan_risk_0.3"]["rooms_bought"]
+            <= s["optimizer_risk_0"]["rooms_bought"])
 
 
 def test_decision_backtest_gives_a_confidence_interval_around_each_uplift():
@@ -51,6 +55,21 @@ def test_decision_backtest_gives_a_confidence_interval_around_each_uplift():
         low, high = s[name]["vs_rebuy_95ci"]
         assert low <= s[name]["vs_rebuy"] <= high
         assert s[name]["vs_rebuy"] == pytest.approx(s[name]["profit"] / s["rebuy_last_year"]["profit"] - 1)
+    assert "vs_pickup" not in s["pickup"] and "vs_pickup" not in s["rebuy_last_year"]
+    for name in ("pickup", "likely_forecast", "optimizer_risk_0", "optimizer_plan_risk_0.3"):
+        low, high = s[name]["vs_rebuy_95ci"]
+        assert low <= s[name]["vs_rebuy"] <= high
+    for name in ("likely_forecast", "optimizer_risk_0", "optimizer_risk_0.3", "optimizer_plan_risk_0.3"):
+        low, high = s[name]["vs_pickup_95ci"]
+        assert low <= s[name]["vs_pickup"] <= high
+        assert s[name]["vs_pickup"] == pytest.approx(s[name]["profit"] / s["pickup"]["profit"] - 1)
+
+
+def test_pickup_adds_last_years_pickup_from_the_same_lead_to_what_is_on_the_books():
+    rows = pd.DataFrame({"on_books": [30.0, 50.0, 5.0], "final_last_year": [80.0, 40.0, 10.0],
+                         "on_books_last_year": [20.0, np.nan, 30.0]})
+    # 30 + (80 - 20); last year's pace unknown: last year's final; never below zero
+    assert pickup_buys(rows).tolist() == [90.0, 40.0, 0.0]
 
 
 def test_optimizer_buys_do_not_depend_on_the_room_rate_level():

@@ -14,7 +14,7 @@ Built for **TBO VoyageHack 4.0**, Problem 1: Inventory Optimization
 
 [**Live demo**](https://voyance-1029341879804.asia-south1.run.app) · [API docs](https://voyance-1029341879804.asia-south1.run.app/docs) · [Team plan](PLAN.md)
 
-`Python 3.11+` · `FastAPI` · `HiGHS (LP)` · `LightGBM + SHAP` · `React + TypeScript` · `210 tests`
+`Python 3.11+` · `FastAPI` · `HiGHS (LP)` · `LightGBM + SHAP` · `React + TypeScript` · `211 tests`
 
 </div>
 
@@ -49,6 +49,13 @@ and overspend on quiet weeks.
 | Profit from buying by the forecast | baseline | **+7% to +13%**, every 95% interval above zero |
 | Room-nights turned away | baseline | **35-46% fewer** |
 | Replay, 68 hotel-weeks (120 days ahead, 20% margin) | €1,160,430 | **€1,272,142** (+10%) |
+| The optimizer itself, caution on the whole plan (risk 0.3) | baseline | **+6% to +19%** at 90 days ahead (every interval above zero); +2% to +10% at 120 days and −2% to +3% at 150 (intervals span zero) |
+
+The whole-plan run treats weeks as going wrong independently; deciding each week alone (as if they all go wrong
+together) is the other bound, and there risk 0.3 loses in 6 of 9 lead-and-margin cases. The truth is between.
+We also tried the classic hotel **pickup** forecast (bookings on the books + last year's pickup from the same
+lead) as a stronger baseline: on these hotels it did 12–61% *worse* than re-buying last year, because 2017's
+early bookings ran far ahead of what stayed, so re-buying stays the bar (`out/decision_backtest.json` has both).
 
 **In simulation** (500 simulated Decembers, 40 hotel-weeks in 5 Indian cities, against re-buying past bookings):
 
@@ -112,7 +119,7 @@ Needs Python 3.11+ (and Node 22+ for the dashboard).
 
 ```bash
 python -m pip install -e ".[test]"
-python -m pytest                              # 210 tests, about a minute
+python -m pytest                              # 211 tests, about a minute
 
 python scripts/seed_demo.py                   # demo companies and API keys (printed once)
 uvicorn voyance.api.app:create_app --factory  # API at http://127.0.0.1:8000/docs

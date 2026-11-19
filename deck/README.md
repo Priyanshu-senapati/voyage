@@ -11,9 +11,11 @@ Pitch decks for TBO VoyageHack 4.0. Lane C owns this folder.
 | `brief.md` | The visual rules: palette, type, the "ghost bar" motif. Round 2 reuses them |
 
 Every number on a slide is listed, with its source, in [`docs/numbers.md`](../docs/numbers.md).
-- **The impact chart and stats** are computed at build time from `out/proof_results.csv`, so they
-  always match the latest simulation run.
-- **The Buy Desk rows** come from `docs/sample_plan_round1.json`, real output of the API's planner.
+The build script reads its numbers from lane A's output files, so a re-run can't leave the slides behind:
+- **the impact chart and stats** from `out/proof_results.csv`;
+- **the real-data strip** from `out/decision_backtest.json` (the build stops if any 95% interval
+  touches zero);
+- **the real-bookings check** in the notes from `out/calibration.json`.
 
 ## Rebuild
 
@@ -24,11 +26,18 @@ node build_round1.js             # writes voyance_round1.pptx
 powershell -ExecutionPolicy Bypass -File render.ps1   # Windows + PowerPoint: PDF + renders/slide-N.png
 ```
 
-## Adding Gourab's Buy Desk mockup
-Save it as `deck/assets/buy_desk_mockup.png` and rebuild. About 1.9:1 fits best, e.g. 1900×1000.
-Slide 2 places it in "The Buy Desk" box, scaled to fit. Until then the slide shows a drawn sketch.
+## The Buy Desk screenshot (`assets/buy_desk_mockup.png`)
+This is the live demo, captured on 19 Nov with lane B's script in its demo session (one simulated
+December), then cropped to the plan header, the buy list and the line detail.
 
-The caption under the box says the rows are real API output. Keep that true:
-- Fill the mockup's rows from `docs/sample_plan_round1.json`.
-- Show an approve control on each line.
-- Don't show a buy-by date or a per-line worst case. The API doesn't return those yet.
+To re-capture after a dashboard change:
+
+```bash
+cd web && npm ci
+CAPTURE_URL=https://voyance-1029341879804.asia-south1.run.app/ node scripts/capture.mjs <out-dir>
+python -c "from PIL import Image; Image.open('<out-dir>/buy-desk.png').crop((520, 190, 2510, 1190)).save('../deck/assets/buy_desk_mockup.png')"
+```
+
+If the crop size changes, update `MOCKUP_RATIO` in `build_round1.js`. Keep the caption true: the
+screen shows one simulated December, so its totals (₹24.7L expected) aren't the 20-market averages
+on the chart. Without the PNG, the build draws a sketch from `docs/sample_plan_round1.json` instead.

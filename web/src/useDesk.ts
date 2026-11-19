@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ApiError, apiFor, type Api, type WhatIfParams } from './api/client'
+import { ApiError, apiFor, type Api, type CapParams, type WhatIfParams } from './api/client'
 import demoPlan from './demo/plan-2cr.json'
 import type { Session } from './session'
 import type { Decision, Me, Plan, PlanLine, PlanOut, PlanPreview, PlanSummary } from './types'
@@ -7,11 +7,12 @@ import { inr } from './format'
 
 export type Notice = { tone: 'error' | 'info' | 'success'; text: string }
 export type LoadState = 'loading' | 'ready' | 'error'
-export type Draft = { budget: number; risk: number }
+// caps are shares of the whole budget the optimizer may put in one city / with one hotel; null = no cap
+export type Draft = { budget: number; risk: number; cityCap: number | null; hotelCap: number | null }
 // demand and cost are fractions (0.2 = +20%); event is the event-week demand multiple, null = the planner's guess
 export type WhatIf = { demand: number; cost: number; event: number | null }
 
-export const DEFAULT_DRAFT: Draft = { budget: 2e7, risk: 0.3 }
+export const DEFAULT_DRAFT: Draft = { budget: 2e7, risk: 0.3, cityCap: null, hotelCap: null }
 export const NO_WHAT_IF: WhatIf = { demand: 0, cost: 0, event: null }
 export const PLANNER_EVENT_GUESS = 1.5 // mirrors voyance.sim.ASSUMED_EVENT_LIFT: the planner's own event-week lift
 const DEMO_ME: Me = { name: 'ravi', role: 'approver', tenant: 'TBO Demo' }
@@ -59,14 +60,27 @@ function previewPlan(raw: PlanPreview): Plan {
 function statusOf(lines: PlanLine[]): Plan['status'] {
   if (lines.length === 0) return 'empty'
   const kinds = new Set(lines.map((line) => line.decision))
+  if (kinds.has('pending')) return 'pending'
   return kinds.size > 1 ? 'mixed' : (lines[0].decision as Plan['status'])
 }
 
 export const draftOf = (plan: Plan | null): Draft =>
-  plan ? { budget: plan.budget_inr, risk: plan.risk_aversion } : DEFAULT_DRAFT
+  plan
+    ? {
+        budget: plan.budget_inr,
+        risk: plan.risk_aversion,
+        cityCap: plan.max_city_share ?? null,
+        hotelCap: plan.max_hotel_share ?? null,
+      }
+    : DEFAULT_DRAFT
 
-const sameDraft = (a: Draft, b: Draft) => a.budget === b.budget && a.risk === b.risk
-const draftKey = (d: Draft) => `${d.budget}|${d.risk}`
+export const capParams = (d: Draft): CapParams => ({
+  ...(d.cityCap !== null ? { max_city_share: d.cityCap } : {}),
+  ...(d.hotelCap !== null ? { max_hotel_share: d.hotelCap } : {}),
+})
+const sameDraft = (a: Draft, b: Draft) =>
+  a.budget === b.budget && a.risk === b.risk && a.cityCap === b.cityCap && a.hotelCap === b.hotelCap
+const draftKey = (d: Draft) => `${d.budget}|${d.risk}|${d.cityCap}|${d.hotelCap}`
 
 async function loadDesk(api: Api) {
   const [me, list] = await Promise.all([api.me(), api.plans()])
@@ -122,7 +136,7 @@ export function useDesk(session: Session, onSignOut: (reason?: string) => void) 
         const controller = new AbortController()
         inflight.current = controller
         setPreviewing(true)
-        const body = { budget_inr: next.budget, risk_aversion: next.risk }
+        const body = { budget_inr: next.budget, risk_aversion: next.risk, ...capParams(next) }
         try {
           const scenario = api.preview({ ...body, ...whatIfParams(w) }, controller.signal)
           let baseline: Promise<Plan | null> = Promise.resolve(null)
@@ -217,7 +231,9 @@ export function useDesk(session: Session, onSignOut: (reason?: string) => void) 
     cancelPreview()
     setCreating(true)
     try {
-      const created = savedPlan(await api.createPlan({ budget_inr: draft.budget, risk_aversion: draft.risk }))
+      const created = savedPlan(
+        await api.createPlan({ budget_inr: draft.budget, risk_aversion: draft.risk, ...capParams(draft) }),
+      )
       showSaved(created)
       setPlans((list) => [summaryOf(created), ...list])
       setNotice({

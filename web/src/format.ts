@@ -30,3 +30,28 @@ export function riskWord(value: number): string {
   if (value < 0.8) return 'Careful'
   return 'Very careful'
 }
+
+const euros = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 })
+
+// Euros, for the 2017 replay (real bookings at two hotels in Portugal): €4,469 · €112K · €1.27M
+export function eur(value: number): string {
+  const abs = Math.abs(value)
+  const sign = value < 0 ? '−' : ''
+  if (abs >= 1e6) return `${sign}€${trim((abs / 1e6).toFixed(2))}M`
+  if (abs >= 1e5) return `${sign}€${Math.round(abs / 1e3)}K`
+  return `${sign}€${euros.format(abs)}`
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+// "2 Jan" (or "2 Jan 2017") for an ISO date
+export function dayMonth(iso: string, withYear = false): string {
+  const [year, month, day] = iso.slice(0, 10).split('-').map(Number)
+  return `${day} ${MONTHS[month - 1]}${withYear ? ` ${year}` : ''}`
+}
+
+export const monthName = (month: number) => MONTHS[month - 1]
+
+export const plural = (n: number, one: string, many = `${one}s`) => `${count(n)} ${n === 1 ? one : many}`
+
+export const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)

@@ -2,12 +2,12 @@ import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { ApiError, type Api } from './api/client'
 import demoFrontier from './demo/frontier-2cr.json'
 import type { FrontierPoint } from './types'
-import { whatIfActive, whatIfParams, type WhatIf } from './useDesk'
+import { capParams, whatIfActive, whatIfParams, type Draft, type WhatIf } from './useDesk'
 import { inr } from './format'
 
 interface Props {
   api: Api | null
-  budget: number
+  draft: Draft
   risk: number
   whatIf: WhatIf
   onPick: (risk: number) => void
@@ -19,9 +19,11 @@ const DEMO_BUDGET = 2e7
 const FETCH_DELAY_MS = 500 // the frontier is slow (4-7 s) and limited to 10 a minute: wait for the budget to settle
 
 // One fetch per budget; cached for the session
-function useFrontier(api: Api | null, budget: number, whatIf: WhatIf): Curve {
+function useFrontier(api: Api | null, draft: Draft, whatIf: WhatIf): Curve {
+  const { budget } = draft
   const cache = useRef(new Map<string, FrontierPoint[]>())
-  const key = `${budget}|${whatIf.demand}|${whatIf.cost}|${whatIf.event}`
+  const capped = draft.cityCap !== null || draft.hotelCap !== null
+  const key = `${budget}|${draft.cityCap}|${draft.hotelCap}|${whatIf.demand}|${whatIf.cost}|${whatIf.event}`
   const [curve, setCurve] = useState<Curve>({ status: 'loading' })
 
   useEffect(() => {
@@ -31,14 +33,14 @@ function useFrontier(api: Api | null, budget: number, whatIf: WhatIf): Curve {
       if (cached) return setCurve({ status: 'ready', points: cached })
       if (!api) {
         return setCurve(
-          budget === DEMO_BUDGET && !whatIfActive(whatIf)
+          budget === DEMO_BUDGET && !whatIfActive(whatIf) && !capped
             ? { status: 'ready', points: demoFrontier }
             : { status: 'error', message: 'The demo has the curve for ₹2 cr only. Sign in to try other budgets.' },
         )
       }
       setCurve({ status: 'loading' })
       try {
-        const points = await api.frontier(budget, whatIfParams(whatIf))
+        const points = await api.frontier(budget, whatIfParams(whatIf), capParams(draft))
         cache.current.set(key, points)
         if (current) setCurve({ status: 'ready', points })
       } catch (error) {
@@ -65,8 +67,9 @@ function useFrontier(api: Api | null, budget: number, whatIf: WhatIf): Curve {
 const M = { top: 26, right: 64, bottom: 28, left: 48 }
 const lakh = (v: number) => v / 1e5
 
-export function RiskCurve({ api, budget, risk, whatIf, onPick }: Props) {
-  const curve = useFrontier(api, budget, whatIf)
+export function RiskCurve({ api, draft, risk, whatIf, onPick }: Props) {
+  const { budget } = draft
+  const curve = useFrontier(api, draft, whatIf)
   const [hover, setHover] = useState<number | null>(null)
   // draw at the plot's real width, so labels stay at UI size from phone to desktop
   const plotRef = useRef<HTMLDivElement>(null)

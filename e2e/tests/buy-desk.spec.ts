@@ -178,3 +178,147 @@ test('the audit log is for admins only', async ({ page }) => {
   await expect(log).toContainText('Approved a line')
   await expect(log).toContainText('Rejected a line')
 })
+
+// What the API itself answers, to check a screen against (the same key the page signed in with)
+async function apiGet<T>(page: Page, path: string, who: keyof typeof KEYS): Promise<T> {
+  const served = await page.evaluate(
+    (w) => (window as { __VOYANCE__?: { demoKeys?: Record<string, string> } }).__VOYANCE__?.demoKeys?.[w],
+    who,
+  )
+  const res = await page.request.get(path, { headers: { 'X-API-Key': served ?? KEYS[who] } })
+  expect(res.ok()).toBeTruthy()
+  return res.json() as Promise<T>
+}
+
+type Totals = { profit: number; turned_away: number }
+
+test('the replay race recomputes its headline from the replay engine', async ({ page }) => {
+  await signIn(page, 'asha')
+  await page.getByRole('link', { name: 'Replay race' }).click()
+  await expect(page.getByRole('heading', { name: 'Voyance vs. re-buying last year' })).toBeVisible()
+  await expect(page.getByText('Historical 2017 bookings · not live inventory')).toBeVisible()
+
+  const { totals } = await apiGet<{ totals: Record<string, Totals> }>(page, '/v1/replay', 'asha')
+  const v = totals.voyance
+  const r = totals.rebuy_last_year
+  const hero = page.getByRole('region', { name: 'Headline result' })
+  await expect(hero).toContainText(`+${(((v.profit - r.profit) / r.profit) * 100).toFixed(1)}%`)
+  await expect(hero).toContainText(`${(((r.turned_away - v.turned_away) / r.turned_away) * 100).toFixed(1)}%`)
+  await expect(page.getByText(/matches the engine's own totals/)).toBeVisible()
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Why Voyance performed better' })).toBeVisible()
+
+  const weeks = page.getByRole('table', { name: 'Replay by week' })
+  await weeks.getByRole('button', { name: '2 Jan' }).first().click()
+  await expect(weeks.getByRole('heading', { name: 'What the forecast knew on 4 Sep 2016' })).toBeVisible()
+  await expect(weeks.getByRole('row', { name: /^Voyance €/ })).toContainText('€10,520')
+  await page.getByRole('tab', { name: 'Resort Hotel' }).click()
+  await expect(weeks.locator('tbody > tr').filter({ hasText: 'City Hotel' })).toHaveCount(0)
+})
+
+type PositionApi = { summary: Record<string, number>; lines: { city: string }[] }
+
+test('the position monitor shows the API status of every line, with search, filters and sorting', async ({ page }) => {
+  await signIn(page, 'ravi')
+  await page.getByRole('link', { name: 'Position monitor' }).click()
+  await page.getByRole('combobox', { name: 'Plan', exact: true }).selectOption('1')
+  const rows = page.getByRole('table', { name: 'Position by line' }).locator('tbody > tr')
+  const nov = await apiGet<PositionApi>(page, '/v1/plans/1/position?as_of=2027-11-01', 'ravi')
+  await expect(rows).toHaveCount(nov.lines.length)
+  for (const [status, label] of [['short', 'Short'], ['on_pace', 'On pace'], ['over', 'Over']]) {
+    await expect(page.getByRole('button', { name: new RegExp(`^${label} ${nov.summary[status]}\\b`) })).toBeVisible()
+  }
+
+  const short = page.getByRole('button', { name: /^Short \d/ })
+  await short.click()
+  await expect(short).toHaveAttribute('aria-pressed', 'true')
+  await expect(rows).toHaveCount(nov.summary.short)
+  await page.getByRole('button', { name: 'Clear filters' }).click()
+
+  await page.getByRole('combobox', { name: 'Destination' }).selectOption('Kochi')
+  await expect(rows).toHaveCount(nov.lines.filter((l) => l.city === 'Kochi').length)
+  await page.getByRole('searchbox', { name: 'Search lines' }).fill('Hotel A')
+  await expect(rows.filter({ hasNotText: 'Hotel A' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Clear filters' }).click()
+
+  await page.getByRole('button', { name: 'Spend', exact: true }).click()
+  await expect(page.getByRole('columnheader', { name: 'Spend' })).toHaveAttribute('aria-sort', 'descending')
+  await rows.first().getByRole('button').first().click()
+  await expect(page.getByText('Spend at stake')).toBeVisible()
+
+  await page.getByRole('tab', { name: '1 Dec' }).click()
+  const dec = await apiGet<PositionApi>(page, '/v1/plans/1/position?as_of=2027-12-01', 'ravi')
+  await expect(page.getByRole('button', { name: new RegExp(`^Week started ${dec.summary.started}\\b`) })).toBeVisible()
+})
+
+type PlanApi = {
+  id: number
+  exposure: { at_cap: boolean }[]
+  passed: { city: string; week: string; hotel: string; reason: string }[]
+}
+
+test('a buyer plans with exposure caps; the exposure page and action queue explain them', async ({ page }) => {
+  await signIn(page, 'asha')
+  await slider(page, 'Budget').fill('10000000')
+  await page.getByLabel('Most in one city').selectOption('0.2')
+  await page.getByLabel('Most with one hotel').selectOption('0.1')
+  await expect(page.getByText(/These caps give up about/)).toBeVisible()
+  await page.getByRole('button', { name: 'Save plan' }).click()
+  await expect(page.getByText(/^Plan #3 saved/)).toBeVisible()
+
+  await page.getByRole('link', { name: 'Exposure caps' }).click()
+  await expect(page.getByRole('combobox', { name: 'Plan', exact: true })).toHaveValue('3')
+  const plan = await apiGet<PlanApi>(page, '/v1/plans/3', 'asha')
+  const atCap = plan.exposure.filter((e) => e.at_cap).length
+  expect(atCap).toBeGreaterThan(0)
+  await expect(page.locator('.badge', { hasText: /^At cap$/ })).toHaveCount(atCap)
+  await expect(page.getByRole('heading', { name: "What's preventing more purchases" })).toBeVisible()
+  await page.getByRole('table', { name: 'Exposure by city' }).getByRole('button').first().click()
+  await expect(page.getByRole('heading', { name: 'What makes up this exposure' })).toBeVisible()
+
+  await page.getByRole('link', { name: 'Action queue' }).click()
+  await page.getByRole('tab', { name: '1 Aug 2027' }).click()
+  const queue = await apiGet<{ items: unknown[] }>(page, '/v1/plans/3/queue?as_of=2027-08-01', 'asha')
+  const rows = page.getByRole('table', { name: 'Action queue' }).locator('tbody > tr')
+  await expect(rows).toHaveCount(queue.items.length)
+
+  // a hotel-week the optimizer passed on shows its own reason under "Why not?"
+  expect(plan.passed.length).toBeGreaterThan(0)
+  const skipped = plan.passed[0]
+  const row = rows.filter({ hasText: `${skipped.city} · ${skipped.hotel}` }).filter({ hasText: skipped.week.replace('-', '–') })
+  await row.getByRole('button').first().click()
+  await expect(page.getByRole('table', { name: 'Action queue' }).getByRole('heading', { name: /^Why not\?/ })).toBeVisible()
+  await expect(page.getByText(skipped.reason, { exact: false })).toBeVisible()
+})
+
+test('the demo shows the replay race and the plan screens without a key', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /Explore a saved demo plan/ }).click()
+  await page.getByRole('link', { name: 'Position monitor' }).click()
+  await expect(page.getByRole('table', { name: 'Position by line' }).locator('tbody > tr')).toHaveCount(39)
+  await page.getByRole('link', { name: 'Action queue' }).click()
+  await expect(page.getByRole('table', { name: 'Action queue' }).locator('tbody > tr')).toHaveCount(39)
+  await page.getByRole('link', { name: 'Exposure caps' }).click()
+  await expect(page.getByText(/was made without exposure caps/)).toBeVisible()
+  await page.getByRole('link', { name: 'Replay race' }).click()
+  await expect(page.getByRole('region', { name: 'Headline result' })).toContainText('+9.6%')
+})
+
+test('the plan screens say when there is no plan, and show an API failure', async ({ page }) => {
+  await signIn(page, 'zed')
+  for (const name of ['Action queue', 'Position monitor', 'Exposure caps']) {
+    await page.getByRole('link', { name }).click()
+    await expect(page.getByRole('heading', { name: 'No saved plans yet' })).toBeVisible()
+  }
+
+  await page.getByRole('button', { name: 'Sign out' }).click()
+  await signIn(page, 'ravi')
+  await page.route('**/v1/plans/*/queue*', (route) =>
+    route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ detail: 'The planner is busy' }) }),
+  )
+  await page.route('**/v1/replay', (route) => route.abort())
+  await page.getByRole('link', { name: 'Action queue' }).click()
+  await expect(page.getByText('The planner is busy')).toBeVisible()
+  await page.getByRole('link', { name: 'Replay race' }).click()
+  await expect(page.getByText("Can't reach the Voyance API. Check that it is running.")).toBeVisible()
+})

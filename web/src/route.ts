@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
 
-export type Route = 'desk' | 'plans' | 'markets' | 'audit'
+export type Route = 'desk' | 'plans' | 'queue' | 'position' | 'exposure' | 'markets' | 'replay' | 'audit'
 
 export const ROUTES: { route: Route; label: string; hash: string }[] = [
   { route: 'desk', label: 'Buy Desk', hash: '#/' },
   { route: 'plans', label: 'Plans', hash: '#/plans' },
+  { route: 'queue', label: 'Action queue', hash: '#/queue' },
+  { route: 'position', label: 'Position monitor', hash: '#/position' },
+  { route: 'exposure', label: 'Exposure caps', hash: '#/exposure' },
   { route: 'markets', label: 'Markets', hash: '#/markets' },
+  { route: 'replay', label: 'Replay race', hash: '#/replay' },
   { route: 'audit', label: 'Audit log', hash: '#/audit' },
 ]
 

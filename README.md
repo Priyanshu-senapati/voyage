@@ -1,98 +1,194 @@
-# Voyance: inventory pre-buy planner (TBO VoyageHack 4.0)
+<div align="center">
 
-Decides what hotel inventory a travel distributor should buy ahead, within a maximum budget:
-which hotel, which week, how many room-nights, the expected profit and the worst case.
+# Voyance
 
-**Live demo:** https://voyance-1029341879804.asia-south1.run.app (simulated data; the sign-in page offers four demo people, and the data resets when the service restarts).
+**Sees hotel demand before it sells out.**
+A pre-buy planner for a travel distributor's hotel buyers: give it a budget and a risk level, and it returns
+a ranked list of rooms to buy ahead, each with a reason, a buy-by date and its worst case, for a second person
+to approve.
 
-**Status:** Round 1 prototype. Runs on simulated data; no TBO data yet. Compared with 119,390 real hotel
-bookings (`out/calibration.json`): the Christmas-week peak matches (1.45× vs our 1.47×); real demand swings
-less from year to year (about 22%) than we simulate (35%), so our test is the harder one; real early December
-is busier than ours (only 4 hotel-years of December data, so that shape is rough).
-Forecast on the same real bookings, made walk-forward (each from only what was known on the day of the
-decision; `out/forecast_backtest.json`): at 90-150 days ahead, where buy-by dates fall, it misses 2017's demand
-by 9.5-10.7% vs 15.5% for re-buying last year. Its low-high range holds the actual 72-79% of the time, and
-misses mostly on the high side (2017 grew). Buying by the likely forecast (`out/decision_backtest.json`,
-Jan-Aug 2017, 2 hotels, 34 weeks) earned 7-13% more than re-buying last year at every lead (90-150 days) and
-assumed contract margin (15-30%), with every 95% interval above zero, 13-18% fewer unsold rooms and 35-46%
-fewer room-nights turned away. Re-buying last year is a naive rule: it ignores what is already on the books.
-The optimizer on the forecast's range beats re-buying at 90 days (+8-20%) but not reliably further out, and
-not the likely forecast; its 0.3 caution, applied one week at a time instead of to a whole plan, gives up
-profit. Two hotels and 18 months of history can't calibrate the range well enough yet.
+Built for **TBO VoyageHack 4.0**, Problem 1: Inventory Optimization
 
-## Run
+[**Live demo**](https://voyance-1029341879804.asia-south1.run.app) · [API docs](https://voyance-1029341879804.asia-south1.run.app/docs) · [Team plan](PLAN.md)
 
-Needs Python 3.11+.
+`Python 3.11+` · `FastAPI` · `HiGHS (LP)` · `LightGBM + SHAP` · `React + TypeScript` · `200 tests`
+
+</div>
+
+> The Buy Desk runs on **simulated** data (TBO's data isn't plugged in yet). Every claim below says whether it
+> comes from the simulation or from **real hotel bookings**, and the real-data results are walk-forward: each
+> decision uses only what was known on its day.
+
+![The Buy Desk](web/mockup/buy-desk.png)
+
+## The problem, and what's new
+
+Distributors pre-buy hotel rooms ahead of peak dates, sized from booking history. But a search that hits
+"sold out" never becomes a booking, so the busiest dates look smaller than they were: buyers under-buy the peaks
+and overspend on quiet weeks.
+
+| | What Voyance does |
+|---|---|
+| **Hidden demand** | Counts sold-out searches back in, the way airlines correct for sold-out flights |
+| **Event signals** | Separates festival, match and concert weeks, so last year's spike isn't mistaken for a trend |
+| **Budget as a portfolio** | One optimizer weighs expected profit against the worst 5% of seasons (CVaR), within the budget and any city or hotel caps |
+| **Every line explained** | Each buy says why, in numbers; each skipped hotel-week says what the money earns elsewhere |
+| **Human in the loop** | A second person approves every line; everything is in an audit log |
+
+## Results at a glance
+
+**On real hotel bookings** (119,390 bookings at two hotels, 2015-2017; tested on Jan-Aug 2017, walk-forward):
+
+| | Re-buy last year | Voyance |
+|---|---|---|
+| Forecast error, 90-150 days ahead | 15.5% | **9.5-10.7%** |
+| Profit from buying by the forecast | baseline | **+7% to +13%**, every 95% interval above zero |
+| Room-nights turned away | baseline | **35-46% fewer** |
+| Replay, 68 hotel-weeks (120 days ahead, 20% margin) | €1,160,430 | **€1,272,142** (+10%) |
+
+**In simulation** (500 simulated Decembers, 40 hotel-weeks in 5 Indian cities, against re-buying past bookings):
+
+| Budget | Expected profit | Worst 5% of seasons | Worlds where Voyance earns more |
+|---|---|---|---|
+| ₹40L | **+24.0%** [23.7, 24.4] | +4.9% | 100% |
+| ₹60L | **+13.7%** [13.4, 14.0] | −1.5% | 100% |
+| ₹1.2 cr | about even | −2.5% | 51% |
+| ₹2 cr | **+3.9%** [3.5, 4.2] | **+20.4%** [19.0, 21.7] | 84% |
+
+![Expected profit by budget, simulated](out/proof_chart.png)
+
+The simulator is checked against the real bookings (`out/calibration.json`): the Christmas-week peak matches
+(1.45× the December average vs our 1.47×), and real demand swings less from year to year (about 22%) than we
+simulate (35%), so the simulation is the harder test.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A[Bookings + sold-out searches] --> B[Hidden demand]
+    E[Event calendar] --> C
+    B --> C[Forecast: low / likely / high]
+    C --> D[Optimizer: budget, CVaR risk, caps]
+    D --> F[Buy Desk: ranked lines, reasons, buy-by dates]
+    F --> G[Approver: approve / reject]
+    G --> H[Audit log]
+    F --> I[Position Monitor: booking pace vs plan]
+    C -. real bookings .-> J[Replay: belief vs outcome]
+```
+
+The language model never decides anything: it only writes briefs from numbers the planner produced, and every
+figure it cites is checked against the plan.
+
+## Features
+
+| Feature | What a buyer gets |
+|---|---|
+| **Buy plan** | Hotel, week, rooms, buy-by date, expected profit and this line's own bad-season profit, ranked |
+| **Why / why not** | The numbers behind each buy; for each hotel-week skipped, "a room here makes ₹1,128; the same ₹8,883 makes ₹2,092 in the rest of the plan" |
+| **Hurdle rate** | What every rupee must earn to get into the plan, straight from the optimizer's shadow prices |
+| **Risk curve** | Profit and bad-season profit at every risk setting: "at 0.3 you give up ₹24,643 to make ₹1.45L more in a bad season" |
+| **What-ifs** | Demand, supplier rates and event strength: the same optimizer re-plans, nothing is saved |
+| **Exposure caps** | No city or hotel above a share of the budget, with what the caps cost |
+| **Action queue** | Buy now (due within 14 days), scheduled, watch, skip, with a reason each |
+| **Position Monitor** | After buying: each line's bookings against the real December pace, projected demand and the gap. Flags only |
+| **Replay** | Real 2017 weeks: what the forecast believed and why, what each buyer bought, what happened |
+| **Buyer briefs** | A local model on the GPU writes a plain-English brief; numbers it didn't get from the plan are rejected |
+| **Approvals and audit** | Four-eyes approval on every line, nobody approves their own plan, every action logged |
+
+## Quick start
+
+Needs Python 3.11+ (and Node 22+ for the dashboard).
 
 ```bash
 python -m pip install -e ".[test]"
-python -m pytest                   # 185 tests, about 60 s
-python scripts/proof_chart.py      # about 3.5 min; writes out/proof_chart.png and out/proof_results.csv
-python scripts/calibrate.py        # downloads 16 MB once; writes out/calibration.json
-python scripts/proof_study.py 500  # the simulation on 500 worlds across every core, with 95% intervals
-VOYANCE_API_KEY=vy_... python scripts/brief.py 1  # GPU env (PyTorch CUDA + transformers): a buyer brief by a local model, every number checked
-python scripts/forecast_backtest.py  # forecast + buying decisions vs re-buying last year on real 2017 bookings
+python -m pytest                              # 200 tests, about a minute
+
+python scripts/seed_demo.py                   # demo companies and API keys (printed once)
+uvicorn voyance.api.app:create_app --factory  # API at http://127.0.0.1:8000/docs
+
+cd web && npm install && npm run dev          # dashboard at http://localhost:5173
 ```
 
-## Buy Desk API
+Sign in with a key from `seed_demo.py`, or build the dashboard with
+`VITE_DEMO_KEYS='{"asha":"vy_…","ravi":"vy_…",…}'` for one-click "Try it as" buttons. Demo people: **asha**
+(buyer), **ravi** (approver), **meera** (admin) at "TBO Demo", and **zed** (admin) at "Other Distributor", who
+can't see TBO Demo's plans. For fixed keys across re-seeds, set `VOYANCE_DEMO_KEY_ASHA` (and `_RAVI`, `_MEERA`,
+`_ZED`). The hosted demo is one container (`Dockerfile`, `deploy/cloudrun.sh`).
 
-```bash
-python scripts/seed_demo.py                                   # prints demo API keys once; copy them
-uvicorn voyance.api.app:create_app --factory --reload          # http://127.0.0.1:8000/docs
-```
+## The evidence, reproducible
 
-Send the key in the `X-API-Key` header. Demo users: **asha** (buyer), **ravi** (approver),
-**meera** (admin) at "TBO Demo", and **zed** (admin) at "Other Distributor", who can't see TBO Demo's plans.
+| Command | What it shows |
+|---|---|
+| `python scripts/proof_chart.py` | The Round 1 chart, 20 simulated worlds (`out/proof_chart.png`, `out/proof_results.csv`) |
+| `python scripts/proof_study.py 500` | The same on 500 worlds across every CPU core, with 95% intervals (`out/proof_study.json`) |
+| `python scripts/calibrate.py` | The simulator against the real bookings; downloads 16 MB once (`out/calibration.json`) |
+| `python scripts/forecast_backtest.py` | Forecast and buying decisions on real 2017 bookings, and the replay (`out/*_backtest.json`) |
+| `VOYANCE_API_KEY=vy_… python scripts/brief.py 1` | A buyer brief from a local model; needs PyTorch with CUDA and `transformers` |
+
+## API
+
+Send the key in the `X-API-Key` header. Full contract at `/docs`.
 
 | Endpoint | Who | What |
 |---|---|---|
 | `GET /v1/me` | anyone | Your name, role and company |
 | `GET /v1/markets` | anyone | Hotel-weeks that can be bought, with past bookings and sold-out searches |
-| `POST /v1/plans` | anyone | Budget + risk (+ cities) in, ranked buy plan out. Each line has a reason and its numbers (`why`), its own worst case, and a buy-by date (before 90% of that week's agent bookings, measured on real data) |
-| `POST /v1/plans/preview` | anyone | The same plan without saving it, for sliders (120 a minute). What-ifs: `demand_change`, `cost_change`, `event_lift` re-plan in a different world through the same optimizer |
-| `GET /v1/frontier` | anyone | Expected profit and worst case at risk 0, 0.1 … 1 for one budget, optionally in a what-if (10 a minute) |
-| `GET /v1/plans`, `GET /v1/plans/{id}` | anyone | Your company's plans. Each has its hurdle rate (what a rupee must earn to get in), what limits each line (hotel, budget or demand), every hotel-week passed with why, and its exposure per city and hotel. Optional caps (`max_city_share`, `max_hotel_share`, on plans, previews and the frontier) keep any one city or hotel to a share of the budget, and the plan says what they cost |
-| `GET /v1/plans/{id}/queue?as_of=` | anyone | What to do on a day: buy now (due within 14 days), scheduled buys, watch (ask a hotel for more rooms, close calls), skip |
-| `GET /v1/plans/{id}/position?as_of=` | anyone | Position Monitor: each saved line's bookings so far against the forecast's December pace, projected demand and the gap to the rooms bought (short / on pace / over). Flags only: on real 2017 bookings, acting on pace automatically lost 4-8% |
-| `GET /v1/replay` | anyone | Real 2017 bookings replayed week by week: what the forecast believed (and why) on the day of the decision, what Voyance and re-buying last year bought, what really happened, running profits |
+| `POST /v1/plans` | anyone | Budget + risk (+ cities, caps) in; ranked buy plan out, with hurdle rate, exposure and every hotel-week passed |
+| `POST /v1/plans/preview` | anyone | The same without saving, with what-ifs (`demand_change`, `cost_change`, `event_lift`); 120 a minute |
+| `GET /v1/frontier` | anyone | Profit and worst case at risk 0, 0.1 … 1 for one budget; 10 a minute |
+| `GET /v1/plans`, `/v1/plans/{id}` | anyone | Your company's plans |
+| `GET /v1/plans/{id}/queue?as_of=` | anyone | The action queue for a day |
+| `GET /v1/plans/{id}/position?as_of=` | anyone | The Position Monitor for a day |
+| `GET /v1/replay` | anyone | Real 2017 bookings, week by week |
 | `PATCH /v1/plans/{id}/lines/{line}` | approver, admin | Approve or reject a line; never your own plan |
-| `GET /v1/plans/{id}/export.csv` | anyone | Plan as a spreadsheet |
+| `GET /v1/plans/{id}/export.csv` | anyone | The plan as a spreadsheet |
 | `GET /v1/audit` | admin | Who did what |
 
-Settings: `VOYANCE_DATABASE_URL` (default `sqlite:///voyance.db`, any SQLAlchemy URL works) and
-`VOYANCE_CORS_ORIGINS` (comma-separated dashboard origins, e.g. `http://localhost:5173`; `*` is refused).
-For a hosted demo, `VOYANCE_DEMO_KEY_ASHA` (and `_RAVI`, `_MEERA`, `_ZED`) give `seed_demo.py` fixed keys.
-There are no database migrations yet: after pulling a schema change, delete `voyance.db` and seed again.
+Settings: `VOYANCE_DATABASE_URL` (default `sqlite:///voyance.db`; any SQLAlchemy URL) and
+`VOYANCE_CORS_ORIGINS` (exact dashboard origins; `*` is refused). There are no database migrations yet: after a
+schema change, delete `voyance.db` and seed again.
 
-### Security model
+## Security model
 
-- Keys belong to a person at a company; only SHA-256 hashes are stored, and keys can be revoked
-  (`voyance.api.auth.revoke_api_key`). The seed keys are for demos only.
+- Keys belong to a person at a company; only SHA-256 hashes are stored, and keys can be revoked.
 - A company never sees another company's plans, lines or audit log (it gets 404).
-- Nobody approves their own plan, even with a second key. A decision is final, and two approvers
-  clicking at once can't both win.
-- Each person can create 30 plans a minute (429 after that); at most 4 plans solve at once (503 if busy).
-  Both limits are per process for now.
+- Nobody approves their own plan, even with a second key; a decision is final, and two approvers clicking at
+  once can't both win.
+- 30 plans a minute per person (429 after that), at most 4 plans in the planner at once (503 if busy); the
+  hosted demo adds a per-network limit in front, since its demo keys are public.
+- Every solve runs on one long-lived thread: SciPy's HiGHS crashed the process when a thread that had solved
+  exited, which a web server's worker threads do all the time.
 - Keys travel in a header, so run it behind HTTPS outside a laptop demo.
 
-## Layout
+## What we tried and dropped
+
+Being clear about what didn't work is part of the evidence:
+
+- **Autopilot** (top up or release rooms automatically as bookings arrive): +22% in simulation, but **−4% to
+  −8%** on real 2017 bookings, because early booking pace is too noisy to trade on. It became the Position
+  Monitor: flags, with the buyer deciding.
+- **A pretrained forecaster** (Amazon Chronos-Bolt, run on the GPU): worse than re-buying last year on its own
+  (20-23% error) and no help as an extra input. What's already booked beats any amount of history.
+- **Recalibrating the forecast's range** (conformal): unstable on two hotels' history.
+
+## Project layout
 
 | Path | What it does |
 |---|---|
-| `voyance/demand.py` | Hidden demand: bookings + sold-out searches ÷ searches-per-booking; demand scenarios |
-| `voyance/optimizer.py` | Budget + risk (CVaR) linear program, solved with scipy's built-in HiGHS |
-| `voyance/sim.py` | Simulated December seasons and the strategies we compare |
-| `voyance/api/` | Buy Desk API: planner, storage, API-key auth, approvals, audit log |
-| `voyance/calibrate.py` | Demand facts measured on real bookings (December shape, year-to-year swing, buy-ahead days) |
-| `voyance/forecast.py` | Forecast from the booking curve: LightGBM low / likely / high, with SHAP reasons |
-| `voyance/backtest.py` | Scores buying strategies on real outcomes: re-buy last year, the forecast, the optimizer |
-| `voyance/replay.py` | Decision memory: each real hotel-week's belief, decision and outcome (shipped as `voyance/data/replay_2017.json`) |
-| `scripts/proof_chart.py` | Round 1 chart: expected profit by budget |
-| `scripts/calibrate.py` | Checks the simulator against the real bookings dataset |
-| `scripts/seed_demo.py` | Demo companies and API keys |
-| `PLAN.md` | Team plan, timeline and product shape |
+| `voyance/demand.py` | Hidden demand (bookings + sold-out searches ÷ searches per booking) and demand scenarios |
+| `voyance/optimizer.py` | The budget + CVaR linear program (HiGHS), with shadow prices and group caps |
+| `voyance/sim.py` | Simulated Decembers, booking pace and the strategies compared |
+| `voyance/calibrate.py` | Facts measured on real bookings: December shape, year-to-year swing, buy-ahead days, booking pace |
+| `voyance/forecast.py` | Booking-curve forecast: LightGBM low / likely / high with SHAP reasons, walk-forward |
+| `voyance/backtest.py`, `voyance/replay.py` | Buying strategies scored on real outcomes; the week-by-week replay |
+| `voyance/brief.py` | Facts for a buyer brief, and the check that a model invented no numbers |
+| `voyance/api/` | The Buy Desk API: planner, position monitor, storage, auth, approvals, audit log |
+| `web/`, `e2e/` | The React dashboard and its end-to-end tests |
+| `deploy/`, `Dockerfile` | The hosted demo on Cloud Run |
+| `scripts/` | Seeding, the proof chart and study, calibration, backtests, briefs |
+| `PLAN.md` | Team plan, timeline and decisions |
 
 ## Data credit
 
-`scripts/calibrate.py` downloads the "Hotel booking demand" dataset: N. Antonio, A. de Almeida, L. Nunes (2019),
-*Data in Brief* 22: 41–49, licence CC BY 4.0. It is checked by SHA-256 and kept out of this repo.
+The "Hotel booking demand" dataset: N. Antonio, A. de Almeida, L. Nunes (2019), *Data in Brief* 22: 41-49,
+licence CC BY 4.0. `scripts/calibrate.py` downloads it, checks it by SHA-256 and keeps it out of this repo.

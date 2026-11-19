@@ -7,11 +7,14 @@ A pre-buy planner for a travel distributor's hotel buyers: give it a budget and 
 a ranked list of rooms to buy ahead, each with a reason, a buy-by date and its worst case, for a second person
 to approve.
 
+*Voyance doesn't blindly automate procurement. It gives buyers an explainable, risk-aware decision, lets them
+approve it, and then proves whether that decision was actually better.*
+
 Built for **TBO VoyageHack 4.0**, Problem 1: Inventory Optimization
 
 [**Live demo**](https://voyance-1029341879804.asia-south1.run.app) · [API docs](https://voyance-1029341879804.asia-south1.run.app/docs) · [Team plan](PLAN.md)
 
-`Python 3.11+` · `FastAPI` · `HiGHS (LP)` · `LightGBM + SHAP` · `React + TypeScript` · `200 tests`
+`Python 3.11+` · `FastAPI` · `HiGHS (LP)` · `LightGBM + SHAP` · `React + TypeScript` · `201 tests`
 
 </div>
 
@@ -83,8 +86,8 @@ figure it cites is checked against the plan.
 
 | Feature | What a buyer gets |
 |---|---|
-| **Buy plan** | Hotel, week, rooms, buy-by date, expected profit and this line's own bad-season profit, ranked |
-| **Why / why not** | The numbers behind each buy; for each hotel-week skipped, "a room here makes ₹1,128; the same ₹8,883 makes ₹2,092 in the rest of the plan" |
+| **Buy plan** | Hotel, week, rooms, buy-by date, expected profit, this line's own bad-season profit and the chance every room sells, ranked |
+| **Why / why not** | The numbers behind each buy, and why not one more room ("would sell only 82% of the time, making about ₹734: not enough for the bad-season risk it adds"); for each hotel-week skipped, "a room here makes ₹1,128; the same ₹8,883 makes ₹2,092 in the rest of the plan" |
 | **Hurdle rate** | What every rupee must earn to get into the plan, straight from the optimizer's shadow prices |
 | **Risk curve** | Profit and bad-season profit at every risk setting: "at 0.3 you give up ₹24,643 to make ₹1.45L more in a bad season" |
 | **What-ifs** | Demand, supplier rates and event strength: the same optimizer re-plans, nothing is saved |
@@ -101,7 +104,7 @@ Needs Python 3.11+ (and Node 22+ for the dashboard).
 
 ```bash
 python -m pip install -e ".[test]"
-python -m pytest                              # 200 tests, about a minute
+python -m pytest                              # 201 tests, about a minute
 
 python scripts/seed_demo.py                   # demo companies and API keys (printed once)
 uvicorn voyance.api.app:create_app --factory  # API at http://127.0.0.1:8000/docs

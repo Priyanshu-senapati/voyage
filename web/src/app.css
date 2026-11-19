@@ -154,6 +154,7 @@
 /* ---------- page and panels ---------- */
 .page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
 }
 
@@ -602,16 +603,23 @@ input[type='range']:active::-webkit-slider-thumb {
   text-align: left;
   white-space: normal;
   box-shadow: var(--shadow-lg);
-  opacity: 0;
+  /* out of the layout until shown, so hidden tips never widen the page */
+  display: none;
+  max-width: calc(100vw - 32px);
   pointer-events: none;
-  transform: translate(-50%, -2px);
-  transition: opacity 120ms var(--ease), transform 120ms var(--ease);
+  transform: translateX(-50%);
 }
 
 .infotip:hover .infotip-body,
 .infotip:focus-within .infotip-body {
-  opacity: 1;
-  transform: translate(-50%, 0);
+  display: block;
+  animation: tip-in 120ms var(--ease);
+}
+
+@keyframes tip-in {
+  from {
+    opacity: 0;
+  }
 }
 
 /* ---------- plan mode ---------- */
@@ -669,6 +677,17 @@ input[type='range']:active::-webkit-slider-thumb {
 
 .settings-foot {
   gap: 8px;
+}
+
+.settings-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-summary {
+  margin-top: -8px;
+  color: var(--ink-2);
 }
 
 .settings-head {
@@ -762,6 +781,21 @@ input[type='range']:active::-webkit-slider-thumb {
   font-size: 12.5px;
 }
 
+.kpi-delta {
+  margin-top: 2px !important;
+}
+
+.kpi-tick {
+  animation: tick 260ms var(--ease);
+}
+
+@keyframes tick {
+  from {
+    opacity: 0.35;
+    transform: translateY(3px);
+  }
+}
+
 .results-bar {
   display: flex;
   align-items: center;
@@ -771,6 +805,33 @@ input[type='range']:active::-webkit-slider-thumb {
 /* ---------- tables ---------- */
 .table-panel {
   overflow-x: auto;
+}
+
+/* the buy list scrolls inside its panel, so its column labels stay in view */
+.list-scroll {
+  max-height: 72vh;
+  overflow: auto;
+}
+
+.list-scroll .table th,
+.list-scroll .table td {
+  padding-right: 12px;
+  padding-left: 12px;
+}
+
+.list-scroll .table th:first-child,
+.list-scroll .table td:first-child {
+  padding-left: 16px;
+}
+
+.list-scroll .table thead th {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+}
+
+.show-sm {
+  display: none;
 }
 
 .table {
@@ -820,7 +881,7 @@ input[type='range']:active::-webkit-slider-thumb {
 }
 
 .chevron-col {
-  width: 40px;
+  width: 32px;
   color: var(--ink-3);
   text-align: right;
 }
@@ -946,6 +1007,10 @@ input[type='range']:active::-webkit-slider-thumb {
   font-size: 18px;
   font-weight: 600;
   letter-spacing: -0.01em;
+}
+
+.case-delta {
+  margin-top: 2px !important;
 }
 
 .case-stats .muted {
@@ -1639,7 +1704,14 @@ input[type='range']:active::-webkit-slider-thumb {
 }
 
 /* ---------- smaller screens ---------- */
-@media (max-width: 1180px) {
+/* laptop widths: the rank (row order shows it) and buy-by date (in the details) give way to the money columns */
+@media (max-width: 1400px) {
+  .hide-md {
+    display: none;
+  }
+}
+
+@media (max-width: 1260px) {
   .plan-mode,
   .review-body {
     grid-template-columns: minmax(0, 1fr);
@@ -1722,6 +1794,15 @@ input[type='range']:active::-webkit-slider-thumb {
 
   .hide-sm {
     display: none;
+  }
+
+  .show-sm {
+    display: block;
+    font-size: 12.5px;
+  }
+
+  .list-scroll {
+    max-height: none;
   }
 
   .table th,

@@ -97,7 +97,7 @@ export function ReviewMode({ desk, onMakePlan }: { desk: Desk; onMakePlan: () =>
                     onClick={() => {
                       setSelectedId(line.id)
                       // stacked layout: bring the case into view instead of leaving it below the queue
-                      if (window.matchMedia('(max-width: 1180px)').matches) {
+                      if (window.matchMedia('(max-width: 1260px)').matches) {
                         requestAnimationFrame(() => document.getElementById('case-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
                       }
                     }}

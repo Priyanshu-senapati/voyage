@@ -7,6 +7,7 @@ import { count, inr, riskWord, sum, weekLabel } from './format'
 import { Badge, Delta, InfoTip, Segmented } from './ui'
 import { LineCase } from './LineCase'
 import { RiskCurve } from './RiskCurve'
+import { useMedia } from './useMedia'
 
 type Desk = ReturnType<typeof useDesk>
 
@@ -29,6 +30,7 @@ export function PlanMode({ desk }: { desk: Desk }) {
   const scenario = whatIfActive(desk.whatIf)
   const base = scenario ? desk.base : null
   const open = plan?.lines.find((l) => l.id === openId) ?? null
+  const openBase = open && base ? (base.lines.find((l) => lineKey(l) === lineKey(open)) ?? null) : null
 
   return (
     <div className="plan-mode">
@@ -67,7 +69,7 @@ export function PlanMode({ desk }: { desk: Desk }) {
       </section>
       {open && plan && (
         <Sheet title={`${open.city} · ${open.hotel}`} onClose={() => setOpenId(null)}>
-          <LineCase line={open} unsaved={plan.id === null} />
+          <LineCase line={open} unsaved={plan.id === null} base={scenario ? openBase : undefined} />
         </Sheet>
       )}
     </div>
@@ -78,6 +80,10 @@ function Settings({ desk }: { desk: Desk }) {
   const { draft, whatIf, saved } = desk
   const active = whatIfActive(whatIf)
   const usable = desk.live && desk.state === 'ready'
+  // side by side on wide screens; on narrow ones the settings fold to one line so the answer comes first
+  const wide = useMedia('(min-width: 1261px)')
+  const [open, setOpen] = useState(false)
+  const expanded = wide || open
   const canSave = usable && !active && desk.preview !== null && !desk.previewing && !desk.creating
 
   let help: string
@@ -91,7 +97,22 @@ function Settings({ desk }: { desk: Desk }) {
 
   return (
     <aside className="panel settings" aria-label="Plan settings">
-      <h2 className="panel-title">Plan settings</h2>
+      <div className="settings-top">
+        <h2 className="panel-title">Plan settings</h2>
+        {!wide && (
+          <button type="button" className="link-button" aria-expanded={expanded} onClick={() => setOpen(!open)}>
+            {expanded ? 'Hide' : 'Edit'}
+          </button>
+        )}
+      </div>
+      {!expanded && (
+        <p className="settings-summary">
+          {inr(draft.budget)} budget · {riskWord(draft.risk)} risk ({draft.risk})
+          {active && ' · what-if on'}
+        </p>
+      )}
+      {expanded && (
+      <>
       <Slider
         label="Budget"
         output={inr(draft.budget)}
@@ -166,6 +187,8 @@ function Settings({ desk }: { desk: Desk }) {
           onChange={(event) => desk.setWhatIf({ ...whatIf, event })}
         />
       </div>
+      </>
+      )}
 
       <div className="settings-foot">
         <button type="button" className="btn btn-primary btn-block" disabled={!canSave} onClick={desk.savePlan}>
@@ -278,49 +301,54 @@ function Kpis({ plan, base }: { plan: Plan; base: Plan | null }) {
     <dl className="kpis panel">
       <div className="kpi">
         <dt>Spend</dt>
-        <dd className="kpi-value">{inr(plan.spend)}</dd>
+        <dd key={plan.spend} className="kpi-value kpi-tick">{inr(plan.spend)}</dd>
         <dd className="kpi-sub">
-          {base ? (
-            <Delta value={plan.spend - base.spend} format={inr} better="none" />
-          ) : (
-            <>
-              of {inr(plan.budget_inr)} · {inr(plan.budget_inr - plan.spend)} kept back
-            </>
-          )}
+          of {inr(plan.budget_inr)} · {inr(plan.budget_inr - plan.spend)} kept back
         </dd>
+        {base && (
+          <dd className="kpi-delta">
+            <Delta value={plan.spend - base.spend} format={inr} better="none" />
+          </dd>
+        )}
       </div>
       <div className="kpi">
         <dt>
           Expected profit
           <InfoTip label="expected profit">The average profit over 200 simulated Decembers.</InfoTip>
         </dt>
-        <dd className="kpi-value">{inr(plan.expected_profit)}</dd>
-        <dd className="kpi-sub">
-          {base ? <Delta value={plan.expected_profit - base.expected_profit} format={inr} /> : 'in an average season'}
-        </dd>
+        <dd key={plan.expected_profit} className="kpi-value kpi-tick">{inr(plan.expected_profit)}</dd>
+        <dd className="kpi-sub">in an average season</dd>
+        {base && (
+          <dd className="kpi-delta">
+            <Delta value={plan.expected_profit - base.expected_profit} format={inr} />
+          </dd>
+        )}
       </div>
       <div className="kpi">
         <dt>
           Bad-season profit
           <InfoTip label="bad-season profit">
-            The average profit in the worst 5% of those 200 Decembers. Raising the risk setting protects this number.
+            The whole plan's average profit in its worst 5% of 200 simulated Decembers. Raising the risk setting
+            protects this number.
           </InfoTip>
         </dt>
-        <dd className={`kpi-value${plan.worst_case_profit < 0 ? ' neg' : ''}`}>{inr(plan.worst_case_profit)}</dd>
-        <dd className="kpi-sub">
-          {base ? <Delta value={plan.worst_case_profit - base.worst_case_profit} format={inr} /> : 'worst 5% of seasons'}
-        </dd>
+        <dd key={plan.worst_case_profit} className="kpi-value kpi-tick">{inr(plan.worst_case_profit)}</dd>
+        <dd className="kpi-sub">worst 5% of seasons, whole plan</dd>
+        {base && (
+          <dd className="kpi-delta">
+            <Delta value={plan.worst_case_profit - base.worst_case_profit} format={inr} />
+          </dd>
+        )}
       </div>
       <div className="kpi">
         <dt>Rooms</dt>
-        <dd className="kpi-value">{count(rooms)}</dd>
-        <dd className="kpi-sub">
-          {base ? (
+        <dd key={rooms} className="kpi-value kpi-tick">{count(rooms)}</dd>
+        <dd className="kpi-sub">across {plan.lines.length} hotel-weeks</dd>
+        {base && (
+          <dd className="kpi-delta">
             <Delta value={rooms - baseRooms} format={count} better="none" />
-          ) : (
-            <>across {plan.lines.length} hotel-weeks</>
-          )}
-        </dd>
+          </dd>
+        )}
       </div>
     </dl>
   )
@@ -329,17 +357,23 @@ function Kpis({ plan, base }: { plan: Plan; base: Plan | null }) {
 function BuyTable({ plan, base, onOpen }: { plan: Plan; base: Plan | null; onOpen: (id: number) => void }) {
   const baseRooms = new Map(base?.lines.map((l) => [lineKey(l), l.rooms]))
   return (
-    <div className="panel table-panel">
+    <div className="panel table-panel list-scroll">
       <table className="table" aria-label="Buy list">
         <thead>
           <tr>
-            <th scope="col" className="num-col">#</th>
+            <th scope="col" className="num-col hide-md">#</th>
             <th scope="col">Hotel</th>
-            <th scope="col">Week</th>
+            <th scope="col" className="hide-sm">Week</th>
             <th scope="col" className="num">Rooms</th>
-            <th scope="col" className="hide-sm">Buy by</th>
+            <th scope="col" className="hide-md">Buy by</th>
             <th scope="col" className="num">Expected profit</th>
-            <th scope="col" className="num hide-sm">Bad season</th>
+            <th scope="col" className="num hide-sm">
+              Bad-season profit
+              <InfoTip label="a line's bad-season profit">
+                Each line's own average in its worst 5% of seasons. A single line often loses money then; the whole
+                plan rarely does, because hotels seldom have a bad season at the same time.
+              </InfoTip>
+            </th>
             <th scope="col" className="chevron-col">
               <span className="sr-only">Details</span>
             </th>
@@ -359,13 +393,14 @@ function Row({ line, baseRooms, onOpen }: { line: PlanLine; baseRooms: number | 
   const change = baseRooms === null ? 0 : line.rooms - baseRooms
   return (
     <tr className="row-link" onClick={() => onOpen(line.id)}>
-      <td className="num-col muted">{line.rank}</td>
+      <td className="num-col muted hide-md">{line.rank}</td>
       <td>
         <button type="button" className="row-button" onClick={() => onOpen(line.id)}>
           <strong>{line.city}</strong> <span className="muted">· {line.hotel}</span>
+          <span className="show-sm muted">{weekLabel(line.week)}</span>
         </button>
       </td>
-      <td>
+      <td className="hide-sm">
         {weekLabel(line.week)}
         {line.why.event_week && (
           <span className="event-tag" title="Festival, match or concert week">
@@ -382,9 +417,9 @@ function Row({ line, baseRooms, onOpen }: { line: PlanLine; baseRooms: number | 
           </span>
         )}
       </td>
-      <td className="hide-sm">{shortDate(line.buy_by)}</td>
+      <td className="hide-md">{shortDate(line.buy_by)}</td>
       <td className="num strong">{inr(line.expected_profit)}</td>
-      <td className={`num hide-sm${line.worst_case_profit < 0 ? ' neg' : ''}`}>{inr(line.worst_case_profit)}</td>
+      <td className="num hide-sm">{inr(line.worst_case_profit)}</td>
       <td className="chevron-col">
         <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
       </td>

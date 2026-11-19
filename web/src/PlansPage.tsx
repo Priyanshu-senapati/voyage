@@ -37,7 +37,7 @@ export function PlansPage({ plans, openId, onOpen }: Props) {
                 <th scope="col" className="num">Budget</th>
                 <th scope="col" className="num hide-sm">Spend</th>
                 <th scope="col" className="num">Expected profit</th>
-                <th scope="col" className="num hide-sm">Bad season</th>
+                <th scope="col" className="num hide-sm">Bad-season profit</th>
                 <th scope="col">Status</th>
                 <th scope="col" className="chevron-col">
                   <span className="sr-only">Open</span>
@@ -58,7 +58,7 @@ export function PlansPage({ plans, openId, onOpen }: Props) {
                   <td className="num">{inr(plan.budget_inr)}</td>
                   <td className="num hide-sm">{inr(plan.spend)}</td>
                   <td className="num strong">{inr(plan.expected_profit)}</td>
-                  <td className={`num hide-sm${plan.worst_case_profit < 0 ? ' neg' : ''}`}>{inr(plan.worst_case_profit)}</td>
+                  <td className="num hide-sm">{inr(plan.worst_case_profit)}</td>
                   <td>
                     <PlanStatusBadge status={plan.status} />
                   </td>

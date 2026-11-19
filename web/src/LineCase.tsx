@@ -1,7 +1,7 @@
 import type { PlanLine } from './types'
 import { SEASON_YEAR } from './cities'
 import { count, inr, percent, sum, weekLabel } from './format'
-import { Badge, DecisionBadge, InfoTip } from './ui'
+import { Badge, Delta, DecisionBadge, InfoTip } from './ui'
 
 const PAST = [3, 2, 1].map((back) => `Dec ${SEASON_YEAR - back}`)
 const longDate = (iso: string) =>
@@ -27,7 +27,8 @@ function reasons(line: PlanLine): string[] {
   return out
 }
 
-export function LineCase({ line, unsaved }: { line: PlanLine; unsaved: boolean }) {
+// `base` is the same hotel-week in the plan without the what-if: null when the what-if dropped it
+export function LineCase({ line, unsaved, base }: { line: PlanLine; unsaved: boolean; base?: PlanLine | null }) {
   const { why } = line
   const scale = Math.max(why.expected_demand, line.rooms, why.booked_last_december) * 1.05
   const width = (v: number) => `${(v / scale) * 100}%`
@@ -57,16 +58,20 @@ export function LineCase({ line, unsaved }: { line: PlanLine; unsaved: boolean }
         <div>
           <dt>Expected profit</dt>
           <dd className="pos">{inr(line.expected_profit)}</dd>
+          {base !== undefined && <WhatIfDelta value={line.expected_profit - (base?.expected_profit ?? 0)} format={inr} />}
         </div>
         <div>
           <dt>
-            In a bad season
-            <InfoTip label="bad-season profit">
-              This line's average profit in the worst 5% of 200 simulated seasons. A loss here is normal for a
-              single line; the plan as a whole is what the risk setting protects.
+            Bad-season profit
+            <InfoTip label="this line's bad-season profit">
+              This line's own average in its worst 5% of 200 simulated seasons. A single line often loses money then;
+              the whole plan rarely does, because hotels seldom have a bad season at the same time.
             </InfoTip>
           </dt>
-          <dd className={line.worst_case_profit < 0 ? 'neg' : undefined}>{inr(line.worst_case_profit)}</dd>
+          <dd>{inr(line.worst_case_profit)}</dd>
+          {base !== undefined && (
+            <WhatIfDelta value={line.worst_case_profit - (base?.worst_case_profit ?? 0)} format={inr} />
+          )}
         </div>
         <div>
           <dt>Likely to sell</dt>
@@ -74,6 +79,9 @@ export function LineCase({ line, unsaved }: { line: PlanLine; unsaved: boolean }
             {Math.round(line.expected_sold)} of {line.rooms}{' '}
             <span className="muted">({percent(line.sell_through)})</span>
           </dd>
+          {base !== undefined && (
+            <WhatIfDelta value={line.rooms - (base?.rooms ?? 0)} format={(v) => `${v} rooms`} better="none" />
+          )}
         </div>
       </dl>
 
@@ -144,5 +152,13 @@ export function LineCase({ line, unsaved }: { line: PlanLine; unsaved: boolean }
         </table>
       </details>
     </article>
+  )
+}
+
+function WhatIfDelta({ value, format, better }: { value: number; format: (v: number) => string; better?: 'up' | 'down' | 'none' }) {
+  return (
+    <dd className="case-delta">
+      <Delta value={value} format={format} better={better} />
+    </dd>
   )
 }

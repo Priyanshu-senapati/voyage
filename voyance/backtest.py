@@ -4,11 +4,16 @@ For each hotel-week a buyer pre-buys room-nights `lead` days before the week sta
 arrive. Rooms not sold are lost (no release). The contract cost is an assumption, (1 - margin) x that week's
 average agent rate, so results are reported for several margins.
 
-Two baselines: re-buying last year's final demand, and rebuy_plus_pickup (on the books now plus the rooms last
-year's week still picked up from the same lead). The optimizer_risk_* strategies decide each hotel-week alone,
-so their worst case is that one week's: much harsher than the Buy Desk's. The planner_risk_* strategies decide
-each calendar month's hotel-weeks together as one plan, as the Buy Desk does, on scenarios whose weeks are
-correlated by a rho estimated on the year before the test (and, for sensitivity, at rho = 0 and rho = 1).
+Two baselines: re-buying last year's final demand, and pickup (on the books now plus what last year's week
+picked up from the same lead). The optimizer_risk_* strategies decide each hotel-week alone, so their worst case
+is that one week's (as if every week went wrong together): much harsher than the Buy Desk's.
+
+Two whole-plan variants put one worst case over many hotel-weeks, as the Buy Desk does:
+- optimizer_plan_risk_* plans the whole test window as one plan, with weeks made independent by shuffling each
+  week's scenarios on its own. With optimizer_risk_* it brackets the truth: weeks are neither fully together nor
+  fully independent.
+- planner_risk_* plans each calendar month's hotel-weeks together, on scenarios whose weeks are correlated by a
+  rho estimated on the year before the test (and, for sensitivity, at rho = 0 and rho = 1).
 
 Exploratory, added after the raw-range planner beat re-buying in only 4 of 9 settings: the *_rescaled strategies
 take the same decisions on a range rescaled by the empirical 10/50/90% quantiles of final / likely, ignoring the
@@ -21,8 +26,8 @@ Disclosures:
   23). A review bounded the effect by buying each month on its first buy date: at most -1.3 points for
   planner_risk_0.3_rescaled (measured on an earlier, non-walk-forward rescaling) and at most -3.5 for
   planner_risk_0.3; every rescaled cell kept its sign.
-- rebuy_plus_pickup is weak on this data: 2017's on-the-books ran 21-33% above 2016's by lead, inflated by
-  bookings that later cancel, while finals rose 9%. vs_pickup is not a headline metric.
+- pickup is weak on this data: 2017's on-the-books ran 21-33% above 2016's by lead, inflated by bookings that
+  later cancel, while finals rose 9%. vs_pickup is not a headline metric.
 - The 9 lead x margin settings are one experiment, not nine: the same 68 hotel-weeks at each lead, and the
   margin only rescales cost.
 - rho is estimated on 2016 with hindsight within that year, never on 2017; planner_risk_0.3 at rho = 0 differs
@@ -42,6 +47,10 @@ RISK_SETTINGS = (0.0, 0.3)  # 0 = most expected profit; 0.3 = the Buy Desk defau
 N_SCENARIOS = 200
 BOOTSTRAP_DRAWS = 2000
 BOOTSTRAP_SEED = 0  # fixed, so the intervals are reproducible
+PLAN_SHUFFLE_SEED = 1  # fixed: which scenario of one week meets which of another in a whole-plan run
+# the planner's intervals draw from their own streams, apart from BOOTSTRAP_SEED and BOOTSTRAP_SEED + 1 above,
+# so adding them leaves every earlier interval's draws alone
+RESCALED_SEED, PAIRED_SEED, PLANNER_SEED = BOOTSTRAP_SEED + 2, BOOTSTRAP_SEED + 3, BOOTSTRAP_SEED + 4
 SENSITIVITY_RISK = 0.3  # the planner at this risk is also run with uncorrelated and fully correlated weeks
 FALLBACK_RHO = 0.5      # used when the year before the test has too few month groups to estimate rho
 MIN_RHO_GROUPS = 3
@@ -51,21 +60,31 @@ RHO_NOTE = ("estimated on 2016 weeks with hindsight within that year, never on 2
 
 
 def strategy_names(risk_settings: Iterable[float] = RISK_SETTINGS) -> tuple[str, ...]:
+    planners, rescaled = _planner_names(risk_settings)
+    return (*_optimizer_names(risk_settings), *planners, *rescaled)
+
+
+def _optimizer_names(risk_settings: Iterable[float]) -> tuple[str, ...]:
     risk_settings = tuple(risk_settings)
-    return ("rebuy_last_year", "likely_forecast", *(f"optimizer_risk_{risk:g}" for risk in risk_settings),
-            "rebuy_plus_pickup", *(f"planner_risk_{risk:g}" for risk in risk_settings),
-            f"planner_risk_{SENSITIVITY_RISK:g}_rho0", f"planner_risk_{SENSITIVITY_RISK:g}_rho1",
-            "likely_rescaled", *(f"planner_risk_{risk:g}_rescaled" for risk in risk_settings))
+    return ("rebuy_last_year", "pickup", "likely_forecast", *(f"optimizer_risk_{risk:g}" for risk in risk_settings),
+            *(f"optimizer_plan_risk_{risk:g}" for risk in risk_settings if risk > 0))
 
 
-def rebuy_plus_pickup(on_books: np.ndarray, final_last_year: np.ndarray,
-                      on_books_last_year: np.ndarray) -> np.ndarray:
-    """On the books now plus what last year's week still picked up from the same lead, in whole rooms (rounded
-    down). Last year's final when last year's on-the-books is unknown."""
-    on_books, final_last_year, on_books_last_year = (np.asarray(a, dtype=float)
-                                                     for a in (on_books, final_last_year, on_books_last_year))
-    pickup = on_books + np.maximum(0, final_last_year - on_books_last_year)
-    return np.floor(np.where(np.isnan(on_books_last_year), final_last_year, pickup))
+def _planner_names(risk_settings: Iterable[float]) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """The monthly planner's strategies on the forecast's range, and the exploratory ones on the rescaled range."""
+    risk_settings = tuple(risk_settings)
+    return ((*(f"planner_risk_{risk:g}" for risk in risk_settings),
+             f"planner_risk_{SENSITIVITY_RISK:g}_rho0", f"planner_risk_{SENSITIVITY_RISK:g}_rho1"),
+            ("likely_rescaled", *(f"planner_risk_{risk:g}_rescaled" for risk in risk_settings)))
+
+
+def pickup_buys(rows: pd.DataFrame) -> np.ndarray:
+    """The classic hotel pickup forecast: what is on the books now plus what last year picked up from the same
+    lead (last year's final where its pace is unknown), in whole rooms."""
+    picked_up = (rows["final_last_year"] - rows["on_books_last_year"]).to_numpy(dtype=float)
+    forecast = np.where(np.isnan(picked_up), rows["final_last_year"].to_numpy(dtype=float),
+                        rows["on_books"].to_numpy(dtype=float) + picked_up)
+    return np.floor(np.clip(forecast, 0, None))
 
 
 def outcome(buy: np.ndarray, actual: np.ndarray, price: np.ndarray, margin: float) -> dict[str, float]:
@@ -82,11 +101,14 @@ def outcome(buy: np.ndarray, actual: np.ndarray, price: np.ndarray, margin: floa
 def decision_backtest(frame: pd.DataFrame, test_from: pd.Timestamp, leads: Iterable[int],
                       margins: Iterable[float], risk_settings: Iterable[float] = RISK_SETTINGS) -> dict:
     """Learn the forecast on weeks before `test_from`; then, for every later hotel-week, lead and margin,
-    compare re-buying last year's demand (alone and plus pickup), buying the likely forecast, and the optimizer
-    on the forecast's range: per hotel-week (optimizer_risk_*) and per monthly plan (planner_risk_*).
+    compare re-buying last year's demand, the pickup forecast (this year's bookings + last year's pickup), buying
+    the likely forecast, and the optimizer on the forecast's range: each hotel-week decided alone (its own worst
+    case, as if every week went wrong together) and, for risk > 0, the whole test window as one plan with one worst
+    case (as if weeks went wrong independently). The truth is between the two. Uplifts are against re-buying and
+    against pickup, with 95% intervals.
 
-    The per-week optimizer's worst case is that one week's: much harsher than the Buy Desk, where it is the
-    whole plan's and good weeks offset bad ones. The planner's is the month's plan's.
+    On top: the planner, each calendar month's hotel-weeks as one plan on weeks correlated by an estimated rho
+    (planner_risk_*), and the exploratory *_rescaled strategies; see the module docstring.
     """
     leads, margins, risk_settings = tuple(leads), tuple(margins), tuple(risk_settings)
     if not all(0 < m < 1 for m in margins):
@@ -101,17 +123,15 @@ def decision_backtest(frame: pd.DataFrame, test_from: pd.Timestamp, leads: Itera
     # every row whose final is known by some decision month: the rescaling learns from those finished before it
     known = pd.concat([fold[["lead", "week", "final"]].assign(likely=fold_ranges[:, 1]),
                        test[["lead", "week", "final"]].assign(likely=ranges[:, 1])])
-    names, per_week = strategy_names(risk_settings), 2 + len(risk_settings)
+    theirs, (planners, rescaled) = _optimizer_names(risk_settings), _planner_names(risk_settings)
+    names = (*theirs, *planners, *rescaled)
     paired = [f"planner_risk_{risk:g}{kind}" for kind in ("", "_rescaled") for risk in risk_settings]
     blocked = [name for name in ("likely_forecast", f"planner_risk_{SENSITIVITY_RISK:g}",
                                  f"planner_risk_{SENSITIVITY_RISK:g}_rescaled") if name in names]
-    # each generation of intervals draws from its own stream, so adding one leaves the earlier ones' draws alone:
-    # the per-week strategies' vs_rebuy; the planner's and every vs_pickup; the rescaled ones; vs_likely and the
-    # month blocks
-    rng, later, latest, paired_draws = (np.random.default_rng(BOOTSTRAP_SEED + i) for i in range(4))
-    rescaled = names[names.index("likely_rescaled"):]
-    newer = {name: latest if name in rescaled else later for name in names}
-    first = {name: rng if name in names[:per_week] else newer[name] for name in names}
+    rng = np.random.default_rng(BOOTSTRAP_SEED)
+    added_rng = np.random.default_rng(BOOTSTRAP_SEED + 1)  # newer comparisons: the original draws stay as published
+    planner_draws, rescaled_draws, paired_draws = (np.random.default_rng(seed)
+                                                   for seed in (PLANNER_SEED, RESCALED_SEED, PAIRED_SEED))
     results, coverage, rescaling = [], {}, {}
     for lead in leads:
         at = (test["lead"] == lead).to_numpy()
@@ -131,25 +151,28 @@ def decision_backtest(frame: pd.DataFrame, test_from: pd.Timestamp, leads: Itera
         for margin in margins:
             plan = (rows["week"], low, likely, high, price, margin, lead)
             # whole rooms, rounded down for every strategy, as the optimizer does
-            buys = [np.floor(rows["final_last_year"].to_numpy()), np.floor(likely),
+            buys = [np.floor(rows["final_last_year"].to_numpy()), pickup_buys(rows), np.floor(likely),
                     *(_optimizer_buys(low, likely, high, price, margin, risk) for risk in risk_settings),
-                    rebuy_plus_pickup(rows["on_books"], rows["final_last_year"], rows["on_books_last_year"]),
+                    *(_plan_buys(low, likely, high, price, margin, risk) for risk in risk_settings if risk > 0),
                     *(_planner_buys(*plan, risk, rho) for risk in risk_settings),
                     _planner_buys(*plan, SENSITIVITY_RISK, 0.0), _planner_buys(*plan, SENSITIVITY_RISK, 1.0),
                     np.floor(likely_c),
                     *(_planner_buys(rows["week"], low_c, likely_c, high_c, price, margin, lead, risk, rho)
                       for risk in risk_settings)]
             strategies = {name: outcome(buy, actual, price, margin) for name, buy in zip(names, buys)}
-            weekly = [_weekly_profit(rows["week"], buy, actual, price, margin) for buy in buys]
-            for name, profits in zip(names[1:], weekly[1:]):
-                strategies[name]["vs_rebuy"] = float(profits.sum() / weekly[0].sum() - 1)
-                strategies[name]["vs_rebuy_95ci"] = _bootstrap_ci(profits, weekly[0], first[name])
-            pickup = weekly[names.index("rebuy_plus_pickup")]
-            for name, profits in zip(names[1:], weekly[1:]):
-                if name != "rebuy_plus_pickup":
-                    strategies[name]["vs_pickup"] = float(profits.sum() / pickup.sum() - 1)
-                    strategies[name]["vs_pickup_95ci"] = _bootstrap_ci(profits, pickup, newer[name])
-            weekly = dict(zip(names, weekly))
+            weekly = {name: _weekly_profit(rows["week"], buy, actual, price, margin) for name, buy in zip(names, buys)}
+            original = [n for n in theirs[1:] if n != "pickup" and not n.startswith("optimizer_plan")]
+            added = [n for n in theirs[1:] if n not in original]
+            for base, key, compared, draws in (("rebuy_last_year", "vs_rebuy", original, rng),
+                                               ("rebuy_last_year", "vs_rebuy", added, added_rng),
+                                               ("pickup", "vs_pickup", theirs[2:], added_rng),
+                                               ("rebuy_last_year", "vs_rebuy", planners, planner_draws),
+                                               ("pickup", "vs_pickup", planners, planner_draws),
+                                               ("rebuy_last_year", "vs_rebuy", rescaled, rescaled_draws),
+                                               ("pickup", "vs_pickup", rescaled, rescaled_draws)):
+                for name in compared:
+                    strategies[name][key] = float(weekly[name].sum() / weekly[base].sum() - 1)
+                    strategies[name][f"{key}_95ci"] = _bootstrap_ci(weekly[name], weekly[base], draws)
             base, plain = weekly["rebuy_last_year"], weekly["likely_forecast"]
             for name in paired:
                 strategies[name]["vs_likely"] = float(weekly[name].sum() / plain.sum() - 1)
@@ -257,6 +280,19 @@ def _month_block_ci(profits: np.ndarray, base: np.ndarray, months: np.ndarray,
     def by_month(weekly: np.ndarray) -> np.ndarray:
         return pd.Series(weekly).groupby(np.asarray(months)).sum().to_numpy()
     return _bootstrap_ci(by_month(profits), by_month(base), rng)
+
+
+def _plan_buys(low: np.ndarray, likely: np.ndarray, high: np.ndarray, price: np.ndarray, margin: float,
+               risk_aversion: float) -> np.ndarray:
+    """The optimizer with one worst case for all these hotel-weeks together, as the Buy Desk plans a season.
+    The forecast's scenarios put the same quantile in every week (weeks that go wrong together); shuffling each
+    week's scenarios on its own treats them as independent instead."""
+    demand = np.random.default_rng(PLAN_SHUFFLE_SEED).permuted(
+        scenarios_from_range(low, likely, high, N_SCENARIOS), axis=0)
+    cost = price * (1 - margin)
+    cap = np.ceil(demand.max(axis=0))
+    return np.asarray(optimize(cost, price, cap, demand, budget=float(cost @ cap), risk_aversion=risk_aversion,
+                               alpha=WORST_SHARE), dtype=float)
 
 
 def _optimizer_buys(low: np.ndarray, likely: np.ndarray, high: np.ndarray, price: np.ndarray, margin: float,

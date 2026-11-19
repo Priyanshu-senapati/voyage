@@ -7,8 +7,8 @@ import numpy as np
 
 import pytest
 
-from voyance.sim import (BOOKED_SHARE, BUY_AHEAD_DAYS, SEASON_YEAR, WEEKS, booked_share, hidden_demand_mean,
-                         make_world, on_books, repeat_past_bookings, run)
+from voyance.sim import (AGENT_CANCEL_RATE, BOOKED_SHARE, BUY_AHEAD_DAYS, SEASON_YEAR, WEEKS, booked_share, hidden_demand_mean,
+                         make_world, on_books, repeat_past_bookings, run, stay_factors)
 
 FAST = {"n_scenarios": 60, "n_test_seasons": 100}
 
@@ -86,3 +86,19 @@ def test_planner_sees_which_weeks_have_events_not_how_big_they_are():
 def test_repeat_past_bookings_never_buys_more_than_average_past_bookings():
     world = make_world(seed=3)
     assert (repeat_past_bookings(world, budget=1e12) <= world.bookings_hist.mean(axis=0)).all()
+
+
+def test_cancellations_split_into_demand_that_never_came_and_rooms_left_empty():
+    assert stay_factors(0.0) == (1.0, 1.0)
+    keep, paid = stay_factors(0.4, late_share=0.25)
+    assert keep == pytest.approx(0.7) and keep * paid == pytest.approx(0.6)  # 60% of bookings end as stays
+    with pytest.raises(ValueError):
+        stay_factors(1.0)
+
+
+def test_run_without_cancellations_is_unchanged_and_with_them_nobody_spends_more():
+    plain = run(seed=3, **FAST)
+    assert run(seed=3, cancel_rate=0.0, **FAST) == plain
+    net = run(seed=3, cancel_rate=AGENT_CANCEL_RATE, **FAST)
+    for name, result in net.items():
+        assert result["spend"] <= plain[name]["spend"] + 1e-6 and result["mean_profit"] < plain[name]["mean_profit"]

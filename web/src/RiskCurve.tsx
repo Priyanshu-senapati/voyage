@@ -62,14 +62,23 @@ function useFrontier(api: Api | null, budget: number, whatIf: WhatIf): Curve {
   return curve
 }
 
-const W = 404
-const H = 214
-const M = { top: 22, right: 62, bottom: 26, left: 44 }
+const M = { top: 26, right: 64, bottom: 28, left: 48 }
 const lakh = (v: number) => v / 1e5
 
 export function RiskCurve({ api, budget, risk, whatIf, onPick }: Props) {
   const curve = useFrontier(api, budget, whatIf)
   const [hover, setHover] = useState<number | null>(null)
+  // draw at the plot's real width, so labels stay at UI size from phone to desktop
+  const plotRef = useRef<HTMLDivElement>(null)
+  const [W, setW] = useState(640)
+  useEffect(() => {
+    const el = plotRef.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => setW(Math.max(300, Math.round(entry.contentRect.width))))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [curve.status])
+  const H = Math.round(Math.min(300, Math.max(220, W * 0.42)))
 
   if (curve.status === 'loading') {
     return (
@@ -142,7 +151,7 @@ export function RiskCurve({ api, budget, risk, whatIf, onPick }: Props) {
         </li>
       </ul>
 
-      <div className="curve-plot">
+      <div className="curve-plot" ref={plotRef}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
           role="img"

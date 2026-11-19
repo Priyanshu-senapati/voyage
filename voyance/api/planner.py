@@ -7,6 +7,7 @@ import numpy as np
 
 from voyance.sim import unconstrained_mean
 
+from voyance.cancellations import effective, kept_rooms
 from voyance.demand import scenarios
 from voyance.optimizer import cvar, profits, solve_relaxed, whole_rooms
 from voyance.sim import ASSUMED_EVENT_LIFT, DEMAND_CV, WORST_SHARE, World, hidden_demand_mean
@@ -93,13 +94,17 @@ def selling_price(usual_rate: float, demand_vs_usual: float) -> float:
 def build_plan(world: World, budget: float, risk_aversion: float, cities: list[str] | None = None,
                demand_change: float = 0.0, cost_change: float = 0.0, event_lift: float | None = None,
                max_city_share: float | None = None, max_hotel_share: float | None = None,
-               price_caps: bool = True) -> PlanResult:
+               price_caps: bool = True, cancel_rate: float = 0.0, late_cancel_share: float = 0.0) -> PlanResult:
     """Best buy plan within budget, best lines first.
 
     What-ifs re-plan in a different world: demand `demand_change` above the forecast (0.2 = +20%), supplier
     rates `cost_change` dearer, and this season's event weeks lifted `event_lift` times instead of the
     planner's own guess. Caps keep any one city (or hotel) to at most that share of the whole budget, also
     when `cities` narrows the plan; `price_caps=False` skips working out what they cost (one more solve).
+    Bookings cancel at `cancel_rate`, `late_cancel_share` of them too late to resell (voyance.cancellations):
+    the plan is chosen and valued on the room-nights that stay booked; prices and demand are reported as they are.
+    The rates are for a forecast of gross bookings, cancelled ones included (as this world's are taken to be); leave
+    them at 0 for a forecast of stays, which has cancellations taken out already.
     """
     idx = _select(world, cities)
     lift = ASSUMED_EVENT_LIFT if event_lift is None else event_lift
@@ -107,6 +112,9 @@ def build_plan(world: World, budget: float, risk_aversion: float, cities: list[s
     usual = unconstrained_mean(world)[idx]  # a usual December per hotel-week, sold-outs counted back in
     demand = scenarios(mean, DEMAND_CV, N_SCENARIOS, np.random.default_rng(PLAN_SEED))
     cost, price, cap = world.cost[idx] * (1 + cost_change), world.price[idx], world.cap[idx]
+    # the one place cancellations enter: from here on revenue = price_eff x min(buy, demand_eff) (= price x rooms
+    # kept); both are price and demand unchanged without cancellations
+    price_eff, demand_eff = effective(price, demand, cancel_rate, late_cancel_share)
     city_of = [world.city[i] for i in idx]
     hotel_of = [f"{world.city[i]} · {world.hotel[i]}" for i in idx]  # "Hotel A" is a different hotel per city
     groups, shares = [], []
@@ -115,45 +123,47 @@ def build_plan(world: World, budget: float, risk_aversion: float, cities: list[s
             for name in dict.fromkeys(names):
                 groups.append(np.array([j for j, n in enumerate(names) if n == name]))
                 shares.append(share)
-    solution = solve_relaxed(cost, price, cap, demand, budget, risk_aversion, WORST_SHARE, groups=groups,
+    solution = solve_relaxed(cost, price_eff, cap, demand_eff, budget, risk_aversion, WORST_SHARE, groups=groups,
                              group_share=shares)
     buy = whole_rooms(solution.buy, cost, cap, budget)
     # priced on the whole-room plans a buyer sees, by solving once without the caps: per-cap shadow prices
     # split arbitrarily when caps add up to the budget, and miss a cap below one room's cost
     caps_cost = 0.0
     if groups and price_caps:
-        free = whole_rooms(solve_relaxed(cost, price, cap, demand, budget, risk_aversion, WORST_SHARE).buy,
+        free = whole_rooms(solve_relaxed(cost, price_eff, cap, demand_eff, budget, risk_aversion, WORST_SHARE).buy,
                            cost, cap, budget)
-        caps_cost = max(0.0, _risk_adjusted(free, cost, price, demand, risk_aversion)
-                        - _risk_adjusted(buy, cost, price, demand, risk_aversion))
+        caps_cost = max(0.0, _risk_adjusted(free, cost, price_eff, demand_eff, risk_aversion)
+                        - _risk_adjusted(buy, cost, price_eff, demand_eff, risk_aversion))
     exposure = (*_exposure("city", city_of, cost * buy, cost * solution.buy, budget, max_city_share),
                 *_exposure("hotel", hotel_of, cost * buy, cost * solution.buy, budget, max_hotel_share))
     capped = {e.name: f"its {e.kind} is at the cap of {e.cap:.0%} of the budget" for e in exposure if e.at_cap}
 
-    per_scenario = profits(buy, cost, price, demand)
-    sold = np.minimum(buy, demand).mean(axis=0)
+    per_scenario = profits(buy, cost, price_eff, demand_eff)
+    sold = kept_rooms(buy, demand, cancel_rate, late_cancel_share).mean(axis=0)  # room-nights that stay booked
     line_profit = price * sold - cost * buy
-    line_scenarios = price * np.minimum(buy, demand) - cost * buy  # scenarios x lines
+    line_scenarios = price_eff * np.minimum(buy, demand_eff) - cost * buy  # scenarios x lines
     buy_by = world.first_night[idx] - world.buy_ahead_days[idx]
     hurdle = solution.budget_value
+    cancel_note = (f"; {cancel_rate:.0%} of bookings expected to cancel, {late_cancel_share:.0%} of those too late "
+                   "to resell" if cancel_rate > 0 else "")
     lines, passed = [], []
     for j, i in enumerate(idx):
         cap_reason = capped.get(city_of[j]) or capped.get(hotel_of[j])
         if buy[j] == 0:
-            passed.append(_passed(world, i, cost[j], price[j], mean[j], demand[:, j], solution.buy[j],
+            passed.append(_passed(world, i, cost[j], price[j], price_eff[j], mean[j], demand_eff[:, j], solution.buy[j],
                                   solution.forced_room_cost[j], hurdle, cap_reason))
             continue
         why = _why(world, i, mean[j], cost[j], price[j])
         at_cap = buy[j] >= np.floor(cap[j])  # whole rooms bought, after rounding and the budget trim
         limited_by = ("hotel" if at_cap else "cap" if cap_reason else
                       "budget" if hurdle > HURDLE_EPS else "demand")
-        why["sell_out_chance"] = float((demand[:, j] >= buy[j]).mean())  # every room bought sells
-        why["why_not_more"] = _why_not_more(limited_by, demand[:, j], buy[j], cost[j], price[j], hurdle,
+        why["sell_out_chance"] = float((demand_eff[:, j] >= buy[j]).mean())  # every room bought sells
+        why["why_not_more"] = _why_not_more(limited_by, demand_eff[:, j], buy[j], cost[j], price_eff[j], hurdle,
                                             float(solution.extra_room_value[j]), cap_reason, risk_aversion)
         why["demand_vs_usual"] = float(mean[j] / usual[j]) if usual[j] > 0 else 1.0
         why["selling_price"] = selling_price(float(price[j]), why["demand_vs_usual"])
         lines.append(PlanLine(world.city[i], world.week[i], world.hotel[i], int(buy[j]), float(cost[j]),
-                              float(price[j]), float(sold[j]), float(line_profit[j]), _reason(why), why,
+                              float(price[j]), float(sold[j]), float(line_profit[j]), _reason(why) + cancel_note, why,
                               cvar(line_scenarios[:, j], WORST_SHARE), buy_by[j].item(),
                               world.first_night[i].item(), limited_by,
                               float(solution.extra_room_value[j]) if at_cap else 0.0))
@@ -208,15 +218,18 @@ def _exposure(kind: str, names: list[str], spend: np.ndarray, relaxed_spend: np.
     return out
 
 
-def _passed(world: World, i: int, cost: float, price: float, mean: float, demand: np.ndarray,
+def _passed(world: World, i: int, cost: float, price: float, price_eff: float, mean: float, demand_eff: np.ndarray,
             fractional_buy: float, shadow_cost: float, hurdle: float, cap_reason: str | None) -> Passed:
-    earns_here = float(price * np.minimum(demand, 1).mean() - cost)
+    earns_here = float(price_eff * np.minimum(demand_eff, 1).mean() - cost)
     earns_elsewhere = float(hurdle * cost)
     # The LP's shadow price is the rate for a first sliver of a room and can be a degenerate 0. The money
     # comparison approximates one whole room: what it makes vs what its cost makes in the rest of the plan
     # (tests: within 5% of re-solving with the room forced in). Report the larger.
     forced = max(float(shadow_cost), earns_elsewhere - earns_here)
-    if earns_here <= 0:
+    if earns_here <= 0 and price_eff < cost <= price:
+        reason = (f"a room here would lose about ₹{-earns_here:,.0f}: after cancellations it earns at most "
+                  f"₹{price_eff:,.0f} of its ₹{price:,.0f} price, below its ₹{cost:,.0f} cost")
+    elif earns_here <= 0:
         reason = f"a room here would lose about ₹{-earns_here:,.0f}: demand is too thin for its price"
     elif cap_reason:
         reason = cap_reason

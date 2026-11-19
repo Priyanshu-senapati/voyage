@@ -622,5 +622,116 @@
       "profit_vs_raw_optimizer": -1.2383880299925318,
       "worlds_where_ours_earns_more_than_rebuy": 0.01
     }
-  ]
+  ],
+  "cancellations": {
+    "cancel_rate": 0.4102585061816696,
+    "late_cancel_share": 0.11466427575214186,
+    "season_rate_sd": 0.05,
+    "rows": [
+      {
+        "budget_lakh": 40,
+        "means": {
+          "ours_aware": {
+            "spend": 3914199.8797817673,
+            "mean_profit": 654951.3703939221,
+            "worst_5pct_profit": 224303.5347506432,
+            "unsold_rooms": 54.03897609513293,
+            "missed_rooms": 1372.305192925619
+          },
+          "ours_told_0.30": {
+            "spend": 3923756.892296966,
+            "mean_profit": 646340.718443434,
+            "worst_5pct_profit": 196508.17579210896,
+            "unsold_rooms": 58.60212425903659,
+            "missed_rooms": 1375.0283410895227
+          },
+          "ours_told_0.50": {
+            "spend": 3906191.889187608,
+            "mean_profit": 649575.919495473,
+            "worst_5pct_profit": 231182.5680421387,
+            "unsold_rooms": 51.18446672810224,
+            "missed_rooms": 1370.9006835585883
+          },
+          "ours_unaware": {
+            "spend": 3940124.475956389,
+            "mean_profit": 561920.2714452157,
+            "worst_5pct_profit": 39160.09624068222,
+            "unsold_rooms": 75.24310709678612,
+            "missed_rooms": 1389.609323927272
+          },
+          "rebuy_gross": {
+            "spend": 3875254.140597709,
+            "mean_profit": 551700.9811119202,
+            "worst_5pct_profit": 157167.43131571478,
+            "unsold_rooms": 46.43166072143864,
+            "missed_rooms": 1374.087877551925
+          },
+          "rebuy_kept": {
+            "spend": 3872190.031909349,
+            "mean_profit": 550259.4137823943,
+            "worst_5pct_profit": 155809.59426015144,
+            "unsold_rooms": 46.58554226043084,
+            "missed_rooms": 1374.7417590909165
+          }
+        },
+        "worlds_where_aware_earns_more_than": {
+          "ours_unaware": 1.0,
+          "rebuy_gross": 1.0,
+          "rebuy_kept": 1.0
+        }
+      },
+      {
+        "budget_lakh": 200,
+        "means": {
+          "ours_aware": {
+            "spend": 7402093.685838217,
+            "mean_profit": 843959.3261402101,
+            "worst_5pct_profit": 35659.59416195101,
+            "unsold_rooms": 120.9791692521077,
+            "missed_rooms": 884.3753860825938
+          },
+          "ours_told_0.30": {
+            "spend": 9034654.289443875,
+            "mean_profit": 709334.109673747,
+            "worst_5pct_profit": -342652.824524557,
+            "unsold_rooms": 187.7522621790067,
+            "missed_rooms": 690.7684790094927
+          },
+          "ours_told_0.50": {
+            "spend": 5967828.031157903,
+            "mean_profit": 807504.1302425573,
+            "worst_5pct_profit": 179291.88148209066,
+            "unsold_rooms": 82.71077068710869,
+            "missed_rooms": 1075.0369875175948
+          },
+          "ours_unaware": {
+            "spend": 13249905.95787426,
+            "mean_profit": -719259.3433974666,
+            "worst_5pct_profit": -2532124.78769369,
+            "unsold_rooms": 500.24674869294273,
+            "missed_rooms": 331.02296552342887
+          },
+          "rebuy_gross": {
+            "spend": 14832709.17675359,
+            "mean_profit": -1711475.4351077792,
+            "worst_5pct_profit": -3802143.889203493,
+            "unsold_rooms": 670.9362835285366,
+            "missed_rooms": 254.3125003590224
+          },
+          "rebuy_kept": {
+            "spend": 10822604.611478953,
+            "mean_profit": 204679.02122558173,
+            "worst_5pct_profit": -1173283.2077862988,
+            "unsold_rooms": 301.8104403337543,
+            "missed_rooms": 523.9766571642402
+          }
+        },
+        "worlds_where_aware_earns_more_than": {
+          "ours_unaware": 1.0,
+          "rebuy_gross": 1.0,
+          "rebuy_kept": 1.0
+        }
+      }
+    ]
+  }
 }

@@ -15,8 +15,9 @@ from itertools import product
 
 import numpy as np
 
+from voyance.cancellations import kept_rooms
 from voyance.demand import scenarios, unconstrain
-from voyance.optimizer import cvar, optimize, profits
+from voyance.optimizer import cvar, optimize
 
 CITIES = ("Goa", "Jaipur", "Udaipur", "Manali", "Kochi")
 WEEKS = ("1-7 Dec", "8-14 Dec", "15-21 Dec", "22-28 Dec")
@@ -167,15 +168,24 @@ def _assumed_lift(true_lift: np.ndarray, lift: float = ASSUMED_EVENT_LIFT) -> np
     return np.where(true_lift > 1, lift, 1.0)
 
 
-def evaluate(world: World, buy: np.ndarray, test_demand: np.ndarray) -> dict[str, float]:
-    """Score a plan on unseen seasons: spend, mean and worst-5% profit, rooms unsold and missed."""
-    p = profits(buy, world.cost, world.price, test_demand)
+def evaluate(world: World, buy: np.ndarray, test_demand: np.ndarray, cancel_rate: float | np.ndarray = 0.0,
+             late_cancel_share: float | np.ndarray = 0.0) -> dict[str, float]:
+    """Score a plan on unseen seasons: spend, mean and worst-5% profit, rooms unsold and missed.
+
+    test_demand is gross bookings; with cancellations only the room-nights kept earn (voyance.cancellations),
+    unsold = bought - kept and missed = bookings that would have stayed - kept. Each rate is one number, or one
+    per test season.
+    """
+    cancel_rate, late_cancel_share = (np.reshape(r, (-1, 1)) if np.ndim(r) else r
+                                      for r in (cancel_rate, late_cancel_share))
+    kept = kept_rooms(buy, test_demand, cancel_rate, late_cancel_share)
+    p = kept @ world.price - world.cost @ buy
     return {
         "spend": float(world.cost @ buy),
         "mean_profit": float(p.mean()),
         "worst_5pct_profit": cvar(p, WORST_SHARE),
-        "unsold_rooms": float(np.maximum(buy - test_demand, 0).sum(axis=1).mean()),
-        "missed_rooms": float(np.maximum(test_demand - buy, 0).sum(axis=1).mean()),
+        "unsold_rooms": float((buy - kept).sum(axis=1).mean()),
+        "missed_rooms": float(np.maximum(test_demand * (1 - cancel_rate) - kept, 0).sum(axis=1).mean()),
     }
 
 

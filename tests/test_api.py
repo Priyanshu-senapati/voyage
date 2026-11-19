@@ -347,6 +347,43 @@ def test_caps_are_shares_of_the_budget(api, caps):
     assert new_plan(client, keys["buyer"], **caps).status_code == 422
 
 
+def test_cancellations_plan_on_rooms_that_stay_booked_and_are_saved_with_the_plan(api):
+    client, keys = api
+    base = preview(client, keys["buyer"]).json()
+    real = preview(client, keys["buyer"], cancel_rate=0.41, late_cancel_share=0.115)
+    assert real.status_code == 200
+    shown = real.json()
+    assert (shown["cancel_rate"], shown["late_cancel_share"]) == (0.41, 0.115)
+    assert (base["cancel_rate"], base["late_cancel_share"]) == (0.0, 0.0)
+    assert sum(line["expected_sold"] for line in shown["lines"]) < sum(line["expected_sold"] for line in base["lines"])
+    saved = new_plan(client, keys["buyer"], cancel_rate=0.41, late_cancel_share=0.115).json()
+    fetched = client.get(f"/v1/plans/{saved['id']}", headers=auth(keys["buyer"])).json()
+    assert (fetched["cancel_rate"], fetched["late_cancel_share"]) == (0.41, 0.115)
+    assert fetched["expected_profit"] == pytest.approx(shown["expected_profit"])
+
+
+@pytest.mark.parametrize("rates", [{"cancel_rate": 1.0}, {"cancel_rate": -0.1}, {"late_cancel_share": 1.5}])
+def test_cancellation_rates_stay_in_range(api, rates):
+    client, keys = api
+    assert preview(client, keys["buyer"], **rates).status_code == 422
+    assert new_plan(client, keys["buyer"], **rates).status_code == 422
+
+
+def test_frontier_takes_the_cancellation_rates_and_agrees_with_the_preview(api):
+    client, keys = api
+    query = "budget_inr=3000000&cancel_rate=0.41&late_cancel_share=0.115"
+    base = frontier(client, keys["buyer"], "budget_inr=3000000").json()
+    response = frontier(client, keys["buyer"], query)
+    assert response.status_code == 200
+    real = response.json()
+    assert real[0]["expected_profit"] < base[0]["expected_profit"]
+    shown = preview(client, keys["buyer"], cancel_rate=0.41, late_cancel_share=0.115).json()  # risk 0.3
+    point = next(p for p in real if p["risk_aversion"] == 0.3)
+    assert point["expected_profit"] == pytest.approx(shown["expected_profit"])
+    assert frontier(client, keys["buyer"], "budget_inr=3000000&cancel_rate=1").status_code == 422
+    assert frontier(client, keys["buyer"], "budget_inr=3000000&late_cancel_share=1.5").status_code == 422
+
+
 def test_position_reads_each_saved_line_against_its_bookings(api):
     client, keys = api
     plan = new_plan(client, keys["buyer"]).json()

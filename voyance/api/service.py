@@ -19,8 +19,8 @@ from sqlalchemy.orm import Session, selectinload
 from voyance.api.auth import Principal
 from voyance.api.db import AuditEvent, Plan, PlanLineRow, Tenant, utcnow
 from voyance.api.planner import PlanRequestError, PlanResult, build_plan
-from voyance.api.schemas import (CANCEL_FIELDS, CAP_FIELDS, WHAT_IF_FIELDS, FrontierPoint, FrontierQuery, MarketItem,
-                                 MeOut, PlanCreate, PlanPreview, PreviewRequest, QueueItem, QueueOut)
+from voyance.api.schemas import (CAP_FIELDS, WHAT_IF_FIELDS, FrontierPoint, FrontierQuery, MarketItem, MeOut,
+                                 PlanCreate, PlanPreview, PreviewRequest, QueueItem, QueueOut)
 from voyance.sim import World
 
 CSV_COLUMNS = ("city", "week", "hotel", "buy_by", "rooms", "unit_cost", "unit_price", "selling_price", "expected_sold",
@@ -112,14 +112,14 @@ def preview_plan(world: World, principal: Principal, request: PreviewRequest) ->
     """The plan `create_plan` would save for this request, or for a what-if, without saving or logging it."""
     _limit(PREVIEW_RATE, principal, "previews")
     result = _solve(world, request.budget_inr, request.risk_aversion, request.cities,
-                    **request.model_dump(include=WHAT_IF_FIELDS | CAP_FIELDS | CANCEL_FIELDS))
+                    **request.model_dump(include=WHAT_IF_FIELDS | CAP_FIELDS))
     return PlanPreview(**request.model_dump(), **asdict(result))
 
 
 def risk_frontier(world: World, principal: Principal, scope: FrontierQuery) -> list[FrontierPoint]:
     """Expected profit, worst case and spend at each risk step, for one budget (and what-if)."""
     _limit(FRONTIER_RATE, principal, "risk frontiers")
-    options = scope.model_dump(include=WHAT_IF_FIELDS | CAP_FIELDS | CANCEL_FIELDS)
+    options = scope.model_dump(include=WHAT_IF_FIELDS | CAP_FIELDS)
     with _planner_slot():  # one slot for the whole sweep; the solves run one at a time (see optimizer)
         results = [build_plan(world, scope.budget_inr, risk, scope.cities, price_caps=False, **options)
                    for risk in RISK_STEPS]
@@ -130,7 +130,7 @@ def risk_frontier(world: World, principal: Principal, scope: FrontierQuery) -> l
 
 def create_plan(session: Session, world: World, principal: Principal, request: PlanCreate) -> Plan:
     _limit(PLAN_RATE, principal, "plans")
-    caps = request.model_dump(include=CAP_FIELDS | CANCEL_FIELDS)  # saved with the plan, like the caps
+    caps = request.model_dump(include=CAP_FIELDS)
     result = _solve(world, request.budget_inr, request.risk_aversion, request.cities, **caps)
     plan = Plan(
         tenant_id=principal.tenant_id, created_by_user_id=principal.user_id, created_by=principal.label,

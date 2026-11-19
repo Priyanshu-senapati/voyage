@@ -8,7 +8,7 @@ from voyance import optimizer
 from voyance.api import planner
 from voyance.api.planner import N_SCENARIOS, PLAN_SEED, RATE_ELASTICITY, build_plan, selling_price
 from voyance.demand import scenarios
-from voyance.sim import DEMAND_CV, WORST_SHARE, hidden_demand_mean, make_world
+from voyance.sim import AGENT_CANCEL_RATE, DEMAND_CV, WORST_SHARE, hidden_demand_mean, make_world, stay_factors
 
 WORLD = make_world(seed=7)
 
@@ -89,9 +89,13 @@ def test_what_if_event_strength_changes_only_this_seasons_event_weeks():
 
 def test_the_round_1_deck_sample_plan_is_unchanged():
     # the deck shows this plan as real API output: Rs 1.22 cr spend, Rs 24.74L expected, Rs 20.04L worst 5%
-    plan = build_plan(WORLD, budget=2e7, risk_aversion=0.3)
+    plan = build_plan(WORLD, budget=2e7, risk_aversion=0.3, cancel_rate=0.0)  # Round 1 deck: no cancellations
     assert (round(plan.spend), round(plan.expected_profit), round(plan.worst_case_profit)) == pytest.approx(
         (12_160_458, 2_473_960, 2_003_528), abs=1)
+    # net of the measured 41% agent cancellations (the default since 20 Nov): Rs 67.7L spend, 8.90L, 6.86L
+    net = build_plan(WORLD, budget=2e7, risk_aversion=0.3)
+    assert (round(net.spend), round(net.expected_profit), round(net.worst_case_profit)) == pytest.approx(
+        (6_772_297, 890_209, 685_845), abs=1)
 
 
 def test_hurdle_rate_is_what_a_rupee_earns_at_the_margin_when_money_runs_out():
@@ -114,7 +118,7 @@ def test_the_cost_of_a_skipped_hotel_week_matches_forcing_one_room_in():
     # brute force: re-solve with one room forced in; the reported cost must match, even where the LP's own
     # shadow price is degenerate (zero)
     budget, risk = 4e6, 0.3
-    plan = build_plan(WORLD, budget, risk)
+    plan = build_plan(WORLD, budget, risk, cancel_rate=0.0)  # the brute force below has none
     demand = scenarios(hidden_demand_mean(WORLD), DEMAND_CV, N_SCENARIOS, np.random.default_rng(PLAN_SEED))
     c, a_ub, b_ub, lower, upper = optimizer._model(WORLD.cost, WORLD.price, WORLD.cap, demand, np.zeros(40),
                                                    budget, risk, WORST_SHARE)
@@ -234,6 +238,20 @@ def test_every_line_recommends_a_selling_price_and_says_why():
     markup = {flag: np.mean([line.why["selling_price"] / line.unit_price for line in plan.lines
                              if line.why["event_week"] == flag]) for flag in (True, False)}
     assert markup[True] > 1 > markup[False] * 0.999  # event weeks price up; others at or below the usual rate
+
+
+def test_plans_count_only_on_the_bookings_that_stay():
+    def rooms(plan):
+        return {(line.city, line.week, line.hotel): line.rooms for line in plan.lines}
+
+    plans = [build_plan(WORLD, 1e10, 0.3, cancel_rate=rate) for rate in (0.0, AGENT_CANCEL_RATE, 0.6)]
+    for fewer_cancel, more_cancel in zip(plans, plans[1:]):  # a higher cancellation rate never adds rooms
+        assert all(rooms(more_cancel).get(key, 0) <= n for key, n in rooms(fewer_cancel).items())
+        assert set(rooms(more_cancel)) <= set(rooms(fewer_cancel))
+    keep, _ = stay_factors(AGENT_CANCEL_RATE)
+    for line in build_plan(WORLD, 2e7, 0.3).lines:  # the default: the measured agent cancellation rate
+        assert line.why["stay_share"] == pytest.approx(keep) and line.unit_price in set(WORLD.price.tolist())
+        assert line.unit_price * line.expected_sold - line.unit_cost * line.rooms == pytest.approx(line.expected_profit)
 
 
 def test_reasons_mention_sold_out_searches_and_event_weeks():

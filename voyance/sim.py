@@ -9,15 +9,14 @@ weeks have events but not how big they are, and the real search-to-booking rate 
 by hotel around the single rate the planner assumes.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from itertools import product
 
 import numpy as np
 
-from voyance.cancellations import kept_rooms
 from voyance.demand import scenarios, unconstrain
-from voyance.optimizer import cvar, optimize
+from voyance.optimizer import cvar, optimize, profits
 
 CITIES = ("Goa", "Jaipur", "Udaipur", "Manali", "Kochi")
 WEEKS = ("1-7 Dec", "8-14 Dec", "15-21 Dec", "22-28 Dec")
@@ -26,6 +25,10 @@ HOTELS = ("Hotel A", "Hotel B")
 N_CITY_WEEKS = len(CITIES) * len(WEEKS)
 N_HISTORY = 3               # past December seasons TBO has data for
 LOOK_TO_BOOK = 25.0         # searches per booking the planner assumes
+# measured on real agent bookings (out/calibration.json): the share that cancel, and of those the share made
+# within 7 days of arrival, too late to sell the room again
+AGENT_CANCEL_RATE = 0.41
+LATE_CANCEL_SHARE = 0.115
 LOOK_TO_BOOK_RANGE = (15.0, 35.0)  # what it really is, per hotel
 DEMAND_CV = 0.35            # season-to-season demand noise
 EVENTS_PER_SEASON = 3       # city-weeks with a festival, match or concert
@@ -139,9 +142,31 @@ def even_split(world: World, budget: float) -> np.ndarray:
     return np.minimum(np.floor(budget / world.cost.size / world.cost), world.cap).astype(int)
 
 
-def repeat_past_bookings(world: World, budget: float) -> np.ndarray:
-    """Re-buy the average of past seasons' bookings, scaled down only if over budget."""
-    target = np.floor(world.bookings_hist.mean(axis=0))
+def stay_factors(cancel_rate: float, late_share: float = LATE_CANCEL_SHARE) -> tuple[float, float]:
+    """(keep, paid) for bookings of which `cancel_rate` cancel. Early cancellations hand the room back in time to
+    sell it again, so they act like demand that never came: `keep` is the share of demand left. Late ones leave a
+    booked room empty: `paid` is the share of booked rooms stayed in and paid for. keep x paid = 1 - cancel_rate.
+    Demand here means gross bookings, cancelled ones included; a forecast of stays should use rate 0."""
+    if not (0 <= cancel_rate < 1 and 0 <= late_share <= 1):
+        raise ValueError("cancel_rate must be in [0, 1) and late_share in [0, 1]")
+    keep = 1 - cancel_rate * (1 - late_share)
+    # shortcut: a late cancellation pays nothing (no cancellation fees); add fees if TBO's contracts have them
+    return keep, 1 - cancel_rate * late_share / keep
+
+
+def kept_rooms(buy: np.ndarray, demand: np.ndarray, cancel_rate: float | np.ndarray,
+               late_share: float | np.ndarray = LATE_CANCEL_SHARE) -> np.ndarray:
+    """Room-nights stayed in and paid for: paid x min(buy, demand x keep) (stay_factors), broadcast like numpy,
+    the rates too (one per season, say). Early cancellations of a sold-out room are resold; with spare stock
+    every cancellation is lost."""
+    keep, paid = np.vectorize(stay_factors, otypes=[float, float])(cancel_rate, late_share)
+    return paid * np.minimum(buy, np.asarray(demand, dtype=float) * keep)
+
+
+def repeat_past_bookings(world: World, budget: float, stay_share: float = 1.0) -> np.ndarray:
+    """Re-buy the average of past seasons' bookings (times `stay_share`, the share that stayed), scaled down only
+    if over budget."""
+    target = np.floor(world.bookings_hist.mean(axis=0) * stay_share)
     spend = world.cost @ target
     scale = min(1.0, budget / spend) if spend > 0 else 0.0
     return np.minimum(np.floor(target * scale), world.cap).astype(int)
@@ -168,42 +193,53 @@ def _assumed_lift(true_lift: np.ndarray, lift: float = ASSUMED_EVENT_LIFT) -> np
     return np.where(true_lift > 1, lift, 1.0)
 
 
-def evaluate(world: World, buy: np.ndarray, test_demand: np.ndarray, cancel_rate: float | np.ndarray = 0.0,
-             late_cancel_share: float | np.ndarray = 0.0) -> dict[str, float]:
+def evaluate(world: World, buy: np.ndarray, test_demand: np.ndarray, cancel_rates: float | np.ndarray | None = None,
+             late_shares: float | np.ndarray = LATE_CANCEL_SHARE) -> dict[str, float]:
     """Score a plan on unseen seasons: spend, mean and worst-5% profit, rooms unsold and missed.
 
-    test_demand is gross bookings; with cancellations only the room-nights kept earn (voyance.cancellations),
-    unsold = bought - kept and missed = bookings that would have stayed - kept. Each rate is one number, or one
-    per test season.
-    """
-    cancel_rate, late_cancel_share = (np.reshape(r, (-1, 1)) if np.ndim(r) else r
-                                      for r in (cancel_rate, late_cancel_share))
-    kept = kept_rooms(buy, test_demand, cancel_rate, late_cancel_share)
-    p = kept @ world.price - world.cost @ buy
+    With `cancel_rates` (one per test season, or one for all), test_demand is gross bookings and only the
+    room-nights kept earn (kept_rooms, `late_shares` of cancellations too late to resell): unsold = bought - kept,
+    missed = bookings that would have stayed - kept."""
+    if cancel_rates is not None:
+        cancel, late = (np.reshape(r, (-1, 1)) for r in (cancel_rates, late_shares))  # one row per season
+        kept = kept_rooms(buy, test_demand, cancel, late)
+        p = kept @ world.price - world.cost @ buy
+        return {
+            "spend": float(world.cost @ buy),
+            "mean_profit": float(p.mean()),
+            "worst_5pct_profit": cvar(p, WORST_SHARE),
+            "unsold_rooms": float((buy - kept).sum(axis=1).mean()),
+            "missed_rooms": float(np.maximum(test_demand * (1 - cancel) - kept, 0).sum(axis=1).mean()),
+        }
+    p = profits(buy, world.cost, world.price, test_demand)
     return {
         "spend": float(world.cost @ buy),
         "mean_profit": float(p.mean()),
         "worst_5pct_profit": cvar(p, WORST_SHARE),
-        "unsold_rooms": float((buy - kept).sum(axis=1).mean()),
-        "missed_rooms": float(np.maximum(test_demand * (1 - cancel_rate) - kept, 0).sum(axis=1).mean()),
+        "unsold_rooms": float(np.maximum(buy - test_demand, 0).sum(axis=1).mean()),
+        "missed_rooms": float(np.maximum(test_demand - buy, 0).sum(axis=1).mean()),
     }
 
 
 def run(seed: int = 7, budget: float = 12_000_000.0, risk_aversion: float = 0.3,
-        n_scenarios: int = 200, n_test_seasons: int = 500) -> dict[str, dict[str, float]]:
-    """Plan with each strategy, then score every plan on the same unseen seasons."""
+        n_scenarios: int = 200, n_test_seasons: int = 500,
+        cancel_rate: float = 0.0) -> dict[str, dict[str, float]]:
+    """Plan with each strategy, then score every plan on the same unseen seasons. With `cancel_rate`, that share
+    of bookings cancel (see stay_factors) and every strategy knows it."""
+    keep, paid = stay_factors(cancel_rate)
     world = make_world(seed)
+    world = replace(world, price=world.price * paid)  # what a booked room earns: late cancellations leave it empty
     plan_rng, test_rng = (np.random.default_rng(s) for s in np.random.SeedSequence(seed).spawn(2))
-    test_demand = scenarios(world.true_mean, DEMAND_CV, n_test_seasons, test_rng)
+    test_demand = scenarios(world.true_mean, DEMAND_CV, n_test_seasons, test_rng) * keep
     # same random multipliers for every optimizer variant, so they differ only in their estimate
     noise = scenarios(np.ones(world.cost.size), DEMAND_CV, n_scenarios, plan_rng)
 
     def optimized(mean: np.ndarray) -> np.ndarray:
-        return optimize(world.cost, world.price, world.cap, mean * noise, budget, risk_aversion, WORST_SHARE)
+        return optimize(world.cost, world.price, world.cap, mean * keep * noise, budget, risk_aversion, WORST_SHARE)
 
     plans = {
         "Even split": even_split(world, budget),
-        "Repeat past bookings": repeat_past_bookings(world, budget),
+        "Repeat past bookings": repeat_past_bookings(world, budget, stay_share=1 - cancel_rate),
         "Optimizer, bookings only": optimized(bookings_mean(world)),
         "Optimizer + hidden demand": optimized(unconstrained_mean(world)),
         "Optimizer + hidden demand + events": optimized(hidden_demand_mean(world)),

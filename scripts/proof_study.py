@@ -23,17 +23,21 @@ from voyance.sim import run  # noqa: E402
 BUDGETS_LAKH = (40, 60, 80, 100, 120, 160, 200, 240)
 OURS, BASELINE = "Optimizer + hidden demand + events", "Repeat past bookings"
 OUT = ROOT / "out" / "proof_study.json"
+OUT_CANCELLING = ROOT / "out" / "proof_study_cancellations.json"
 
 
-def one(job: tuple[int, int]) -> tuple[int, int, dict]:
-    seed, budget = job
-    return seed, budget, run(seed=seed, budget=budget * 1e5)  # separate processes: no shared solver state
+def one(job: tuple[int, int, float]) -> tuple[int, int, dict]:
+    seed, budget, cancel_rate = job
+    # separate processes: no shared solver state
+    return seed, budget, run(seed=seed, budget=budget * 1e5, cancel_rate=cancel_rate)
 
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     worlds = int(sys.argv[1]) if len(sys.argv) > 1 else 500
-    jobs = [(seed, budget) for budget in BUDGETS_LAKH for seed in range(worlds)]
+    cancel_rate = float(sys.argv[2]) if len(sys.argv) > 2 else 0.0  # e.g. 0.41, the measured agent rate
+    out = OUT_CANCELLING if cancel_rate > 0 else OUT
+    jobs = [(seed, budget, cancel_rate) for budget in BUDGETS_LAKH for seed in range(worlds)]
     with ProcessPoolExecutor(max_workers=os.cpu_count()) as pool:
         results = list(pool.map(one, jobs, chunksize=4))
     rng = np.random.default_rng(0)
@@ -54,8 +58,9 @@ def main() -> None:
             "worst_case_vs_rebuy_95ci": _bootstrap_ci(ours_worst, base_worst, rng),
             "worlds_where_ours_earns_more": float((ours > base).mean()),
         })
-    OUT.write_text(json.dumps({"worlds": worlds, "budgets": rows}, indent=1) + "\n", encoding="utf-8")
-    logging.info(f"{worlds} worlds x {len(BUDGETS_LAKH)} budgets on {os.cpu_count()} cores -> {OUT.relative_to(ROOT)}")
+    report = {"worlds": worlds, **({"cancel_rate": cancel_rate} if cancel_rate else {}), "budgets": rows}
+    out.write_text(json.dumps(report, indent=1) + "\n", encoding="utf-8")
+    logging.info(f"{worlds} worlds x {len(BUDGETS_LAKH)} budgets on {os.cpu_count()} cores -> {out.relative_to(ROOT)}")
     logging.info("budget   profit vs re-buy [95%]        worst 5% vs re-buy [95%]       worlds better")
     for row in rows:
         p, w = row["profit_vs_rebuy_95ci"], row["worst_case_vs_rebuy_95ci"]

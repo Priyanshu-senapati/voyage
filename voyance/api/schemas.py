@@ -37,21 +37,7 @@ class PlanScope(BaseModel):
 CAP_FIELDS = frozenset({"max_city_share", "max_hotel_share"})
 
 
-class Cancellations(BaseModel):
-    """Booking cancellations, for a demand forecast of gross bookings (cancelled ones included)."""
-
-    cancel_rate: float = Field(0.0, ge=0.0, lt=1.0, description="Share of bookings that cancel; the plan then "
-                               "counts only room-nights that stay booked. Only for a forecast of gross bookings, "
-                               "cancelled ones included: leave at 0 if it already counts stays")
-    late_cancel_share: float = Field(0.0, ge=0.0, le=1.0, description="Share of cancellations too late to sell the "
-                                     "room again (within 7 days of arrival). Like cancel_rate, only for a forecast "
-                                     "of gross bookings; leave at 0 if it counts stays")
-
-
-CANCEL_FIELDS = frozenset(Cancellations.model_fields)
-
-
-class PlanCreate(PlanScope, Cancellations):
+class PlanCreate(PlanScope):
     # what-ifs are only for previews: refuse them here rather than quietly saving the base plan
     model_config = ConfigDict(extra="forbid", json_schema_extra={
         "examples": [{"budget_inr": 2_000_000, "risk_aversion": 0.3, "cities": ["Goa", "Udaipur"]}]})
@@ -66,6 +52,8 @@ class WhatIf(BaseModel):
     cost_change: float = Field(0.0, ge=-0.3, le=0.5, description="0.1 = supplier rates 10% dearer")
     event_lift: float | None = Field(None, ge=1.0, le=3.0, description="Demand multiple in this season's event "
                                      "weeks; leave out for the planner's own guess (1.5)")
+    cancel_rate: float | None = Field(None, ge=0, lt=1, description="Share of agent bookings that cancel; leave "
+                                      "out for the rate measured on real agent bookings (41%). Saved plans use it")
 
 
 WHAT_IF_FIELDS = frozenset(WhatIf.model_fields)
@@ -75,7 +63,7 @@ class PreviewRequest(PlanCreate, WhatIf):
     pass
 
 
-class FrontierQuery(PlanScope, WhatIf, Cancellations):
+class FrontierQuery(PlanScope, WhatIf):
     model_config = ConfigDict(extra="forbid")  # a misspelt what-if must not quietly give the base frontier
 
 
@@ -94,13 +82,14 @@ class LineWhy(BaseModel):
     event_week: bool
     margin: float = Field(description="(price - cost) / price")
     sell_out_chance: float | None = Field(None, description="Chance every room bought sells (plans from before "
-                                          "this field have none). With cancellations: the chance it stays sold "
-                                          "out, early cancellations resold, so only late ones are lost")
+                                          "this field have none)")
     why_not_more: str | None = Field(None, description="Why the plan stops at this many rooms, in money")
     demand_vs_usual: float | None = Field(None, description="Expected demand / a usual December's for this "
                                           "hotel-week, sold-out searches counted back in")
     selling_price: float | None = Field(None, description="Recommended price per room-night: unit_price moved "
                                         "the way real agent rates move with demand (profits stay at unit_price)")
+    stay_share: float | None = Field(None, description="Share of expected demand the plan counts on after early "
+                                     "cancellations (late ones are already in expected_sold)")
 
 
 class PreviewLine(BaseModel):
@@ -125,8 +114,7 @@ class PreviewLine(BaseModel):
     extra_room_value: float = Field(description="Risk-adjusted rupees one more room of allotment would add; "
                                     "0 unless limited by the hotel")
 
-    @computed_field(description="expected_sold / rooms. With cancellations, room-nights kept per room bought: "
-                    "below 1 even when it sells out, as late cancellations can't be resold")
+    @computed_field
     @property
     def sell_through(self) -> float:
         return self.expected_sold / self.rooms
@@ -151,8 +139,6 @@ class PlanTotals(BaseModel):
                                "every purchase must beat. 0 when money isn't the limit")
     max_city_share: float | None = None
     max_hotel_share: float | None = None
-    cancel_rate: float = 0.0
-    late_cancel_share: float = 0.0
     caps_cost: float = Field(description="Risk-adjusted profit the city and hotel caps give up (0 without caps)")
 
 

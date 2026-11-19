@@ -48,7 +48,8 @@ def test_the_reading_is_bookings_against_the_typical_pace():
     _, item = read(world_where(LINE.why["expected_demand"]), days_before=60)
     assert item.expected_by_now == pytest.approx(LINE.why["expected_demand"] * booked_share(60))
     assert item.on_books == np.floor(LINE.why["expected_demand"] * booked_share(60))
-    assert item.on_books <= item.projected_demand and item.gap == pytest.approx(item.projected_demand - LINE.rooms)
+    assert item.on_books <= item.projected_demand and item.gap == pytest.approx(
+        item.projected_demand * LINE.why["stay_share"] - LINE.rooms)
 
 
 def test_a_week_that_has_started_is_marked_started():

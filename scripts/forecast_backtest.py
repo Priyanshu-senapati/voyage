@@ -59,15 +59,23 @@ def main() -> None:
         logging.info(f"{row['lead']:>4}  {row['margin']:>6.0%}  {_vs(s['likely_forecast'])}  "
                      f"{_vs(s['optimizer_risk_0'])}  {_vs(s['optimizer_risk_0.3'])}"
                      f" | {_rooms(s['rebuy_last_year'])}  {_rooms(s['likely_forecast'])}")
+    logging.info("\nagainst the pickup forecast (bookings now + last year's pickup from the same lead) [95% interval]")
+    logging.info("lead  margin  pickup vs re-buy    likely forecast     optimizer risk 0    risk 0.3 per week   "
+                 "risk 0.3 whole plan")
+    for row in decisions["results"]:
+        s = row["strategies"]
+        others = (_vs(s[name], "vs_pickup") for name in
+                  ("likely_forecast", "optimizer_risk_0", "optimizer_risk_0.3", "optimizer_plan_risk_0.3"))
+        logging.info(f"{row['lead']:>4}  {row['margin']:>6.0%}  {_vs(s['pickup'])}  " + "  ".join(others))
 
 
 def _rooms(result: dict) -> str:
     return f"{result['unsold']:,.0f} / {result['turned_away']:,.0f}"
 
 
-def _vs(result: dict) -> str:
-    low, high = result["vs_rebuy_95ci"]
-    return f"{result['vs_rebuy']:+.0%} [{low:+.0%},{high:+.0%}]".ljust(18)
+def _vs(result: dict, key: str = "vs_rebuy") -> str:
+    low, high = result[f"{key}_95ci"]
+    return f"{result[key]:+.0%} [{low:+.0%},{high:+.0%}]".ljust(18)
 
 
 def _write(name: str, result: dict) -> None:

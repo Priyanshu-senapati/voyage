@@ -52,12 +52,13 @@ def position(world: World, lines, as_of: date) -> Position:
 
 def _read(line, booked: float, as_of: date) -> PositionLine:
     forecast, rooms = float(line.why["expected_demand"]), int(line.rooms)
+    keep = float(line.why.get("stay_share", 1.0))  # the plan counted on the demand left after early cancellations
     days = (line.first_night - as_of).days
     base = {"city": line.city, "week": line.week, "hotel": line.hotel, "line_id": getattr(line, "id", None),
             "rooms": rooms, "forecast": forecast, "on_books": booked}
     if days <= 0:
         return PositionLine(**base, expected_by_now=forecast, pace=booked / forecast if forecast else 1.0,
-                            projected_demand=booked, gap=booked - rooms, status="started",
+                            projected_demand=booked, gap=booked * keep - rooms, status="started",
                             note=f"the week began on {line.first_night:%d %b %Y}")
     share = float(booked_share(days))
     expected = forecast * share
@@ -65,12 +66,15 @@ def _read(line, booked: float, as_of: date) -> PositionLine:
     # a typical curve can pass 100% (bookings that later cancel are on the books), so keep a little room left
     projected = booked + forecast * max(1.0 - share, MIN_STILL_TO_COME)
     status = "short" if pace > 1 + PACE_BAND else "over" if pace < 1 - PACE_BAND else "on_pace"
-    reading = f"{booked:.0f} booked against {expected:.0f} expected by now; projected {projected:.0f} room-nights"
+    gap = projected * keep - rooms
+    after = f" ({projected * keep:.0f} after early cancellations)" if keep < 1 else ""
+    reading = (f"{booked:.0f} booked against {expected:.0f} expected by now; projected {projected:.0f} "
+               f"room-nights{after}")
     if status == "on_pace":
         note = f"on pace: {reading} for {rooms} rooms"
     else:
         note = (f"running {abs(pace - 1):.0%} {'ahead of' if pace > 1 else 'behind'} the forecast: {reading}, "
-                f"{abs(projected - rooms):.0f} {'more than' if projected > rooms else 'fewer than'} the {rooms} rooms "
+                f"{abs(gap):.0f} {'more than' if gap > 0 else 'fewer than'} the {rooms} rooms "
                 "bought")
     return PositionLine(**base, expected_by_now=expected, pace=pace, projected_demand=projected,
-                        gap=projected - rooms, status=status, note=note)
+                        gap=gap, status=status, note=note)

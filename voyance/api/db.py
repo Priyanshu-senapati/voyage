@@ -72,9 +72,6 @@ class Plan(Base):
     passed: Mapped[list] = mapped_column(JSON)  # hotel-weeks bought none of, with why (planner.Passed)
     max_city_share: Mapped[float | None]
     max_hotel_share: Mapped[float | None]
-    # shortcut: new columns need a fresh database (create_all, no migrations); add Alembic before keeping real data
-    cancel_rate: Mapped[float] = mapped_column(default=0.0, server_default="0")
-    late_cancel_share: Mapped[float] = mapped_column(default=0.0, server_default="0")
     caps_cost: Mapped[float]
     exposure: Mapped[list] = mapped_column(JSON)  # spend per city and hotel against its cap (planner.Exposure)
     lines: Mapped[list["PlanLineRow"]] = relationship(

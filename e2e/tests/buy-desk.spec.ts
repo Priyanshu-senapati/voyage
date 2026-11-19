@@ -327,3 +327,13 @@ test('the plan screens say when there is no plan, and show an API failure', asyn
   await page.getByRole('link', { name: 'Replay race' }).click()
   await expect(page.getByText("Can't reach the Voyance API. Check that it is running.")).toBeVisible()
 })
+
+test('the landing page leads with the pitch and the demo opens the Buy Desk', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByRole('heading', { level: 1 })).toContainText("Buy December's rooms")
+  await expect(page.getByText('+9.6%')).toBeVisible()
+  // the hero and nav "Sign in" are links, so the only button named "Sign in" is still the form submit
+  await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toHaveCount(1)
+  await page.getByRole('button', { name: 'Explore the live demo' }).click()
+  await expect(page.getByRole('heading', { name: 'Buy Desk', exact: true })).toBeVisible()
+})

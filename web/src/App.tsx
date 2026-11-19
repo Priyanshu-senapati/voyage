@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { loadSession, saveSession, type Session } from './session'
-import { SignIn } from './SignIn'
+import { Landing } from './Landing'
 import { Desk } from './Desk'
 
 export default function App() {
@@ -19,6 +19,6 @@ export default function App() {
     setSession(null)
   }, [])
 
-  if (!session) return <SignIn error={signInError} onStart={start} />
+  if (!session) return <Landing error={signInError} onStart={start} />
   return <Desk key={session.mode === 'live' ? session.key : 'demo'} session={session} onSignOut={signOut} />
 }

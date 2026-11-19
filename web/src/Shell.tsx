@@ -13,6 +13,15 @@ const ICONS: Record<Route, typeof Target> = {
   audit: ScrollText,
 }
 
+// Group the pages so the sidebar reads as a workflow, not a flat list
+const NAV_GROUPS: { label: string; routes: Route[] }[] = [
+  { label: 'Plan', routes: ['desk', 'plans'] },
+  { label: 'Monitor', routes: ['queue', 'position', 'exposure'] },
+  { label: 'Analyze', routes: ['replay', 'markets'] },
+  { label: 'Admin', routes: ['audit'] },
+]
+const ROUTE_BY_KEY = Object.fromEntries(ROUTES.map((r) => [r.route, r])) as Record<Route, (typeof ROUTES)[number]>
+
 export function BrandMark({ size = 28 }: { size?: number }) {
   return (
     <svg viewBox="0 0 28 28" width={size} height={size} aria-hidden="true" className="brand-mark">
@@ -50,15 +59,21 @@ export function Shell({ active, viewer, onSignOut, children }: Props) {
           Voyance
         </a>
         <nav className="sidenav" aria-label="Main">
-          {ROUTES.map((r) => {
-            const Icon = ICONS[r.route]
-            return (
-              <a key={r.route} href={r.hash} aria-current={r.route === active ? 'page' : undefined} onClick={() => setOpen(false)}>
-                <Icon size={17} strokeWidth={2} aria-hidden="true" />
-                {r.label}
-              </a>
-            )
-          })}
+          {NAV_GROUPS.map((group) => (
+            <div className="sidenav-group" key={group.label}>
+              <span className="sidenav-group-label">{group.label}</span>
+              {group.routes.map((route) => {
+                const r = ROUTE_BY_KEY[route]
+                const Icon = ICONS[route]
+                return (
+                  <a key={route} href={r.hash} aria-current={route === active ? 'page' : undefined} onClick={() => setOpen(false)}>
+                    <Icon size={17} strokeWidth={2} aria-hidden="true" />
+                    {r.label}
+                  </a>
+                )
+              })}
+            </div>
+          ))}
         </nav>
         <div className="sidebar-foot">
           <p className="sim-note">

@@ -1,6 +1,6 @@
 """Storage: SQLite for the demo; any SQLAlchemy URL (e.g. Postgres) in production."""
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from sqlalchemy import (JSON, DateTime, ForeignKey, String, Text, TypeDecorator, UniqueConstraint,
                         create_engine, event)
@@ -68,6 +68,12 @@ class Plan(Base):
     spend: Mapped[float]
     expected_profit: Mapped[float]
     worst_case_profit: Mapped[float]
+    hurdle_rate: Mapped[float]
+    passed: Mapped[list] = mapped_column(JSON)  # hotel-weeks bought none of, with why (planner.Passed)
+    max_city_share: Mapped[float | None]
+    max_hotel_share: Mapped[float | None]
+    caps_cost: Mapped[float]
+    exposure: Mapped[list] = mapped_column(JSON)  # spend per city and hotel against its cap (planner.Exposure)
     lines: Mapped[list["PlanLineRow"]] = relationship(
         back_populates="plan", order_by="PlanLineRow.id", cascade="all, delete-orphan")
 
@@ -94,14 +100,16 @@ class PlanLineRow(Base):
     expected_sold: Mapped[float]
     expected_profit: Mapped[float]
     reason: Mapped[str] = mapped_column(Text)
+    why: Mapped[dict] = mapped_column(JSON)
+    worst_case_profit: Mapped[float]
+    buy_by: Mapped[date]
+    first_night: Mapped[date]
+    limited_by: Mapped[str] = mapped_column(String(10))
+    extra_room_value: Mapped[float]
     decision: Mapped[str] = mapped_column(String(10), default="pending")
     decided_by: Mapped[str | None] = mapped_column(String(100))
     decided_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
     plan: Mapped[Plan] = relationship(back_populates="lines")
-
-    @property
-    def sell_through(self) -> float:
-        return self.expected_sold / self.rooms
 
 
 class AuditEvent(Base):

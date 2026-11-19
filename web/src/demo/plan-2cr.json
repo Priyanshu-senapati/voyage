@@ -1,0 +1,1374 @@
+{
+ "id": 12,
+ "created_at": "2026-11-19T05:01:00Z",
+ "created_by": "asha",
+ "budget_inr": 20000000,
+ "risk_aversion": 0.3,
+ "cities": null,
+ "spend": 12160458.13,
+ "expected_profit": 2473960.32,
+ "worst_case_profit": 2003528.21,
+ "status": "mixed",
+ "lines": [
+  {
+   "id": 1,
+   "city": "Udaipur",
+   "week": "15-21 Dec",
+   "hotel": "Hotel A",
+   "rooms": 82,
+   "unit_cost": 6827.81,
+   "unit_price": 9165.95,
+   "expected_sold": 79.21,
+   "sell_through": 0.966,
+   "expected_profit": 166168.7,
+   "reason": "expected demand 118 room-nights vs 55 booked last December; 2,395 sold-out searches in past Decembers; event week this year; 26% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 117.9,
+    "booked_last_december": 55,
+    "bookings_past_decembers": [
+     39,
+     46,
+     55
+    ],
+    "soldout_searches_past": [
+     464,
+     1091,
+     840
+    ],
+    "event_week": true,
+    "margin": 0.2551
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -85148.72
+  },
+  {
+   "id": 2,
+   "city": "Kochi",
+   "week": "22-28 Dec",
+   "hotel": "Hotel A",
+   "rooms": 121,
+   "unit_cost": 6633.46,
+   "unit_price": 8068.59,
+   "expected_sold": 118.55,
+   "sell_through": 0.9798,
+   "expected_profit": 153907.48,
+   "reason": "expected demand 196 room-nights vs 107 booked last December; 859 sold-out searches in past Decembers; event week this year; 18% margin",
+   "decision": "approved",
+   "decided_by": "ravi",
+   "decided_at": "2026-11-19T05:12:00Z",
+   "why": {
+    "expected_demand": 195.7,
+    "booked_last_december": 107,
+    "bookings_past_decembers": [
+     133,
+     117,
+     107
+    ],
+    "soldout_searches_past": [
+     368,
+     491,
+     0
+    ],
+    "event_week": true,
+    "margin": 0.1779
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -109740.1
+  },
+  {
+   "id": 3,
+   "city": "Manali",
+   "week": "22-28 Dec",
+   "hotel": "Hotel A",
+   "rooms": 80,
+   "unit_cost": 7194.71,
+   "unit_price": 9324.39,
+   "expected_sold": 77.51,
+   "sell_through": 0.9689,
+   "expected_profit": 147164.18,
+   "reason": "expected demand 120 room-nights vs 81 booked last December; 5,685 sold-out searches in past Decembers; 23% margin",
+   "decision": "approved",
+   "decided_by": "ravi",
+   "decided_at": "2026-11-19T05:14:00Z",
+   "why": {
+    "expected_demand": 120.2,
+    "booked_last_december": 81,
+    "bookings_past_decembers": [
+     76,
+     100,
+     81
+    ],
+    "soldout_searches_past": [
+     932,
+     1498,
+     3255
+    ],
+    "event_week": false,
+    "margin": 0.2284
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -98854.06
+  },
+  {
+   "id": 4,
+   "city": "Goa",
+   "week": "1-7 Dec",
+   "hotel": "Hotel B",
+   "rooms": 50,
+   "unit_cost": 8341.83,
+   "unit_price": 11123.14,
+   "expected_sold": 48.37,
+   "sell_through": 0.9675,
+   "expected_profit": 120970.34,
+   "reason": "expected demand 75 room-nights vs 56 booked last December; 1,844 sold-out searches in past Decembers; 25% margin",
+   "decision": "approved",
+   "decided_by": "ravi",
+   "decided_at": "2026-11-19T05:15:00Z",
+   "why": {
+    "expected_demand": 74.6,
+    "booked_last_december": 56,
+    "bookings_past_decembers": [
+     64,
+     30,
+     56
+    ],
+    "soldout_searches_past": [
+     1151,
+     0,
+     693
+    ],
+    "event_week": false,
+    "margin": 0.25
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -50704.83
+  },
+  {
+   "id": 5,
+   "city": "Manali",
+   "week": "22-28 Dec",
+   "hotel": "Hotel B",
+   "rooms": 77,
+   "unit_cost": 5152.31,
+   "unit_price": 6847.99,
+   "expected_sold": 73.87,
+   "sell_through": 0.9594,
+   "expected_profit": 109163.77,
+   "reason": "expected demand 112 room-nights vs 74 booked last December; 6,964 sold-out searches in past Decembers; 25% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 112.1,
+    "booked_last_december": 74,
+    "bookings_past_decembers": [
+     52,
+     74,
+     74
+    ],
+    "soldout_searches_past": [
+     0,
+     854,
+     6110
+    ],
+    "event_week": false,
+    "margin": 0.2476
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -124122.24
+  },
+  {
+   "id": 6,
+   "city": "Kochi",
+   "week": "15-21 Dec",
+   "hotel": "Hotel A",
+   "rooms": 47,
+   "unit_cost": 8697.21,
+   "unit_price": 11362.23,
+   "expected_sold": 45.15,
+   "sell_through": 0.9606,
+   "expected_profit": 104229.94,
+   "reason": "expected demand 68 room-nights vs 62 booked last December; 919 sold-out searches in past Decembers; 23% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 68.3,
+    "booked_last_december": 62,
+    "bookings_past_decembers": [
+     54,
+     52,
+     62
+    ],
+    "soldout_searches_past": [
+     0,
+     31,
+     888
+    ],
+    "event_week": false,
+    "margin": 0.2346
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -98903.64
+  },
+  {
+   "id": 7,
+   "city": "Goa",
+   "week": "15-21 Dec",
+   "hotel": "Hotel A",
+   "rooms": 52,
+   "unit_cost": 7018.44,
+   "unit_price": 9287.74,
+   "expected_sold": 50.43,
+   "sell_through": 0.9698,
+   "expected_profit": 103426.2,
+   "reason": "expected demand 75 room-nights vs 50 booked last December; 1,516 sold-out searches in past Decembers; 24% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 75.2,
+    "booked_last_december": 50,
+    "bookings_past_decembers": [
+     55,
+     60,
+     50
+    ],
+    "soldout_searches_past": [
+     760,
+     0,
+     756
+    ],
+    "event_week": false,
+    "margin": 0.2443
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -52745.2
+  },
+  {
+   "id": 8,
+   "city": "Goa",
+   "week": "22-28 Dec",
+   "hotel": "Hotel B",
+   "rooms": 85,
+   "unit_cost": 6476.29,
+   "unit_price": 7813.94,
+   "expected_sold": 83.25,
+   "sell_through": 0.9794,
+   "expected_profit": 100003.75,
+   "reason": "expected demand 139 room-nights vs 109 booked last December; 1,776 sold-out searches in past Decembers; 17% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 138.7,
+    "booked_last_december": 109,
+    "bookings_past_decembers": [
+     110,
+     126,
+     109
+    ],
+    "soldout_searches_past": [
+     610,
+     1166,
+     0
+    ],
+    "event_week": false,
+    "margin": 0.1712
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -125512.66
+  },
+  {
+   "id": 9,
+   "city": "Jaipur",
+   "week": "22-28 Dec",
+   "hotel": "Hotel B",
+   "rooms": 86,
+   "unit_cost": 4326.1,
+   "unit_price": 5592.8,
+   "expected_sold": 81.88,
+   "sell_through": 0.9521,
+   "expected_profit": 85906.38,
+   "reason": "expected demand 113 room-nights vs 121 booked last December; 187 sold-out searches in past Decembers; 23% margin",
+   "decision": "rejected",
+   "decided_by": "ravi",
+   "decided_at": "2026-11-19T05:17:00Z",
+   "why": {
+    "expected_demand": 112.8,
+    "booked_last_december": 121,
+    "bookings_past_decembers": [
+     116,
+     94,
+     121
+    ],
+    "soldout_searches_past": [
+     187,
+     0,
+     0
+    ],
+    "event_week": false,
+    "margin": 0.2265
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -94533.77
+  },
+  {
+   "id": 10,
+   "city": "Udaipur",
+   "week": "15-21 Dec",
+   "hotel": "Hotel B",
+   "rooms": 63,
+   "unit_cost": 7008.98,
+   "unit_price": 8910.41,
+   "expected_sold": 59.16,
+   "sell_through": 0.939,
+   "expected_profit": 85564.91,
+   "reason": "expected demand 80 room-nights vs 38 booked last December; 956 sold-out searches in past Decembers; event week this year; 21% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 79.6,
+    "booked_last_december": 38,
+    "bookings_past_decembers": [
+     36,
+     47,
+     38
+    ],
+    "soldout_searches_past": [
+     956,
+     0,
+     0
+    ],
+    "event_week": true,
+    "margin": 0.2134
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -204498.23
+  },
+  {
+   "id": 11,
+   "city": "Udaipur",
+   "week": "22-28 Dec",
+   "hotel": "Hotel A",
+   "rooms": 60,
+   "unit_cost": 7220.48,
+   "unit_price": 8798.08,
+   "expected_sold": 58.77,
+   "sell_through": 0.9796,
+   "expected_profit": 83876.14,
+   "reason": "expected demand 92 room-nights vs 112 booked last December; 1,931 sold-out searches in past Decembers; 18% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 92.5,
+    "booked_last_december": 112,
+    "bookings_past_decembers": [
+     46,
+     102,
+     112
+    ],
+    "soldout_searches_past": [
+     0,
+     1931,
+     0
+    ],
+    "event_week": false,
+    "margin": 0.1793
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -56499.73
+  },
+  {
+   "id": 12,
+   "city": "Manali",
+   "week": "8-14 Dec",
+   "hotel": "Hotel B",
+   "rooms": 89,
+   "unit_cost": 4031.87,
+   "unit_price": 5149.7,
+   "expected_sold": 85.85,
+   "sell_through": 0.9646,
+   "expected_profit": 83243.69,
+   "reason": "expected demand 124 room-nights vs 65 booked last December; 1,218 sold-out searches in past Decembers; event week this year; 22% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 124.4,
+    "booked_last_december": 65,
+    "bookings_past_decembers": [
+     79,
+     56,
+     65
+    ],
+    "soldout_searches_past": [
+     1000,
+     0,
+     218
+    ],
+    "event_week": true,
+    "margin": 0.2171
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -82548.58
+  },
+  {
+   "id": 13,
+   "city": "Manali",
+   "week": "15-21 Dec",
+   "hotel": "Hotel A",
+   "rooms": 57,
+   "unit_cost": 8823.05,
+   "unit_price": 10603.06,
+   "expected_sold": 55.05,
+   "sell_through": 0.9658,
+   "expected_profit": 80785.23,
+   "reason": "expected demand 87 room-nights vs 83 booked last December; 2,417 sold-out searches in past Decembers; 17% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 87.0,
+    "booked_last_december": 83,
+    "bookings_past_decembers": [
+     67,
+     68,
+     83
+    ],
+    "soldout_searches_past": [
+     470,
+     0,
+     1947
+    ],
+    "event_week": false,
+    "margin": 0.1679
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -138753.88
+  },
+  {
+   "id": 14,
+   "city": "Kochi",
+   "week": "8-14 Dec",
+   "hotel": "Hotel B",
+   "rooms": 43,
+   "unit_cost": 8147.91,
+   "unit_price": 10536.75,
+   "expected_sold": 40.8,
+   "sell_through": 0.9489,
+   "expected_profit": 79572.94,
+   "reason": "expected demand 56 room-nights vs 35 booked last December; 1,636 sold-out searches in past Decembers; 23% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 55.8,
+    "booked_last_december": 35,
+    "bookings_past_decembers": [
+     40,
+     27,
+     35
+    ],
+    "soldout_searches_past": [
+     1074,
+     0,
+     562
+    ],
+    "event_week": false,
+    "margin": 0.2267
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -99431.77
+  },
+  {
+   "id": 15,
+   "city": "Jaipur",
+   "week": "22-28 Dec",
+   "hotel": "Hotel A",
+   "rooms": 88,
+   "unit_cost": 5276.7,
+   "unit_price": 6300.89,
+   "expected_sold": 85.14,
+   "sell_through": 0.9675,
+   "expected_profit": 72090.9,
+   "reason": "expected demand 130 room-nights vs 100 booked last December; 2,981 sold-out searches in past Decembers; 16% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 129.7,
+    "booked_last_december": 100,
+    "bookings_past_decembers": [
+     77,
+     93,
+     100
+    ],
+    "soldout_searches_past": [
+     0,
+     2376,
+     605
+    ],
+    "event_week": false,
+    "margin": 0.1625
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -84772.16
+  },
+  {
+   "id": 16,
+   "city": "Manali",
+   "week": "8-14 Dec",
+   "hotel": "Hotel A",
+   "rooms": 62,
+   "unit_cost": 5713.74,
+   "unit_price": 7175.13,
+   "expected_sold": 59.41,
+   "sell_through": 0.9581,
+   "expected_profit": 71988.26,
+   "reason": "expected demand 89 room-nights vs 51 booked last December; 1,020 sold-out searches in past Decembers; event week this year; 20% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 89.4,
+    "booked_last_december": 51,
+    "bookings_past_decembers": [
+     35,
+     52,
+     51
+    ],
+    "soldout_searches_past": [
+     0,
+     0,
+     1020
+    ],
+    "event_week": true,
+    "margin": 0.2037
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -105880.31
+  },
+  {
+   "id": 17,
+   "city": "Kochi",
+   "week": "22-28 Dec",
+   "hotel": "Hotel B",
+   "rooms": 56,
+   "unit_cost": 4300.03,
+   "unit_price": 5622.33,
+   "expected_sold": 54.42,
+   "sell_through": 0.9718,
+   "expected_profit": 65165.23,
+   "reason": "expected demand 83 room-nights vs 47 booked last December; 315 sold-out searches in past Decembers; event week this year; 24% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 83.3,
+    "booked_last_december": 47,
+    "bookings_past_decembers": [
+     50,
+     57,
+     47
+    ],
+    "soldout_searches_past": [
+     315,
+     0,
+     0
+    ],
+    "event_week": true,
+    "margin": 0.2352
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -37586.47
+  },
+  {
+   "id": 18,
+   "city": "Goa",
+   "week": "15-21 Dec",
+   "hotel": "Hotel B",
+   "rooms": 37,
+   "unit_cost": 7579.74,
+   "unit_price": 9607.79,
+   "expected_sold": 35.73,
+   "sell_through": 0.9655,
+   "expected_profit": 62790.57,
+   "reason": "expected demand 55 room-nights vs 52 booked last December; 21% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 54.7,
+    "booked_last_december": 52,
+    "bookings_past_decembers": [
+     43,
+     69,
+     52
+    ],
+    "soldout_searches_past": [
+     0,
+     0,
+     0
+    ],
+    "event_week": false,
+    "margin": 0.2111
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -47608.25
+  },
+  {
+   "id": 19,
+   "city": "Udaipur",
+   "week": "8-14 Dec",
+   "hotel": "Hotel B",
+   "rooms": 73,
+   "unit_cost": 6744.95,
+   "unit_price": 7745.0,
+   "expected_sold": 71.66,
+   "sell_through": 0.9816,
+   "expected_profit": 62598.24,
+   "reason": "expected demand 129 room-nights vs 82 booked last December; 4,003 sold-out searches in past Decembers; 13% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 128.7,
+    "booked_last_december": 82,
+    "bookings_past_decembers": [
+     64,
+     80,
+     82
+    ],
+    "soldout_searches_past": [
+     1492,
+     113,
+     2398
+    ],
+    "event_week": false,
+    "margin": 0.1291
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -83208.77
+  },
+  {
+   "id": 20,
+   "city": "Goa",
+   "week": "8-14 Dec",
+   "hotel": "Hotel A",
+   "rooms": 44,
+   "unit_cost": 6303.85,
+   "unit_price": 7861.12,
+   "expected_sold": 42.19,
+   "sell_through": 0.9588,
+   "expected_profit": 54261.27,
+   "reason": "expected demand 61 room-nights vs 56 booked last December; 1,746 sold-out searches in past Decembers; 20% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 61.4,
+    "booked_last_december": 56,
+    "bookings_past_decembers": [
+     37,
+     67,
+     56
+    ],
+    "soldout_searches_past": [
+     0,
+     1746,
+     0
+    ],
+    "event_week": false,
+    "margin": 0.1981
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -76844.88
+  },
+  {
+   "id": 21,
+   "city": "Kochi",
+   "week": "1-7 Dec",
+   "hotel": "Hotel B",
+   "rooms": 27,
+   "unit_cost": 7142.18,
+   "unit_price": 9532.57,
+   "expected_sold": 25.72,
+   "sell_through": 0.9526,
+   "expected_profit": 52350.68,
+   "reason": "expected demand 37 room-nights vs 28 booked last December; 787 sold-out searches in past Decembers; 25% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 36.8,
+    "booked_last_december": 28,
+    "bookings_past_decembers": [
+     19,
+     32,
+     28
+    ],
+    "soldout_searches_past": [
+     0,
+     43,
+     744
+    ],
+    "event_week": false,
+    "margin": 0.2508
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -38930.76
+  },
+  {
+   "id": 22,
+   "city": "Manali",
+   "week": "15-21 Dec",
+   "hotel": "Hotel B",
+   "rooms": 56,
+   "unit_cost": 4682.52,
+   "unit_price": 5803.48,
+   "expected_sold": 54.03,
+   "sell_through": 0.9649,
+   "expected_profit": 51367.76,
+   "reason": "expected demand 76 room-nights vs 81 booked last December; 827 sold-out searches in past Decembers; 19% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 75.8,
+    "booked_last_december": 81,
+    "bookings_past_decembers": [
+     76,
+     75,
+     81
+    ],
+    "soldout_searches_past": [
+     25,
+     0,
+     802
+    ],
+    "event_week": false,
+    "margin": 0.1932
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -46114.87
+  },
+  {
+   "id": 23,
+   "city": "Jaipur",
+   "week": "8-14 Dec",
+   "hotel": "Hotel B",
+   "rooms": 26,
+   "unit_cost": 6790.01,
+   "unit_price": 8973.21,
+   "expected_sold": 25.11,
+   "sell_through": 0.9657,
+   "expected_profit": 48765.99,
+   "reason": "expected demand 38 room-nights vs 21 booked last December; 1,229 sold-out searches in past Decembers; 24% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 38.0,
+    "booked_last_december": 21,
+    "bookings_past_decembers": [
+     47,
+     29,
+     21
+    ],
+    "soldout_searches_past": [
+     1229,
+     0,
+     0
+    ],
+    "event_week": false,
+    "margin": 0.2433
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -39193.78
+  },
+  {
+   "id": 24,
+   "city": "Jaipur",
+   "week": "15-21 Dec",
+   "hotel": "Hotel B",
+   "rooms": 44,
+   "unit_cost": 5631.97,
+   "unit_price": 7017.19,
+   "expected_sold": 41.83,
+   "sell_through": 0.9507,
+   "expected_profit": 45727.06,
+   "reason": "expected demand 60 room-nights vs 54 booked last December; 2,037 sold-out searches in past Decembers; 20% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 59.8,
+    "booked_last_december": 54,
+    "bookings_past_decembers": [
+     50,
+     39,
+     54
+    ],
+    "soldout_searches_past": [
+     0,
+     0,
+     2037
+    ],
+    "event_week": false,
+    "margin": 0.1974
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -82110.93
+  },
+  {
+   "id": 25,
+   "city": "Udaipur",
+   "week": "1-7 Dec",
+   "hotel": "Hotel B",
+   "rooms": 37,
+   "unit_cost": 5586.95,
+   "unit_price": 6735.65,
+   "expected_sold": 35.68,
+   "sell_through": 0.9644,
+   "expected_profit": 33624.11,
+   "reason": "expected demand 55 room-nights vs 48 booked last December; 929 sold-out searches in past Decembers; 17% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 55.4,
+    "booked_last_december": 48,
+    "bookings_past_decembers": [
+     56,
+     55,
+     48
+    ],
+    "soldout_searches_past": [
+     845,
+     84,
+     0
+    ],
+    "event_week": false,
+    "margin": 0.1705
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -66398.22
+  },
+  {
+   "id": 26,
+   "city": "Jaipur",
+   "week": "1-7 Dec",
+   "hotel": "Hotel B",
+   "rooms": 23,
+   "unit_cost": 8292.37,
+   "unit_price": 9744.21,
+   "expected_sold": 22.7,
+   "sell_through": 0.9869,
+   "expected_profit": 30446.76,
+   "reason": "expected demand 41 room-nights vs 38 booked last December; 644 sold-out searches in past Decembers; 15% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 41.4,
+    "booked_last_december": 38,
+    "bookings_past_decembers": [
+     40,
+     39,
+     38
+    ],
+    "soldout_searches_past": [
+     400,
+     0,
+     244
+    ],
+    "event_week": false,
+    "margin": 0.149
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -17934.78
+  },
+  {
+   "id": 27,
+   "city": "Udaipur",
+   "week": "8-14 Dec",
+   "hotel": "Hotel A",
+   "rooms": 30,
+   "unit_cost": 8883.11,
+   "unit_price": 10011.1,
+   "expected_sold": 29.38,
+   "sell_through": 0.9792,
+   "expected_profit": 27585.87,
+   "reason": "expected demand 44 room-nights vs 33 booked last December; 11% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 43.7,
+    "booked_last_december": 33,
+    "bookings_past_decembers": [
+     36,
+     62,
+     33
+    ],
+    "soldout_searches_past": [
+     0,
+     0,
+     0
+    ],
+    "event_week": false,
+    "margin": 0.1127
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -46017.27
+  },
+  {
+   "id": 28,
+   "city": "Goa",
+   "week": "8-14 Dec",
+   "hotel": "Hotel B",
+   "rooms": 25,
+   "unit_cost": 8159.33,
+   "unit_price": 9477.28,
+   "expected_sold": 24.43,
+   "sell_through": 0.977,
+   "expected_profit": 27505.11,
+   "reason": "expected demand 40 room-nights vs 31 booked last December; 1,149 sold-out searches in past Decembers; 14% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 40.3,
+    "booked_last_december": 31,
+    "bookings_past_decembers": [
+     28,
+     43,
+     31
+    ],
+    "soldout_searches_past": [
+     0,
+     955,
+     194
+    ],
+    "event_week": false,
+    "margin": 0.1391
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -49839.42
+  },
+  {
+   "id": 29,
+   "city": "Jaipur",
+   "week": "1-7 Dec",
+   "hotel": "Hotel A",
+   "rooms": 21,
+   "unit_cost": 6292.75,
+   "unit_price": 7642.67,
+   "expected_sold": 20.75,
+   "sell_through": 0.9882,
+   "expected_profit": 26452.3,
+   "reason": "expected demand 34 room-nights vs 22 booked last December; 314 sold-out searches in past Decembers; 18% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 33.8,
+    "booked_last_december": 22,
+    "bookings_past_decembers": [
+     45,
+     41,
+     22
+    ],
+    "soldout_searches_past": [
+     314,
+     0,
+     0
+    ],
+    "event_week": false,
+    "margin": 0.1766
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -2801.28
+  },
+  {
+   "id": 30,
+   "city": "Udaipur",
+   "week": "22-28 Dec",
+   "hotel": "Hotel B",
+   "rooms": 30,
+   "unit_cost": 4329.33,
+   "unit_price": 5370.37,
+   "expected_sold": 28.97,
+   "sell_through": 0.9657,
+   "expected_profit": 25698.14,
+   "reason": "expected demand 41 room-nights vs 50 booked last December; 310 sold-out searches in past Decembers; 19% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 41.1,
+    "booked_last_december": 50,
+    "bookings_past_decembers": [
+     25,
+     60,
+     50
+    ],
+    "soldout_searches_past": [
+     0,
+     310,
+     0
+    ],
+    "event_week": false,
+    "margin": 0.1938
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -33884.3
+  },
+  {
+   "id": 31,
+   "city": "Manali",
+   "week": "1-7 Dec",
+   "hotel": "Hotel B",
+   "rooms": 32,
+   "unit_cost": 4817.6,
+   "unit_price": 5777.12,
+   "expected_sold": 30.92,
+   "sell_through": 0.9664,
+   "expected_profit": 24492.65,
+   "reason": "expected demand 52 room-nights vs 30 booked last December; 1,000 sold-out searches in past Decembers; 17% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 52.3,
+    "booked_last_december": 30,
+    "bookings_past_decembers": [
+     45,
+     42,
+     30
+    ],
+    "soldout_searches_past": [
+     903,
+     97,
+     0
+    ],
+    "event_week": false,
+    "margin": 0.1661
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -38193.06
+  },
+  {
+   "id": 32,
+   "city": "Kochi",
+   "week": "15-21 Dec",
+   "hotel": "Hotel B",
+   "rooms": 22,
+   "unit_cost": 8471.54,
+   "unit_price": 9754.61,
+   "expected_sold": 21.58,
+   "sell_through": 0.981,
+   "expected_profit": 24153.89,
+   "reason": "expected demand 38 room-nights vs 38 booked last December; 568 sold-out searches in past Decembers; 13% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 37.9,
+    "booked_last_december": 38,
+    "bookings_past_decembers": [
+     30,
+     23,
+     38
+    ],
+    "soldout_searches_past": [
+     302,
+     0,
+     266
+    ],
+    "event_week": false,
+    "margin": 0.1315
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -33515.93
+  },
+  {
+   "id": 33,
+   "city": "Udaipur",
+   "week": "1-7 Dec",
+   "hotel": "Hotel A",
+   "rooms": 27,
+   "unit_cost": 7989.86,
+   "unit_price": 8994.95,
+   "expected_sold": 26.66,
+   "sell_through": 0.9873,
+   "expected_profit": 24054.79,
+   "reason": "expected demand 45 room-nights vs 61 booked last December; 11% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 44.7,
+    "booked_last_december": 61,
+    "bookings_past_decembers": [
+     63,
+     31,
+     61
+    ],
+    "soldout_searches_past": [
+     0,
+     0,
+     0
+    ],
+    "event_week": false,
+    "margin": 0.1117
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -26645.48
+  },
+  {
+   "id": 34,
+   "city": "Goa",
+   "week": "22-28 Dec",
+   "hotel": "Hotel A",
+   "rooms": 31,
+   "unit_cost": 4003.23,
+   "unit_price": 5008.15,
+   "expected_sold": 29.47,
+   "sell_through": 0.9506,
+   "expected_profit": 23490.26,
+   "reason": "expected demand 42 room-nights vs 39 booked last December; 21 sold-out searches in past Decembers; 20% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 42.3,
+    "booked_last_december": 39,
+    "bookings_past_decembers": [
+     52,
+     35,
+     39
+    ],
+    "soldout_searches_past": [
+     21,
+     0,
+     0
+    ],
+    "event_week": false,
+    "margin": 0.2007
+   },
+   "buy_by": "2027-08-05",
+   "worst_case_profit": -47250.83
+  },
+  {
+   "id": 35,
+   "city": "Jaipur",
+   "week": "8-14 Dec",
+   "hotel": "Hotel A",
+   "rooms": 40,
+   "unit_cost": 5486.95,
+   "unit_price": 6193.41,
+   "expected_sold": 39.09,
+   "sell_through": 0.9774,
+   "expected_profit": 22649.19,
+   "reason": "expected demand 66 room-nights vs 34 booked last December; 3,579 sold-out searches in past Decembers; 11% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 66.1,
+    "booked_last_december": 34,
+    "bookings_past_decembers": [
+     48,
+     13,
+     34
+    ],
+    "soldout_searches_past": [
+     1797,
+     0,
+     1782
+    ],
+    "event_week": false,
+    "margin": 0.1141
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -55267.54
+  },
+  {
+   "id": 36,
+   "city": "Goa",
+   "week": "1-7 Dec",
+   "hotel": "Hotel A",
+   "rooms": 32,
+   "unit_cost": 4971.8,
+   "unit_price": 5788.5,
+   "expected_sold": 31.31,
+   "sell_through": 0.9783,
+   "expected_profit": 22114.46,
+   "reason": "expected demand 57 room-nights vs 49 booked last December; 892 sold-out searches in past Decembers; 14% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 56.6,
+    "booked_last_december": 49,
+    "bookings_past_decembers": [
+     50,
+     35,
+     49
+    ],
+    "soldout_searches_past": [
+     289,
+     0,
+     603
+    ],
+    "event_week": false,
+    "margin": 0.1411
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -25064.58
+  },
+  {
+   "id": 37,
+   "city": "Jaipur",
+   "week": "15-21 Dec",
+   "hotel": "Hotel A",
+   "rooms": 31,
+   "unit_cost": 3825.88,
+   "unit_price": 4696.57,
+   "expected_sold": 29.95,
+   "sell_through": 0.9661,
+   "expected_profit": 22056.91,
+   "reason": "expected demand 43 room-nights vs 44 booked last December; 657 sold-out searches in past Decembers; 19% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 42.6,
+    "booked_last_december": 44,
+    "bookings_past_decembers": [
+     44,
+     37,
+     44
+    ],
+    "soldout_searches_past": [
+     0,
+     0,
+     657
+    ],
+    "event_week": false,
+    "margin": 0.1854
+   },
+   "buy_by": "2027-08-26",
+   "worst_case_profit": -27876.03
+  },
+  {
+   "id": 38,
+   "city": "Manali",
+   "week": "1-7 Dec",
+   "hotel": "Hotel A",
+   "rooms": 13,
+   "unit_cost": 5921.72,
+   "unit_price": 7821.09,
+   "expected_sold": 12.45,
+   "sell_through": 0.9574,
+   "expected_profit": 20364.24,
+   "reason": "expected demand 19 room-nights vs 20 booked last December; 20 sold-out searches in past Decembers; 24% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 18.6,
+    "booked_last_december": 20,
+    "bookings_past_decembers": [
+     19,
+     16,
+     20
+    ],
+    "soldout_searches_past": [
+     1,
+     0,
+     19
+    ],
+    "event_week": false,
+    "margin": 0.2429
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -12255.02
+  },
+  {
+   "id": 39,
+   "city": "Kochi",
+   "week": "8-14 Dec",
+   "hotel": "Hotel A",
+   "rooms": 38,
+   "unit_cost": 4223.89,
+   "unit_price": 4735.78,
+   "expected_sold": 37.23,
+   "sell_through": 0.9798,
+   "expected_profit": 15819.62,
+   "reason": "expected demand 60 room-nights vs 53 booked last December; 11% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 59.7,
+    "booked_last_december": 53,
+    "bookings_past_decembers": [
+     68,
+     58,
+     53
+    ],
+    "soldout_searches_past": [
+     0,
+     0,
+     0
+    ],
+    "event_week": false,
+    "margin": 0.1081
+   },
+   "buy_by": "2027-08-20",
+   "worst_case_profit": -36104.36
+  },
+  {
+   "id": 40,
+   "city": "Kochi",
+   "week": "1-7 Dec",
+   "hotel": "Hotel A",
+   "rooms": 11,
+   "unit_cost": 8307.42,
+   "unit_price": 9592.95,
+   "expected_sold": 10.81,
+   "sell_through": 0.9831,
+   "expected_profit": 12362.41,
+   "reason": "expected demand 17 room-nights vs 24 booked last December; 11 sold-out searches in past Decembers; 13% margin",
+   "decision": "pending",
+   "decided_by": null,
+   "decided_at": null,
+   "why": {
+    "expected_demand": 17.5,
+    "booked_last_december": 24,
+    "bookings_past_decembers": [
+     18,
+     10,
+     24
+    ],
+    "soldout_searches_past": [
+     0,
+     0,
+     11
+    ],
+    "event_week": false,
+    "margin": 0.134
+   },
+   "buy_by": "2027-08-30",
+   "worst_case_profit": -10537.7
+  }
+ ]
+}

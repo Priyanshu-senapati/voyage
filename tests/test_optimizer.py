@@ -1,7 +1,10 @@
+import threading
+
 import numpy as np
 import pytest
 
-from voyance.optimizer import cvar, optimize, plan_relaxed, profits
+from voyance import optimizer
+from voyance.optimizer import cvar, optimize, plan_relaxed, profits, solve_relaxed
 
 
 def small_instance(seed=0, n_items=4, n_scenarios=40):
@@ -11,6 +14,116 @@ def small_instance(seed=0, n_items=4, n_scenarios=40):
     cap = np.full(n_items, 60)
     demand = rng.gamma(4.0, 8.0, size=(n_scenarios, n_items))
     return cost, price, cap, demand
+
+
+def _objective(cost, price, cap, demand, budget, risk, alpha=0.1, lower=None):
+    """Risk-adjusted profit of the best fractional plan, optionally forcing a minimum buy (brute-force check)."""
+    from scipy.optimize import linprog
+
+    c, a_ub, b_ub, low, up = optimizer._model(cost, price, cap, demand, np.zeros(cost.size), budget, risk, alpha)
+    if lower is not None:
+        low[: cost.size] = lower
+    return -linprog(c, A_ub=a_ub, b_ub=b_ub, bounds=np.column_stack([low, up]), method="highs").fun
+
+
+def test_solution_reports_its_own_risk_adjusted_profit():
+    cost, price, cap, demand = small_instance()
+    sol = solve_relaxed(cost, price, cap, demand, budget=2_000.0, risk_aversion=0.5, alpha=0.1)
+    assert sol.objective == pytest.approx(_objective(cost, price, cap, demand, 2_000.0, 0.5))
+    assert sol.buy == pytest.approx(plan_relaxed(cost, price, cap, demand, budget=2_000.0, risk_aversion=0.5,
+                                                 alpha=0.1))
+
+
+def test_budget_value_is_what_one_more_rupee_would_earn():
+    cost, price, cap, demand = small_instance()
+    sol = solve_relaxed(cost, price, cap, demand, budget=2_000.0, risk_aversion=0.3, alpha=0.1)
+    gain = _objective(cost, price, cap, demand, 2_010.0, 0.3) - sol.objective
+    assert sol.budget_value > 0 and gain == pytest.approx(10 * sol.budget_value, rel=1e-3)
+    roomy = solve_relaxed(cost, price, cap, demand, budget=1e9, risk_aversion=0.3, alpha=0.1)
+    assert roomy.budget_value == pytest.approx(0, abs=1e-9)  # money is not what holds the plan back
+
+
+def test_forced_room_cost_is_what_buying_one_skipped_room_would_lose():
+    cost, price, cap, demand = small_instance()
+    price[2] = cost[2] * 1.01  # barely any margin: the optimizer skips it
+    sol = solve_relaxed(cost, price, cap, demand, budget=2_000.0, risk_aversion=0.3, alpha=0.1)
+    assert sol.buy[2] == pytest.approx(0, abs=1e-9) and sol.forced_room_cost[2] > 0
+    forced = np.zeros(cost.size)
+    forced[2] = 1
+    loss = sol.objective - _objective(cost, price, cap, demand, 2_000.0, 0.3, lower=forced)
+    assert loss == pytest.approx(sol.forced_room_cost[2], rel=1e-3)
+
+
+def test_extra_room_value_is_what_one_more_room_of_allotment_would_earn():
+    cost, price, cap, demand = small_instance()
+    cap = np.array([5.0, 60, 60, 60])  # a scarce, profitable hotel
+    sol = solve_relaxed(cost, price, cap, demand, budget=1e9, risk_aversion=0.0, alpha=0.1)
+    assert sol.buy[0] == pytest.approx(5) and sol.extra_room_value[0] > 0
+    # a shadow price is exact at the margin; over a whole room it can bend where a scenario's demand ends
+    tenth = _objective(cost, price, cap + np.array([0.1, 0, 0, 0]), demand, 1e9, 0.0) - sol.objective
+    whole = _objective(cost, price, cap + np.array([1, 0, 0, 0]), demand, 1e9, 0.0) - sol.objective
+    assert tenth / 0.1 == pytest.approx(sol.extra_room_value[0], rel=1e-3)
+    assert whole == pytest.approx(sol.extra_room_value[0], rel=1e-2)
+
+
+def test_every_solve_runs_on_the_one_long_lived_solver_thread(monkeypatch):
+    # HiGHS through scipy crashes the process when a thread that ran a solve exits (seen on Windows), so
+    # solves never run on the caller's thread, which may be a short-lived worker
+    ran_on = []
+    real = optimizer.linprog
+
+    def watched(*args, **kwargs):
+        ran_on.append(threading.current_thread())
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(optimizer, "linprog", watched)
+    cost, price, cap, demand = small_instance()
+    callers = [threading.Thread(target=optimize, args=(cost, price, cap, demand, 2_000.0)) for _ in range(3)]
+    for t in callers:
+        t.start()
+    for t in callers:
+        t.join()
+    optimize(cost, price, cap, demand, budget=2_000.0)
+    assert len(ran_on) == 4 and len(set(ran_on)) == 1
+    assert ran_on[0].daemon and ran_on[0] is not threading.main_thread() and ran_on[0] not in callers
+
+
+def test_a_failing_solve_raises_in_the_caller():
+    cost, price, cap, demand = small_instance()
+    with pytest.raises(ValueError):
+        optimize(cost, price, cap, demand, budget=-1.0)
+
+
+GROUPS = (np.array([0, 1]), np.array([2, 3]))  # e.g. two cities of two hotel-weeks each
+
+
+def test_group_caps_keep_each_groups_spend_within_its_share_of_the_budget():
+    cost, price, cap, demand = small_instance()
+    price[:2] = cost[:2] * 1.8  # the first group is far more profitable, so the plan wants to pile into it
+    free = solve_relaxed(cost, price, cap, demand, budget=2_000.0, risk_aversion=0.3, alpha=0.1)
+    assert cost[:2] @ free.buy[:2] > 0.5 * 2_000
+    capped = solve_relaxed(cost, price, cap, demand, budget=2_000.0, risk_aversion=0.3, alpha=0.1,
+                           groups=GROUPS, group_share=0.5)
+    assert cost[:2] @ capped.buy[:2] <= 0.5 * 2_000 + 1e-6 and capped.objective < free.objective
+    whole = optimize(cost, price, cap, demand, budget=2_000.0, risk_aversion=0.3, alpha=0.1, groups=GROUPS,
+                     group_share=0.5)
+    assert cost[:2] @ whole[:2] <= 0.5 * 2_000 + 1e-6  # rounding down never breaks a cap (solver tolerance)
+
+
+def test_each_group_can_have_its_own_share():
+    cost, price, cap, demand = small_instance()
+    price[:2] = cost[:2] * 1.8
+    sol = solve_relaxed(cost, price, cap, demand, budget=2_000.0, risk_aversion=0.3, alpha=0.1,
+                        groups=GROUPS, group_share=[0.3, 1.0])
+    assert cost[:2] @ sol.buy[:2] <= 0.3 * 2_000 + 1e-6
+
+
+@pytest.mark.parametrize("groups, share", [(GROUPS, 0.0), (GROUPS, float("nan")), (GROUPS, [0.5]),
+                                           ((np.array([0, 0]),), 0.5), ((np.array([7]),), 0.5)])
+def test_group_caps_need_distinct_items_and_a_share_between_zero_and_one(groups, share):
+    cost, price, cap, demand = small_instance()
+    with pytest.raises(ValueError, match="share"):
+        solve_relaxed(cost, price, cap, demand, budget=2_000.0, groups=groups, group_share=share)
 
 
 def test_profits_per_scenario():

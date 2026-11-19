@@ -89,6 +89,33 @@ Shared files (`README.md`, `PLAN.md`): pull first, keep edits small.
 | 10 – 16 Dec | Mock TBO Hotel API adapter (search, availability re-check, book); webhooks | December replay view; live URL; end-to-end tests | 10-slide deck draft, docs, video script. Bug bash 2 |
 | 17 – 23 Dec | Fixes from bug bashes; README | Polish | Record video; judge Q&A bank. **Submit 23 Dec** |
 
+**Lane A progress (19 Nov, all on `main`; the API contract at `/docs` is current):**
+- Done early:
+  - real-data calibration (`f9d67d9`);
+  - forecast v1, LightGBM low/likely/high + SHAP, walk-forward (`b957b1b`);
+  - real-data decision backtest, with 95% intervals (`ff81abc`).
+- API, all requested by lane B:
+  - `/v1/me`, plan preview, structured `why`, risk frontier, fixed demo keys (`5299b9b`);
+  - buy-by date and per-line worst case (`406050c`);
+  - what-ifs (`1625011`).
+- Decision layer:
+  - optimizer shadow prices (`010113a`);
+  - hurdle rate, what limits each line, and the "why not" for every skip (`fec5b0a`);
+  - action queue (`28a4925`);
+  - city/hotel exposure caps with what they cost (`6494b8b`, `8472f15`).
+- Reliability:
+  - clean-install fix (`4ac974a`);
+  - every solve runs on one long-lived thread, because SciPy's HiGHS crashed the process when a solver thread exited (`41e678d`).
+- Measured on real 2017 bookings: buying by the forecast earns 7–13% more than re-buying last year, with every 95% interval above zero.
+- Tried and dropped:
+  - "Autopilot" top-up/release after the first buy: no reliable profit gain on real data;
+  - conformal recalibration of the forecast range: unstable.
+- Next:
+  - real-data Replay (decision memory: what we believed vs what happened);
+  - Alembic migrations (each schema change still needs a fresh `voyance.db`);
+  - release value + price tiers;
+  - mock TBO adapter + webhooks.
+
 ### Hand-offs
 - **A → B:** the OpenAPI page at `/docs` is the contract. Run `python scripts/seed_demo.py`, then
   `uvicorn voyance.api.app:create_app --factory` with `VOYANCE_CORS_ORIGINS=http://localhost:5173`.

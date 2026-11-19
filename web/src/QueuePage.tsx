@@ -15,10 +15,11 @@ type PlanLine = PlanOut['lines'][number]
 const DAYS = ['today', `${SEASON_YEAR}-08-01`, `${SEASON_YEAR}-08-15`, `${SEASON_YEAR}-09-01`]
 
 const ACTION: Record<QueueItem['action'], { label: string; tone: 'accent' | 'warn' | 'neutral'; priority: string }> = {
-  buy_now: { label: 'Buy now', tone: 'warn', priority: 'High' },
-  scheduled: { label: 'Buy later', tone: 'accent', priority: 'Medium' },
-  watch: { label: 'Watch', tone: 'neutral', priority: 'Low' },
-  skip: { label: 'Skip', tone: 'neutral', priority: 'No' },
+  buy_now: { label: 'Buy now', tone: 'warn', priority: 'High priority' },
+  scheduled: { label: 'Buy later', tone: 'accent', priority: 'Medium priority' },
+  awaiting_approval: { label: 'Needs approval', tone: 'neutral', priority: 'Approve first' },
+  watch: { label: 'Watch', tone: 'neutral', priority: 'Low priority' },
+  skip: { label: 'Skip', tone: 'neutral', priority: 'No priority' },
 }
 
 // The planner's why-not rules, by the sentence each one writes (voyance/api/planner.py: _passed)
@@ -98,16 +99,18 @@ function Queue({ queue, plan }: { queue: QueueOut; plan: PlanOut }) {
     line: item.line_id != null ? lines.get(item.line_id) : undefined,
     passed: passed.get(`${item.city}|${item.week}|${item.hotel}`),
   }))
+  // only approved lines are buys (the API's approval gate); the rest wait for an approver first
   const buys = items.filter(({ item }) => item.action === 'buy_now' || item.action === 'scheduled')
+  const awaiting = items.filter(({ item }) => item.action === 'awaiting_approval')
+  const purchases = [...buys, ...awaiting]
   const watch = items.filter(({ item }) => item.action === 'watch')
   const skips = items.filter(({ item }) => item.action === 'skip')
-  const awaiting = buys.filter(({ item }) => item.decision === 'pending')
   const urgent = buys.filter(({ item }) => item.action === 'buy_now')
-  const needed = sum(buys.map(({ item, line }) => (item.rooms ?? 0) * (line?.unit_cost ?? 0)))
+  const needed = sum(purchases.map(({ item, line }) => (item.rooms ?? 0) * (line?.unit_cost ?? 0)))
 
   const shown = items.filter(({ item }) => {
     if (filter === 'buy') return item.action === 'buy_now' || item.action === 'scheduled'
-    if (filter === 'approval') return (item.action === 'buy_now' || item.action === 'scheduled') && item.decision === 'pending'
+    if (filter === 'approval') return item.action === 'awaiting_approval'
     if (filter === 'all') return true
     return item.action === filter
   })
@@ -117,27 +120,31 @@ function Queue({ queue, plan }: { queue: QueueOut; plan: PlanOut }) {
       <dl className="kpis panel">
         <div className="kpi">
           <dt>Actions to take</dt>
-          <dd className="kpi-value">{buys.length + watch.length}</dd>
+          <dd className="kpi-value">{purchases.length + watch.length}</dd>
           <dd className="kpi-sub">
-            {plural(buys.length, 'buy')} · {watch.length} to watch
+            {plural(buys.length, 'approved buy')} · {awaiting.length} need approval · {watch.length} to watch
           </dd>
         </div>
         <div className="kpi">
           <dt>High priority</dt>
           <dd className="kpi-value">{urgent.length}</dd>
-          <dd className="kpi-sub">{urgent.length ? `due within 14 days of ${dayMonth(queue.as_of, true)}` : 'nothing due within 14 days'}</dd>
+          <dd className="kpi-sub">
+            {urgent.length ? `approved buys due within 14 days of ${dayMonth(queue.as_of, true)}` : 'no approved buy due within 14 days'}
+          </dd>
         </div>
         <div className="kpi">
           <dt>Recommended purchases</dt>
-          <dd className="kpi-value">{count(sum(buys.map(({ item }) => item.rooms ?? 0)))} rooms</dd>
+          <dd className="kpi-value">{count(sum(purchases.map(({ item }) => item.rooms ?? 0)))} rooms</dd>
           <dd className="kpi-sub">
-            {plural(buys.length, 'line')} · {awaiting.length} awaiting approval
+            {plural(purchases.length, 'line')} · {awaiting.length} awaiting approval
           </dd>
         </div>
         <div className="kpi">
           <dt>
             Budget needed
-            <InfoTip label="budget needed">Rooms times their contract cost, for every buy in the queue (rejected lines are left out).</InfoTip>
+            <InfoTip label="budget needed">
+              Rooms times their contract cost, for every buy in the queue, approved or waiting (rejected lines are left out).
+            </InfoTip>
           </dt>
           <dd className="kpi-value">{inr(needed)}</dd>
           <dd className="kpi-sub">
@@ -155,7 +162,7 @@ function Queue({ queue, plan }: { queue: QueueOut; plan: PlanOut }) {
             onChange={setFilter}
             options={[
               { value: 'all', label: `All ${items.length}` },
-              { value: 'buy', label: `Buy ${buys.length}` },
+              { value: 'buy', label: `Approved buys ${buys.length}` },
               { value: 'approval', label: `Needs approval ${awaiting.length}` },
               { value: 'watch', label: `Watch ${watch.length}` },
               { value: 'skip', label: `Skip ${skips.length}` },
@@ -195,14 +202,14 @@ function Queue({ queue, plan }: { queue: QueueOut; plan: PlanOut }) {
             <tbody>
               {shown.map(({ item, index, line, passed: pass }) => {
                 const expanded = open === index
-                const meta = ACTION[item.action]
+                const meta = ACTION[item.action] ?? { label: capital(item.action.replace(/_/g, ' ')), tone: 'neutral', priority: 'No priority' }
                 const id = `queue-item-${index}`
                 return (
                   <Fragment key={index}>
                     <tr className="row-link" aria-current={expanded ? 'true' : undefined} onClick={() => setOpen(expanded ? null : index)}>
                       <td>
                         <Badge tone={meta.tone}>{meta.label}</Badge>
-                        <span className="cell-sub">{meta.priority} priority</span>
+                        <span className="cell-sub">{meta.priority}</span>
                       </td>
                       <td>
                         <button
@@ -324,7 +331,15 @@ function ItemDetail({ item, line, passed, hurdle }: { item: QueueItem; line?: Pl
   }
   return (
     <div className="line-detail">
-      <h3>{item.action === 'watch' ? 'Why watch it' : item.action === 'skip' ? 'Why skip it' : 'Why buy it'}</h3>
+      <h3>
+        {item.action === 'watch'
+          ? 'Why watch it'
+          : item.action === 'skip'
+            ? 'Why skip it'
+            : item.action === 'awaiting_approval'
+              ? 'Why buy it, once approved'
+              : 'Why buy it'}
+      </h3>
       <p className="line-note">{capital(item.reason)}.</p>
       {line && (
         <dl className="detail-grid">

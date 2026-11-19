@@ -337,6 +337,16 @@ export interface components {
              * @description (price - cost) / price
              */
             margin: number;
+            /**
+             * Sell Out Chance
+             * @description Chance every room bought sells (plans from before this field have none)
+             */
+            sell_out_chance?: number | null;
+            /**
+             * Why Not More
+             * @description Why the plan stops at this many rooms, in money
+             */
+            why_not_more?: string | null;
         };
         /** MarketItem */
         MarketItem: {
@@ -831,7 +841,7 @@ export interface components {
              * Action
              * @enum {string}
              */
-            action: "buy_now" | "scheduled" | "watch" | "skip";
+            action: "buy_now" | "scheduled" | "awaiting_approval" | "watch" | "skip";
             /** City */
             city: string;
             /** Week */
@@ -854,7 +864,8 @@ export interface components {
         };
         /**
          * QueueOut
-         * @description What to do about a plan on a given day: buy now, scheduled buys, things to watch, and skips.
+         * @description What to do about a plan on a given day: approved buys (now or scheduled), lines awaiting approval,
+         *     things to watch, and skips. Only approved lines are ever buys.
          */
         QueueOut: {
             /** Plan Id */

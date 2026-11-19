@@ -133,6 +133,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/plans/{plan_id}/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What to do about a plan today
+         * @description Buys due within two weeks first, then later buys by date, then hotels to ask for more rooms and close calls to watch, then skips with their reasons.
+         */
+        get: operations["plan_queue_v1_plans__plan_id__queue_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/plans/{plan_id}/lines/{line_id}": {
         parameters: {
             query?: never;
@@ -194,6 +214,30 @@ export interface components {
         ErrorOut: {
             /** Detail */
             detail: string;
+        };
+        /** ExposureOut */
+        ExposureOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "city" | "hotel";
+            /**
+             * Name
+             * @description A city, or "City · Hotel" for a hotel
+             */
+            name: string;
+            /** Spend */
+            spend: number;
+            /** Share Of Budget */
+            share_of_budget: number;
+            /** Cap */
+            cap: number | null;
+            /**
+             * At Cap
+             * @description The optimizer's plan fills the cap; whole rooms can round a little below it
+             */
+            at_cap: boolean;
         };
         /** FrontierPoint */
         FrontierPoint: {
@@ -288,6 +332,41 @@ export interface components {
             tenant: string;
         };
         /**
+         * PassedOut
+         * @description A hotel-week the plan buys none of, and why.
+         */
+        PassedOut: {
+            /** City */
+            city: string;
+            /** Week */
+            week: string;
+            /** Hotel */
+            hotel: string;
+            /** Unit Cost */
+            unit_cost: number;
+            /** Unit Price */
+            unit_price: number;
+            /** Expected Demand */
+            expected_demand: number;
+            /**
+             * Earns Here
+             * @description What one whole room here makes: price x its expected sales - cost
+             */
+            earns_here: number;
+            /**
+             * Earns Elsewhere
+             * @description What the same money makes in the rest of the plan
+             */
+            earns_elsewhere: number;
+            /**
+             * Forced Room Cost
+             * @description About what the plan would lose, risk-adjusted, with one whole room forced in
+             */
+            forced_room_cost: number;
+            /** Reason */
+            reason: string;
+        };
+        /**
          * PlanCreate
          * @example {
          *       "budget_inr": 2000000,
@@ -309,6 +388,16 @@ export interface components {
              * @description Limit to these cities; leave out for all
              */
             cities?: string[] | null;
+            /**
+             * Max City Share
+             * @description At most this share of the whole budget in any one city, e.g. 0.35, also when `cities` narrows the plan; leave out for no cap
+             */
+            max_city_share?: number | null;
+            /**
+             * Max Hotel Share
+             * @description At most this share of the whole budget with any one hotel (supplier); leave out for no cap
+             */
+            max_hotel_share?: number | null;
             /**
              * Risk Aversion
              * @description 0 = maximise expected profit, 1 = protect the worst case
@@ -348,6 +437,22 @@ export interface components {
              * @description Commit by this date: 90% of that week's agent bookings come later
              */
             buy_by: string;
+            /**
+             * First Night
+             * Format: date
+             */
+            first_night: string;
+            /**
+             * Limited By
+             * @description What stopped it buying more: the hotel's allotment, a city or hotel cap, the budget (the next room earns less than the hurdle rate) or demand
+             * @enum {string}
+             */
+            limited_by: "hotel" | "cap" | "budget" | "demand";
+            /**
+             * Extra Room Value
+             * @description Risk-adjusted rupees one more room of allotment would add; 0 unless limited by the hotel
+             */
+            extra_room_value: number;
             /** Id */
             id: number;
             /**
@@ -376,6 +481,20 @@ export interface components {
             expected_profit: number;
             /** Worst Case Profit */
             worst_case_profit: number;
+            /**
+             * Hurdle Rate
+             * @description Risk-adjusted rupees one more rupee of budget would earn: the return every purchase must beat. 0 when money isn't the limit
+             */
+            hurdle_rate: number;
+            /** Max City Share */
+            max_city_share?: number | null;
+            /** Max Hotel Share */
+            max_hotel_share?: number | null;
+            /**
+             * Caps Cost
+             * @description Risk-adjusted profit the city and hotel caps give up (0 without caps)
+             */
+            caps_cost: number;
             /** Id */
             id: number;
             /**
@@ -392,6 +511,10 @@ export interface components {
             status: "empty" | "pending" | "approved" | "rejected" | "mixed";
             /** Lines */
             lines: components["schemas"]["PlanLineOut"][];
+            /** Passed */
+            passed: components["schemas"]["PassedOut"][];
+            /** Exposure */
+            exposure: components["schemas"]["ExposureOut"][];
         };
         /** PlanPreview */
         PlanPreview: {
@@ -424,8 +547,26 @@ export interface components {
             expected_profit: number;
             /** Worst Case Profit */
             worst_case_profit: number;
+            /**
+             * Hurdle Rate
+             * @description Risk-adjusted rupees one more rupee of budget would earn: the return every purchase must beat. 0 when money isn't the limit
+             */
+            hurdle_rate: number;
+            /** Max City Share */
+            max_city_share?: number | null;
+            /** Max Hotel Share */
+            max_hotel_share?: number | null;
+            /**
+             * Caps Cost
+             * @description Risk-adjusted profit the city and hotel caps give up (0 without caps)
+             */
+            caps_cost: number;
             /** Lines */
             lines: components["schemas"]["PreviewLine"][];
+            /** Passed */
+            passed: components["schemas"]["PassedOut"][];
+            /** Exposure */
+            exposure: components["schemas"]["ExposureOut"][];
         };
         /** PlanSummary */
         PlanSummary: {
@@ -441,6 +582,20 @@ export interface components {
             expected_profit: number;
             /** Worst Case Profit */
             worst_case_profit: number;
+            /**
+             * Hurdle Rate
+             * @description Risk-adjusted rupees one more rupee of budget would earn: the return every purchase must beat. 0 when money isn't the limit
+             */
+            hurdle_rate: number;
+            /** Max City Share */
+            max_city_share?: number | null;
+            /** Max Hotel Share */
+            max_hotel_share?: number | null;
+            /**
+             * Caps Cost
+             * @description Risk-adjusted profit the city and hotel caps give up (0 without caps)
+             */
+            caps_cost: number;
             /** Id */
             id: number;
             /**
@@ -491,6 +646,22 @@ export interface components {
              * @description Commit by this date: 90% of that week's agent bookings come later
              */
             buy_by: string;
+            /**
+             * First Night
+             * Format: date
+             */
+            first_night: string;
+            /**
+             * Limited By
+             * @description What stopped it buying more: the hotel's allotment, a city or hotel cap, the budget (the next room earns less than the hurdle rate) or demand
+             * @enum {string}
+             */
+            limited_by: "hotel" | "cap" | "budget" | "demand";
+            /**
+             * Extra Room Value
+             * @description Risk-adjusted rupees one more room of allotment would add; 0 unless limited by the hotel
+             */
+            extra_room_value: number;
             /** Sell Through */
             readonly sell_through: number;
         };
@@ -534,11 +705,65 @@ export interface components {
              */
             cities?: string[] | null;
             /**
+             * Max City Share
+             * @description At most this share of the whole budget in any one city, e.g. 0.35, also when `cities` narrows the plan; leave out for no cap
+             */
+            max_city_share?: number | null;
+            /**
+             * Max Hotel Share
+             * @description At most this share of the whole budget with any one hotel (supplier); leave out for no cap
+             */
+            max_hotel_share?: number | null;
+            /**
              * Risk Aversion
              * @description 0 = maximise expected profit, 1 = protect the worst case
              * @default 0.3
              */
             risk_aversion: number;
+        };
+        /** QueueItem */
+        QueueItem: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "buy_now" | "scheduled" | "watch" | "skip";
+            /** City */
+            city: string;
+            /** Week */
+            week: string;
+            /** Hotel */
+            hotel: string;
+            /**
+             * Line Id
+             * @description The plan line, for buys and hotel-limited lines
+             */
+            line_id?: number | null;
+            /** Rooms */
+            rooms?: number | null;
+            /** Buy By */
+            buy_by?: string | null;
+            /** Decision */
+            decision?: ("pending" | "approved" | "rejected") | null;
+            /** Reason */
+            reason: string;
+        };
+        /**
+         * QueueOut
+         * @description What to do about a plan on a given day: buy now, scheduled buys, things to watch, and skips.
+         */
+        QueueOut: {
+            /** Plan Id */
+            plan_id: number;
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Hurdle Rate */
+            hurdle_rate: number;
+            /** Items */
+            items: components["schemas"]["QueueItem"][];
         };
         /** ValidationError */
         ValidationError: {
@@ -702,6 +927,10 @@ export interface operations {
                 budget_inr: number;
                 /** @description Limit to these cities; leave out for all */
                 cities?: string[] | null;
+                /** @description At most this share of the whole budget in any one city, e.g. 0.35, also when `cities` narrows the plan; leave out for no cap */
+                max_city_share?: number | null;
+                /** @description At most this share of the whole budget with any one hotel (supplier); leave out for no cap */
+                max_hotel_share?: number | null;
             };
             header?: never;
             path?: never;
@@ -942,6 +1171,58 @@ export interface operations {
                 };
                 content: {
                     "text/csv": unknown;
+                };
+            };
+            /** @description Missing or invalid API key */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description No such plan or line in your company */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    plan_queue_v1_plans__plan_id__queue_get: {
+        parameters: {
+            query?: {
+                /** @description The day to plan for; default today (UTC) */
+                as_of?: string | null;
+            };
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueOut"];
                 };
             };
             /** @description Missing or invalid API key */

@@ -9,9 +9,10 @@ from sqlalchemy.orm import Session
 from voyance.api import service
 from voyance.api.auth import Principal, get_principal, get_session, require_role
 from voyance.api.db import utcnow
+from voyance.api.position import position
 from voyance.api.schemas import (AuditOut, ErrorOut, FrontierPoint, FrontierQuery, LineDecision, MarketItem, MeOut,
-                                PlanCreate, PlanLineOut, PlanOut, PlanPreview, PlanSummary, PreviewRequest, QueueOut,
-                                ReplayOut)
+                                PlanCreate, PlanLineOut, PlanOut, PlanPreview, PlanSummary, PositionOut, PreviewRequest,
+                                QueueOut, ReplayOut)
 
 MAX_ID = 2**31 - 1
 Id = Annotated[int, Path(ge=1, le=MAX_ID)]
@@ -85,6 +86,18 @@ def export_plan(plan_id: Id, principal: Principal = Depends(get_principal),
     plan = service.get_plan(session, principal, plan_id)
     return Response(service.plan_csv(plan), media_type="text/csv",
                     headers={"Content-Disposition": f'attachment; filename="plan-{plan_id}.csv"'})
+
+
+@router.get("/plans/{plan_id}/position", response_model=PositionOut, responses=_errors(404),
+            summary="How each line is booking up", description="Bookings so far against the forecast's typical "
+            "December pace, the projected demand and the gap to the rooms bought: short, on pace or over. Flags "
+            "only; the buyer decides. Rejected lines are left out.")
+def plan_position(plan_id: Id, request: Request,
+                  as_of: date | None = Query(None, description="Default today (UTC)"),
+                  principal: Principal = Depends(get_principal),
+                  session: Session = Depends(get_session)) -> PositionOut:
+    plan = service.get_plan(session, principal, plan_id)
+    return position(request.app.state.world, plan.lines, as_of or utcnow().date())
 
 
 @router.get("/replay", response_model=ReplayOut, summary="Real 2017 bookings, replayed week by week",

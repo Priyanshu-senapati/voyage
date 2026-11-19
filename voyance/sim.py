@@ -10,6 +10,7 @@ by hotel around the single rate the planner assumes.
 """
 
 from dataclasses import dataclass
+from datetime import date
 from itertools import product
 
 import numpy as np
@@ -36,6 +37,13 @@ SEASON_YEAR = 2027          # the December being planned, so every buy-by date i
 # (real bookings, `python scripts/calibrate.py` -> december_buy_ahead_days); Christmas is booked earliest
 BUY_AHEAD_DAYS = np.array([93, 110, 111, 139])
 BUY_AHEAD_DAYS.flags.writeable = False
+# share of a December week's agent bookings already made this many days before it starts: December books late
+# (real bookings, `python scripts/calibrate.py` -> december_booked_share)
+BOOKED_SHARE = {150: 0.22, 120: 0.33, 90: 0.45, 60: 0.58, 45: 0.65, 30: 0.79, 21: 0.83, 14: 0.86, 7: 0.89, 0: 0.95}
+NO_BOOKINGS_DAYS = 365
+# shortcut: one "earliness" per hotel-week; 0.5 gives a log-share spread of about 0.67 / 0.33 / 0.14 at 120 /
+# 60 / 30 days against 0.81 / 0.36 / 0.20 in real hotel-weeks, so early pace is a little less noisy than real.
+PACE_SPREAD = 0.5
 
 
 @dataclass(frozen=True)
@@ -56,6 +64,9 @@ class World:
     alloc_hist: np.ndarray             # room-nights TBO held
     bookings_hist: np.ndarray          # capped by alloc_hist: sold-out dates hide demand
     soldout_searches_hist: np.ndarray  # searches that found nothing left
+    # this season as it unfolds (hidden from the planner; Autopilot sees only what is on the books so far):
+    season_demand: np.ndarray          # room-nights this season's bookings will come to
+    pace: np.ndarray                   # how early each hotel-week books: > 1 earlier than the typical December
 
 
 def make_world(seed: int) -> World:
@@ -72,6 +83,10 @@ def make_world(seed: int) -> World:
     past = [_past_season(rng, base, city_week, look_to_book) for _ in range(N_HISTORY)]
     lift_hist, alloc_hist, bookings_hist, soldout_hist = (np.array(rows) for rows in zip(*past))
     lift_now = _event_lift(rng, city_week)
+    season_rng = np.random.default_rng([seed, 1])  # its own stream: everything drawn above stays the same
+    shape = 1.0 / DEMAND_CV**2
+    season_demand = season_rng.gamma(shape, base * lift_now / shape)
+    pace = np.exp(PACE_SPREAD * season_rng.normal(0.0, 1.0, n))
 
     return World(
         labels=tuple(f"{c} {WEEKS[w]} {h}" for c, w, h in items),
@@ -84,7 +99,22 @@ def make_world(seed: int) -> World:
         true_mean=base * lift_now, event_lift_now=lift_now,
         event_lift_hist=lift_hist, alloc_hist=alloc_hist,
         bookings_hist=bookings_hist, soldout_searches_hist=soldout_hist,
+        season_demand=season_demand, pace=pace,
     )
+
+
+def booked_share(lead_days: np.ndarray | float) -> np.ndarray | float:
+    """Typical share of a December week's bookings made by `lead_days` before it starts (straight lines between
+    the measured leads; none made a year or more ahead)."""
+    leads = sorted(BOOKED_SHARE)
+    return np.interp(lead_days, [*leads, NO_BOOKINGS_DAYS], [*(BOOKED_SHARE[lead] for lead in leads), 0.0])
+
+
+def on_books(world: World, as_of: date) -> np.ndarray:
+    """Room-nights already booked on `as_of` for each hotel-week of this season."""
+    lead_days = (world.first_night - np.datetime64(as_of, "D")).astype(int)
+    # an early-booking hotel-week (pace > 1) is further along the same curve; shares stay below 1
+    return np.floor(world.season_demand * booked_share(lead_days) ** (1.0 / world.pace))
 
 
 def _past_season(rng: np.random.Generator, base: np.ndarray, city_week: np.ndarray,

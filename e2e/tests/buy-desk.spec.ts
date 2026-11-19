@@ -278,9 +278,14 @@ test('a buyer plans with exposure caps; the exposure page and action queue expla
 
   await page.getByRole('link', { name: 'Action queue' }).click()
   await page.getByRole('tab', { name: '1 Aug 2027' }).click()
-  const queue = await apiGet<{ items: unknown[] }>(page, '/v1/plans/3/queue?as_of=2027-08-01', 'asha')
+  const queue = await apiGet<{ items: { action: string }[] }>(page, '/v1/plans/3/queue?as_of=2027-08-01', 'asha')
   const rows = page.getByRole('table', { name: 'Action queue' }).locator('tbody > tr')
   await expect(rows).toHaveCount(queue.items.length)
+  // nothing in a new plan is approved yet, so the API's approval gate holds every buy back
+  const waiting = queue.items.filter((i) => i.action === 'awaiting_approval').length
+  expect(waiting).toBeGreaterThan(0)
+  await expect(page.getByRole('tab', { name: `Needs approval ${waiting}` })).toBeVisible()
+  await expect(page.getByRole('tab', { name: 'Approved buys 0' })).toBeVisible()
 
   // a hotel-week the optimizer passed on shows its own reason under "Why not?"
   expect(plan.passed.length).toBeGreaterThan(0)

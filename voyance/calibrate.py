@@ -9,6 +9,7 @@ import os
 import urllib.request
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
+from datetime import date
 from pathlib import Path
 
 import numpy as np
@@ -23,6 +24,11 @@ Row = Mapping[str, str]
 AGENT_CHANNEL = "TA/TO"  # travel agents and tour operators: the channel TBO sells through
 DECEMBER_WEEKS = 4  # days 1-7, 8-14, 15-21, 22-28, matching voyance.sim.WEEKS
 BUY_AHEAD_QUANTILE = 0.9  # buy before 90% of a week's agent bookings are made
+LATE_CANCEL_DAYS = 7  # a room given back this close to arrival rarely sells again
+TRUSTED_DEMAND = (0.6, 1.4)  # demand vs the hotel's usual week; further out, weeks are few and mostly one season
+MONTHS = {name: number for number, name in enumerate(
+    ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
+     "November", "December"), start=1)}
 
 
 def fetch_verified(path: Path, url: str, sha256: str) -> bytes:
@@ -125,6 +131,42 @@ def year_to_year_cv(rows: Iterable[Row]) -> float:
     return float(np.sqrt(np.expm1(sigma**2)))
 
 
+def late_cancel_share(rows: Iterable[Row], days: int = LATE_CANCEL_DAYS) -> float:
+    """Share of cancellations made within `days` of arrival, too late to sell the room again (0 if none)."""
+    gaps = [(_arrival(r) - date.fromisoformat(r["reservation_status_date"])).days for r in rows if not _stayed(r)]
+    return float(np.mean(np.array(gaps) <= days)) if gaps else 0.0
+
+
+def rate_vs_demand(rows: Iterable[Row]) -> dict:
+    """How agent rates move with demand: the slope of log(rate) on log(room-nights), each week against its
+    hotel's usual (median) week, over the demand range we trust. 0.5 = demand 21% above usual, rates 10% above.
+    0 when no week's demand differs from the usual (nothing to measure)."""
+    nights: dict[tuple[str, str, str], float] = defaultdict(float)
+    revenue: dict[tuple[str, str, str], float] = defaultdict(float)
+    for r in rows:
+        n, rate = room_nights(r), float(r["adr"])
+        if _stayed(r) and n > 0 and rate > 0:
+            week = r["hotel"], r["arrival_date_year"], r["arrival_date_week_number"]
+            nights[week] += n
+            revenue[week] += n * rate
+    x, y = [], []
+    for hotel in sorted({week[0] for week in nights}):
+        weeks = [week for week in nights if week[0] == hotel]
+        demand = np.array([nights[w] for w in weeks])
+        rate = np.array([revenue[w] / nights[w] for w in weeks])
+        demand, rate = demand / np.median(demand), rate / np.median(rate)
+        keep = (demand >= TRUSTED_DEMAND[0]) & (demand <= TRUSTED_DEMAND[1])
+        x += np.log(demand[keep]).tolist()
+        y += np.log(rate[keep]).tolist()
+    x_, y_ = np.array(x), np.array(y)
+    slope = float(x_ @ y_ / (x_ @ x_)) if (x_ != 0).any() else 0.0  # through the origin: usual demand, usual rate
+    return {"elasticity": slope, "weeks": int(x_.size), "demand_range": list(TRUSTED_DEMAND)}
+
+
+def _arrival(row: Row) -> date:
+    return date(int(row["arrival_date_year"]), MONTHS[row["arrival_date_month"]], int(row["arrival_date_day_of_month"]))
+
+
 def summary(rows: list[Row]) -> dict:
     """Facts about agent bookings (TA/TO), the part of the market a distributor serves."""
     agent = [r for r in rows if r["distribution_channel"] == AGENT_CHANNEL]
@@ -141,4 +183,6 @@ def summary(rows: list[Row]) -> dict:
         "year_to_year_cv": year_to_year_cv(agent),
         "year_to_year_week_pairs": sum(g.size for g in _log_ratio_groups(agent)),
         "december_buy_ahead_days": december_buy_ahead_days(agent),
+        "agent_late_cancel_share": late_cancel_share(agent),
+        "rate_vs_demand": rate_vs_demand(agent),
     }

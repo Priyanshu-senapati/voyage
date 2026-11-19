@@ -23,7 +23,7 @@ from voyance.api.schemas import (CAP_FIELDS, WHAT_IF_FIELDS, FrontierPoint, Fron
                                  PlanCreate, PlanPreview, PreviewRequest, QueueItem, QueueOut)
 from voyance.sim import World
 
-CSV_COLUMNS = ("city", "week", "hotel", "buy_by", "rooms", "unit_cost", "unit_price", "expected_sold",
+CSV_COLUMNS = ("city", "week", "hotel", "buy_by", "rooms", "unit_cost", "unit_price", "selling_price", "expected_sold",
                "expected_profit", "worst_case_profit", "decision", "decided_by", "reason")
 FORMULA_STARTS = ("=", "+", "-", "@", "\t", "\r")
 

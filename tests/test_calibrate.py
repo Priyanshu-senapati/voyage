@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 
 from voyance import calibrate
-from voyance.calibrate import (december_buy_ahead_days, december_shape, fetch_verified, room_nights, summary,
-                               year_to_year_cv)
+from voyance.calibrate import (december_buy_ahead_days, december_shape, fetch_verified, late_cancel_share,
+                               rate_vs_demand, room_nights, summary, year_to_year_cv)
 
 NEVER_FETCHED = "https://example.invalid/hotels.csv"  # the file already exists, so this must not be used
 
@@ -74,6 +74,7 @@ def booking(hotel="Resort Hotel", year=2016, month="December", day=1, week=49, n
         "arrival_date_day_of_month": str(day), "arrival_date_week_number": str(week),
         "stays_in_weekend_nights": "0", "stays_in_week_nights": str(nights),
         "is_canceled": "1" if canceled else "0", "distribution_channel": channel, "lead_time": str(lead),
+        "adr": "100", "reservation_status_date": "2016-11-01",
     }
 
 
@@ -165,3 +166,30 @@ def test_summary_reports_agent_channel_facts():
     assert out["year_to_year_cv"] == pytest.approx(0.0, abs=1e-9)
     assert out["year_to_year_week_pairs"] == 4
     assert out["december_buy_ahead_days"] == [10, 30, 50, 70]  # one booking per week and year
+    assert out["agent_late_cancel_share"] == 0.0  # its one cancellation came a month before arrival
+    assert out["rate_vs_demand"]["elasticity"] == 0.0  # every week is equally busy: nothing to measure
+
+
+def test_rate_vs_demand_measures_how_rates_rise_with_demand():
+    rows = []
+    for hotel in ("City Hotel", "Resort Hotel"):
+        for week, demand in enumerate((6, 8, 9, 10, 10, 11, 12, 13), start=10):
+            rate = 100 * (demand / 10) ** 0.5  # each week's rate: the square root of its demand vs the usual week
+            rows += [booking(hotel=hotel, month="March", week=week) | {"adr": str(rate)}] * demand
+    rows += [booking(week=30, canceled=True) | {"adr": "999"}, booking(week=31) | {"adr": "0"}]  # ignored
+    fit = rate_vs_demand(rows)
+    assert fit["elasticity"] == pytest.approx(0.5) and fit["weeks"] == 16
+
+
+def test_rate_vs_demand_ignores_weeks_far_outside_the_usual():
+    rows = [booking(week=w) for w in range(1, 6) for _ in range(10)]
+    rows += [booking(week=9) | {"adr": "900"}] * 40  # 4x the usual demand: outside the range we trust
+    assert rate_vs_demand(rows) == {"elasticity": 0.0, "weeks": 5, "demand_range": [0.6, 1.4]}
+
+
+def test_late_cancel_share_counts_cancellations_within_a_week_of_arrival():
+    rows = [booking(day=10, canceled=True) | {"reservation_status_date": when}
+            for when in ("2016-12-09", "2016-12-03", "2016-11-01", "2016-10-01")]
+    rows.append(booking(day=10))  # kept bookings don't count
+    assert late_cancel_share(rows) == 0.5
+    assert late_cancel_share([booking()]) == 0.0

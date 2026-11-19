@@ -82,6 +82,10 @@ class LineWhy(BaseModel):
     sell_out_chance: float | None = Field(None, description="Chance every room bought sells (plans from before "
                                           "this field have none)")
     why_not_more: str | None = Field(None, description="Why the plan stops at this many rooms, in money")
+    demand_vs_usual: float | None = Field(None, description="Expected demand / a usual December's for this "
+                                          "hotel-week, sold-out searches counted back in")
+    selling_price: float | None = Field(None, description="Recommended price per room-night: unit_price moved "
+                                        "the way real agent rates move with demand (profits stay at unit_price)")
 
 
 class PreviewLine(BaseModel):

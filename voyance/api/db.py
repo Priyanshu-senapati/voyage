@@ -111,6 +111,10 @@ class PlanLineRow(Base):
     decided_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
     plan: Mapped[Plan] = relationship(back_populates="lines")
 
+    @property
+    def selling_price(self) -> float | None:  # kept in `why`: no schema change; older plans have none
+        return self.why.get("selling_price")
+
 
 class AuditEvent(Base):
     __tablename__ = "audit_events"

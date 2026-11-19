@@ -19,6 +19,15 @@
       111,
       139
     ],
+    "agent_late_cancel_share": 0.11466427575214186,
+    "rate_vs_demand": {
+      "elasticity": 0.7020620269583294,
+      "weeks": 180,
+      "demand_range": [
+        0.6,
+        1.4
+      ]
+    },
     "december_booked_share": {
       "150": 0.218,
       "120": 0.3284,

@@ -1,4 +1,4 @@
-from voyance.brief import facts, inr, unknown_numbers
+from voyance.brief import facts, inr, template_brief, unknown_numbers
 
 PLAN = {
     "id": 1, "budget_inr": 2e7, "risk_aversion": 0.3, "spend": 12_160_458, "expected_profit": 2_473_960,
@@ -36,3 +36,9 @@ def test_a_rupee_figure_must_keep_its_unit():
     assert unknown_numbers("Expected profit ₹24.7 million.", text) == ["₹24.7 million"]
     assert unknown_numbers("Udaipur earns ₹1.7M.", text) == ["₹1.7M"]
     assert unknown_numbers("Expected profit ₹24.7 cr.", text) == ["₹24.7 cr"]
+
+
+def test_the_template_brief_needs_no_model_and_passes_the_same_number_check():
+    text = template_brief(PLAN)
+    assert unknown_numbers(text, facts(PLAN)) == []
+    assert "Udaipur 15-21 Dec Hotel A" in text and "buy by 26 Aug 2027" in text  # the earliest buy-by goes first

@@ -14,7 +14,7 @@ Built for **TBO VoyageHack 4.0**, Problem 1: Inventory Optimization
 
 [**Live demo**](https://voyance-1029341879804.asia-south1.run.app) · [API docs](https://voyance-1029341879804.asia-south1.run.app/docs) · [Team plan](PLAN.md)
 
-`Python 3.11+` · `FastAPI` · `HiGHS (LP)` · `LightGBM + SHAP` · `React + TypeScript` · `212 tests`
+`Python 3.11+` · `FastAPI` · `HiGHS (LP)` · `LightGBM + SHAP` · `React + TypeScript` · `243 tests`
 
 </div>
 
@@ -22,7 +22,9 @@ Built for **TBO VoyageHack 4.0**, Problem 1: Inventory Optimization
 > comes from the simulation or from **real hotel bookings**, and the real-data results are walk-forward: each
 > decision uses only what was known on its day.
 
-![The Buy Desk](web/mockup/buy-desk.png)
+![The Buy Desk, as designed](web/mockup/buy-desk.png)
+
+*A design mock-up of the Buy Desk; the [live demo](https://voyance-1029341879804.asia-south1.run.app) is the working product.*
 
 ## The problem, and what's new
 
@@ -41,7 +43,7 @@ and overspend on quiet weeks.
 
 ## Results at a glance
 
-**On real hotel bookings** (119,390 bookings at two hotels, 2015-2017; tested on Jan-Aug 2017, walk-forward):
+**On real hotel bookings** (119,390 bookings at two hotels in Portugal, 2015-2017; outcomes count only bookings that stayed, since 41% of agent bookings cancel; tested on Jan-Aug 2017, walk-forward; 95% intervals resample whole months, so neighbouring weeks can't make them look tighter than they are):
 
 | | Re-buy last year | Voyance |
 |---|---|---|
@@ -49,13 +51,14 @@ and overspend on quiet weeks.
 | Profit from buying by the forecast | baseline | **+7% to +13%**, every 95% interval above zero |
 | Room-nights turned away | baseline | **35-46% fewer** |
 | Replay, 68 hotel-weeks (120 days ahead, 20% margin) | €1,160,430 | **€1,272,142** (+10%) |
-| The optimizer itself, caution on the whole plan (risk 0.3) | baseline | **+6% to +19%** at 90 days ahead (every interval above zero); +2% to +10% at 120 days and −2% to +3% at 150 (intervals span zero) |
+| **The planner itself** (risk 0.3; forecast range recalibrated walk-forward; weeks correlated within a month, as measured on 2016) | baseline | **+6% to +20%** at every lead (90-150 days) and margin (15-30%), every 95% interval above zero |
 
-The whole-plan run treats weeks as going wrong independently; deciding each week alone (as if they all go wrong
-together) is the other bound, and there risk 0.3 loses in 6 of 9 lead-and-margin cases. The truth is between.
-We also tried the classic hotel **pickup** forecast (bookings on the books + last year's pickup from the same
-lead) as a stronger baseline: on these hotels it did 12–61% *worse* than re-buying last year, because 2017's
-early bookings ran far ahead of what stayed, so re-buying stays the bar (`out/decision_backtest.json` has both).
+The range had to be recalibrated first. As forecast, its 80% range caught the actual 72-79% of the time and the
+planner at risk 0.3 lost in 5 of 9 cases; rescaled month by month on finished weeks only, it catches 69-81% and
+wins in all 9. We also tried the classic hotel **pickup** forecast (bookings on the books + last year's pickup)
+as a stronger baseline: here it did 12-61% *worse* than re-buying, because 2017's early bookings ran far ahead
+of what stayed, so re-buying stays the bar. Everything, including a plain newsvendor (`optimizer_risk_0`), is in
+`out/decision_backtest.json`.
 
 **In simulation** (500 simulated Decembers, 40 hotel-weeks in 5 Indian cities, against re-buying past bookings):
 
@@ -66,6 +69,17 @@ early bookings ran far ahead of what stayed, so re-buying stays the bar (`out/de
 | ₹1.2 cr | about even | −2.5% | 51% |
 | ₹2 cr | **+3.9%** [3.5, 4.2] | **+20.4%** [19.0, 21.7] | 84% |
 
+**When Voyance matters most:** when money is short it chooses where to cut (+24% at ₹40L); when money is ample
+it chooses where to add and protects the bad season (+20% at ₹2 cr, spending ₹1.32 cr where re-buying spends
+₹1.48 cr). Around ₹1.2 cr neither lever bites: that is about what re-buying last year costs anyway, so trimming
+its list evenly is nearly optimal.
+
+**Hidden demand is tested in simulation only:** the public dataset has no sold-out searches. The stress test
+(`scripts/stress_test.py`, `out/stress_test.json`) breaks the planner's assumptions on purpose. Half the
+searches missing or noisy logs leave Voyance ahead; **over-counting hurts**: with 50% duplicate searches (agents
+retrying), a look-to-book ratio 30% too low or no event lift, it over-buys and does 7-10% worse than re-buying
+at ₹2 cr. So searches must be de-duplicated before use (see How TBO's data plugs in).
+
 **With cancellations** (41% of real agent bookings cancel, 11.5% of those in the last week, too late to resell;
 same 500 worlds, every strategy knows the rate, `out/proof_study_cancellations.json`): everyone earns much less,
 and Voyance still earns more at every budget: **+19.3%** at ₹40L, +3.9% at ₹60L, +2.0% at ₹80L, and from ₹1 cr
@@ -74,8 +88,9 @@ default.
 
 ![Expected profit by budget, simulated](out/proof_chart.png)
 
-The simulator is checked against the real bookings (`out/calibration.json`): the Christmas-week peak matches
-(1.45× the December average vs our 1.47×), and real demand swings less from year to year (about 22%) than we
+The simulator's December shape was set by hand on 4 Nov and checked against the real bookings two weeks later
+(`out/calibration.json`): the Christmas-week peak matches (1.45× the December average vs our 1.47×; only 4
+hotel-years of Decembers, so a sanity check, not proof), and real demand swings less from year to year (about 22%) than we
 simulate (35%), so the simulation is the harder test.
 
 ## How it works
@@ -119,7 +134,7 @@ Needs Python 3.11+ (and Node 22+ for the dashboard).
 
 ```bash
 python -m pip install -e ".[test]"
-python -m pytest                              # 212 tests, about a minute
+python -m pytest                              # 243 tests, about a minute
 
 python scripts/seed_demo.py                   # demo companies and API keys (printed once)
 uvicorn voyance.api.app:create_app --factory  # API at http://127.0.0.1:8000/docs
@@ -141,7 +156,7 @@ can't see TBO Demo's plans. For fixed keys across re-seeds, set `VOYANCE_DEMO_KE
 | `python scripts/proof_study.py 500` | The same on 500 worlds across every CPU core, with 95% intervals (`out/proof_study.json`); add `0.41` for the run with cancellations |
 | `python scripts/calibrate.py` | The simulator against the real bookings; downloads 16 MB once (`out/calibration.json`) |
 | `python scripts/forecast_backtest.py` | Forecast and buying decisions on real 2017 bookings, and the replay (`out/*_backtest.json`) |
-| `VOYANCE_API_KEY=vy_… python scripts/brief.py 1` | A buyer brief from a local model; needs PyTorch with CUDA and `transformers` |
+| `VOYANCE_API_KEY=vy_… python scripts/brief.py 1` | A buyer brief from a local model on the GPU (PyTorch with CUDA and `transformers`); without them, or with `--template`, a fixed-form brief from the same checked facts |
 
 ## API
 
@@ -187,7 +202,23 @@ Being clear about what didn't work is part of the evidence:
   Monitor: flags, with the buyer deciding.
 - **A pretrained forecaster** (Amazon Chronos-Bolt, run on the GPU): worse than re-buying last year on its own
   (20-23% error) and no help as an extra input. What's already booked beats any amount of history.
-- **Recalibrating the forecast's range** (conformal): unstable on two hotels' history.
+- **Conformal recalibration of the forecast's range:** unstable on two hotels' history. A simpler walk-forward
+  monthly rescaling replaced it, and it is what makes the planner win on real data.
+
+## How TBO's data plugs in
+
+The planner reads its world through one interface (`voyance/api/datasource.py`); today it serves the
+simulation, and a TBO adapter replaces it. What each feed is for:
+
+| TBO feed | What Voyance needs from it | Where it goes |
+|---|---|---|
+| Hotel searches with an availability flag | Searches that found nothing left, per hotel and stay week, **de-duplicated per agent, hotel and date** (retries and bots inflate them: see the stress test) | Hidden demand (`voyance/demand.py`) and the look-to-book ratio |
+| Bookings with booked-on and cancelled-on dates | Room-nights per hotel and arrival week, by lead time | The forecast's booking curves (`voyance/forecast.py`), the cancellation rates, the Position Monitor |
+| Contract rates and allotments | Cost per room-night, allotment size, release dates | The planner's costs and hotel limits (`/v1/markets`) |
+| Selling rates | What TBO sells each hotel-week at | The planner's prices and the recommended selling price |
+| Event calendar | Event weeks per city | The event lift (`data/events/events.csv` is the first sourced calendar) |
+
+The first pilot step is logging sold-out searches if TBO doesn't already (`docs/business_case.md`).
 
 ## Project layout
 

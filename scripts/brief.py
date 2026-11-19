@@ -2,6 +2,7 @@
 
 Run from the project root, in an environment with PyTorch (CUDA) and transformers, with the API running:
     VOYANCE_API_KEY=vy_... python scripts/brief.py 1          (plan id; VOYANCE_API defaults to the local API)
+Without PyTorch and transformers, or with --template, it prints a fixed-form brief from the same facts.
 The model only explains: it gets the plan's facts (voyance.brief.facts), and a brief citing any number that isn't
 in them is rejected and written again; after three tries a plain template is used instead. Nothing leaves this
 machine: the model runs locally.
@@ -16,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from voyance.brief import facts, unknown_numbers  # noqa: E402
+from voyance.brief import facts, template_brief, unknown_numbers  # noqa: E402
 
 MODEL = "Qwen/Qwen2.5-1.5B-Instruct"  # Apache-2.0, ~3 GB, fits a laptop GPU with room to spare
 TRIES = 3
@@ -40,10 +41,18 @@ def fetch_plan(plan_id: int) -> dict:
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    import torch
-    from transformers import pipeline
+    ids = [arg for arg in sys.argv[1:] if not arg.startswith("--")]
+    plan = fetch_plan(int(ids[0]) if ids else 1)
+    try:
+        if "--template" in sys.argv:
+            raise ImportError("asked for the template")
+        import torch
+        from transformers import pipeline
+    except ImportError:  # no GPU stack here: the same facts in a fixed form, no model
+        logging.info(template_brief(plan) + "\n\n(fixed-form brief, no language model)")
+        return
 
-    fact_text = facts(fetch_plan(int(sys.argv[1]) if len(sys.argv) > 1 else 1))
+    fact_text = facts(plan)
     writer = pipeline("text-generation", model=MODEL, device_map="cuda", dtype=torch.bfloat16)
     messages = [{"role": "system", "content": INSTRUCTIONS}, {"role": "user", "content": fact_text}]
     for attempt in range(1, TRIES + 1):
@@ -55,7 +64,7 @@ def main() -> None:
                          f"the plan, attempt {attempt})")
             return
         logging.info(f"attempt {attempt} rejected: numbers not in the plan: {', '.join(invented)}")
-    logging.info("The model kept inventing numbers; here are the plan's facts instead:\n" + fact_text)
+    logging.info(template_brief(plan) + "\n\n(the model kept inventing numbers: fixed-form brief instead)")
 
 
 if __name__ == "__main__":

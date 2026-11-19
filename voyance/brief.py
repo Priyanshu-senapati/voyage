@@ -44,6 +44,19 @@ def facts(plan: dict) -> str:
     return "\n".join(out)
 
 
+def template_brief(plan: dict) -> str:
+    """A brief without a language model, in a fixed form from the same facts: for machines without a GPU."""
+    top = sorted(plan["lines"], key=lambda line: -line["expected_profit"])[:TOP_LINES]
+    first = min(top, key=lambda line: line["buy_by"])
+    out = [f"Plan {plan['id']} spends {inr(plan['spend'])} of a {inr(plan['budget_inr'])} budget for "
+           f"{inr(plan['expected_profit'])} expected profit ({inr(plan['worst_case_profit'])} in a bad season)."]
+    out += [f"- {line['city']} {line['week']} {line['hotel']}: {line['rooms']} rooms, "
+            f"{inr(line['expected_profit'])} expected; {line['reason']}" for line in top[:3]]
+    out.append(f"First: {first['city']} {first['week']} {first['hotel']}, buy by "
+               f"{date.fromisoformat(first['buy_by']):%d %b %Y}.")
+    return "\n".join(out)
+
+
 def unknown_numbers(brief: str, fact_text: str) -> list[str]:
     """Figures in the brief that aren't in the facts, in order of appearance.
 

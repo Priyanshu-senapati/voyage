@@ -51,6 +51,7 @@ Send the key in the `X-API-Key` header. Demo users: **asha** (buyer), **ravi** (
 | `GET /v1/frontier` | anyone | Expected profit and worst case at risk 0, 0.1 … 1 for one budget, optionally in a what-if (10 a minute) |
 | `GET /v1/plans`, `GET /v1/plans/{id}` | anyone | Your company's plans. Each has its hurdle rate (what a rupee must earn to get in), what limits each line (hotel, budget or demand), every hotel-week passed with why, and its exposure per city and hotel. Optional caps (`max_city_share`, `max_hotel_share`, on plans, previews and the frontier) keep any one city or hotel to a share of the budget, and the plan says what they cost |
 | `GET /v1/plans/{id}/queue?as_of=` | anyone | What to do on a day: buy now (due within 14 days), scheduled buys, watch (ask a hotel for more rooms, close calls), skip |
+| `GET /v1/replay` | anyone | Real 2017 bookings replayed week by week: what the forecast believed (and why) on the day of the decision, what Voyance and re-buying last year bought, what really happened, running profits |
 | `PATCH /v1/plans/{id}/lines/{line}` | approver, admin | Approve or reject a line; never your own plan |
 | `GET /v1/plans/{id}/export.csv` | anyone | Plan as a spreadsheet |
 | `GET /v1/audit` | admin | Who did what |

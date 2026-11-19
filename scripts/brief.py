@@ -30,8 +30,11 @@ INSTRUCTIONS = (
 
 def fetch_plan(plan_id: int) -> dict:
     base = os.environ.get("VOYANCE_API", "http://127.0.0.1:8000")
-    request = urllib.request.Request(f"{base}/v1/plans/{plan_id}", headers={"X-API-Key": os.environ["VOYANCE_API_KEY"]})
-    with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310 (our own API, from the environment)
+    if not base.startswith(("http://", "https://")):
+        raise ValueError("VOYANCE_API must be an http(s) address")
+    url = f"{base}/v1/plans/{plan_id}"
+    request = urllib.request.Request(url, headers={"X-API-Key": os.environ["VOYANCE_API_KEY"]})  # noqa: S310
+    with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310 (http(s) checked above)
         return json.load(response)
 
 

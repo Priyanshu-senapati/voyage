@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 
-export type Route = 'desk' | 'plans' | 'markets' | 'audit'
+export type Route = 'desk' | 'plans' | 'pace' | 'markets' | 'replay' | 'audit'
 
 export const ROUTES: { route: Route; label: string; hash: string }[] = [
   { route: 'desk', label: 'Buy Desk', hash: '#/' },
   { route: 'plans', label: 'Plans', hash: '#/plans' },
+  { route: 'pace', label: 'Booking pace', hash: '#/pace' },
   { route: 'markets', label: 'Markets', hash: '#/markets' },
+  { route: 'replay', label: '2017 replay', hash: '#/replay' },
   { route: 'audit', label: 'Audit log', hash: '#/audit' },
 ]
 

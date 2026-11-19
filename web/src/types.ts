@@ -27,3 +27,11 @@ export interface Plan extends Omit<PlanOut, 'id' | 'created_at' | 'created_by' |
   status: PlanOut['status']
   lines: PlanLine[]
 }
+
+export type PositionOut = Schemas['PositionOut']
+// The demo's stored readings leave out the API's sentence: the page writes its own from the numbers
+export type PositionLine = Omit<Schemas['PositionLineOut'], 'note'>
+export type Position = Omit<PositionOut, 'lines'> & { lines: PositionLine[] }
+export type ReplayOut = Schemas['ReplayOut']
+export type ReplayWeek = Schemas['ReplayWeek']
+export type ReplayOutcome = Schemas['ReplayOutcome']

@@ -146,11 +146,6 @@ function Settings({ desk }: { desk: Desk }) {
               the plan without the what-if.
             </InfoTip>
           </h2>
-          {active && (
-            <button type="button" className="link-button" onClick={desk.resetWhatIf}>
-              Reset
-            </button>
-          )}
         </div>
         <Slider
           label="Demand vs forecast"

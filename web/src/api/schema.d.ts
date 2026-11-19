@@ -133,6 +133,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/plans/{plan_id}/position": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * How each line is booking up
+         * @description Bookings so far against the forecast's typical December pace, the projected demand and the gap to the rooms bought: short, on pace or over. Flags only; the buyer decides. Rejected lines are left out.
+         */
+        get: operations["plan_position_v1_plans__plan_id__position_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Real 2017 bookings, replayed week by week
+         * @description For each hotel-week: what the forecast believed on the day of the decision (and why), what Voyance and re-buying last year would have bought, and what really happened, with running profits. Two hotels in Portugal; the contract cost is an assumption (see `assumptions`).
+         */
+        get: operations["replay_v1_replay_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/plans/{plan_id}/queue": {
         parameters: {
             query?: never;
@@ -611,6 +651,70 @@ export interface components {
              */
             status: "empty" | "pending" | "approved" | "rejected" | "mixed";
         };
+        /** PositionLineOut */
+        PositionLineOut: {
+            /** City */
+            city: string;
+            /** Week */
+            week: string;
+            /** Hotel */
+            hotel: string;
+            /** Line Id */
+            line_id: number | null;
+            /** Rooms */
+            rooms: number;
+            /**
+             * Forecast
+             * @description Expected demand when the plan was made
+             */
+            forecast: number;
+            /**
+             * On Books
+             * @description Room-nights booked so far
+             */
+            on_books: number;
+            /**
+             * Expected By Now
+             * @description Forecast x the typical share booked by this many days out
+             */
+            expected_by_now: number;
+            /**
+             * Pace
+             * @description on_books / expected_by_now: 1.3 = running 30% ahead
+             */
+            pace: number;
+            /** Projected Demand */
+            projected_demand: number;
+            /**
+             * Gap
+             * @description Projected demand - rooms bought: > 0 short of rooms, < 0 more than demand
+             */
+            gap: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "short" | "on_pace" | "over" | "started";
+            /** Note */
+            note: string;
+        };
+        /**
+         * PositionOut
+         * @description How each saved line is booking up. Flags only: the buyer decides whether to buy more or release.
+         */
+        PositionOut: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Lines */
+            lines: components["schemas"]["PositionLineOut"][];
+            /** Summary */
+            summary: {
+                [key: string]: number;
+            };
+        };
         /**
          * PreviewLine
          * @description A buy line before it is saved.
@@ -764,6 +868,105 @@ export interface components {
             hurdle_rate: number;
             /** Items */
             items: components["schemas"]["QueueItem"][];
+        };
+        /** ReplayDriver */
+        ReplayDriver: {
+            /**
+             * Label
+             * @description What moved the forecast, in plain words, e.g. "already booked"
+             */
+            label: string;
+            /**
+             * Room Nights
+             * @description How far it moved it (SHAP value)
+             */
+            room_nights: number;
+        };
+        /** ReplayForecast */
+        ReplayForecast: {
+            /** Low */
+            low: number;
+            /** Likely */
+            likely: number;
+            /** High */
+            high: number;
+            /** Drivers */
+            drivers: components["schemas"]["ReplayDriver"][];
+        };
+        /**
+         * ReplayOut
+         * @description Decision memory on real bookings: what we believed, decided and saw, week by week.
+         */
+        ReplayOut: {
+            /** Source */
+            source: string;
+            /** Assumptions */
+            assumptions: {
+                [key: string]: number | string;
+            };
+            /** Weeks */
+            weeks: components["schemas"]["ReplayWeek"][];
+            /** Totals */
+            totals: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
+        };
+        /** ReplayOutcome */
+        ReplayOutcome: {
+            /** Rooms */
+            rooms: number;
+            /** Sold */
+            sold: number;
+            /** Unsold */
+            unsold: number;
+            /** Turned Away */
+            turned_away: number;
+            /** Profit */
+            profit: number;
+        };
+        /** ReplayWeek */
+        ReplayWeek: {
+            /**
+             * Week
+             * Format: date
+             */
+            week: string;
+            /** Hotel */
+            hotel: string;
+            /**
+             * Decided On
+             * Format: date
+             */
+            decided_on: string;
+            /** @description What we believed on decided_on */
+            forecast: components["schemas"]["ReplayForecast"];
+            /** On Books */
+            on_books: number;
+            /** Last Year */
+            last_year: number;
+            /**
+             * Actual
+             * @description Room-nights the week's agent bookings really came to
+             */
+            actual: number;
+            /**
+             * Rate
+             * @description Average agent rate that week (EUR)
+             */
+            rate: number;
+            /**
+             * Strategies
+             * @description voyance (buy the likely forecast) and rebuy_last_year
+             */
+            strategies: {
+                [key: string]: components["schemas"]["ReplayOutcome"];
+            };
+            /** Running Profit */
+            running_profit: {
+                [key: string]: number;
+            };
         };
         /** ValidationError */
         ValidationError: {
@@ -1198,6 +1401,87 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    plan_position_v1_plans__plan_id__position_get: {
+        parameters: {
+            query?: {
+                /** @description Default today (UTC) */
+                as_of?: string | null;
+            };
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PositionOut"];
+                };
+            };
+            /** @description Missing or invalid API key */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description No such plan or line in your company */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replay_v1_replay_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplayOut"];
+                };
+            };
+            /** @description Missing or invalid API key */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
                 };
             };
         };

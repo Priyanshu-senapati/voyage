@@ -1,8 +1,15 @@
 import { useState, type ReactNode } from 'react'
-import { Building2, FileText, Info, LogOut, Menu, ScrollText, Target, X } from 'lucide-react'
+import { Building2, FileText, Gauge, History, Info, LogOut, Menu, ScrollText, Target, X } from 'lucide-react'
 import { ROUTES, type Route } from './route'
 
-const ICONS: Record<Route, typeof Target> = { desk: Target, plans: FileText, markets: Building2, audit: ScrollText }
+const ICONS: Record<Route, typeof Target> = {
+  desk: Target,
+  plans: FileText,
+  pace: Gauge,
+  markets: Building2,
+  replay: History,
+  audit: ScrollText,
+}
 
 export function BrandMark({ size = 28 }: { size?: number }) {
   return (

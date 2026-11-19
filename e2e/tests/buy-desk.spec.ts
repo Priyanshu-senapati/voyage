@@ -178,3 +178,46 @@ test('the audit log is for admins only', async ({ page }) => {
   await expect(log).toContainText('Approved a line')
   await expect(log).toContainText('Rejected a line')
 })
+
+test('booking pace reads how a saved plan is booking up on a chosen day', async ({ page }) => {
+  await signIn(page, 'ravi')
+  await page.getByRole('link', { name: 'Booking pace' }).click()
+  await page.getByRole('combobox', { name: 'Plan', exact: true }).selectOption('1')
+  const lines = page.getByRole('table', { name: 'Booking pace by line' }).locator('tbody tr')
+  await expect(lines.first()).toBeVisible()
+  await expect(page.getByRole('tab', { name: '1 Nov' })).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByText('Week began')).toHaveCount(0)
+
+  await page.getByRole('tab', { name: '1 Dec' }).click()
+  await expect(page.getByText('The first December week starts today.', { exact: false })).toBeVisible()
+  const started = page.getByRole('button', { name: /^Week started/ })
+  await started.click()
+  await expect(started).toHaveAttribute('aria-pressed', 'true')
+  await expect(lines.filter({ hasText: 'Week began' })).toHaveCount(await lines.count())
+  await page.getByRole('button', { name: 'Show all lines' }).click()
+  await expect(started).toHaveAttribute('aria-pressed', 'false')
+})
+
+test('the 2017 replay compares buying the forecast with re-buying last year', async ({ page }) => {
+  await signIn(page, 'asha')
+  await page.getByRole('link', { name: '2017 replay' }).click()
+  await expect(page.getByText('€1.27M', { exact: true })).toBeVisible()
+  await expect(page.getByText(/finished €112K ahead/)).toBeVisible()
+
+  const weeks = page.getByRole('table', { name: 'Replay by week' })
+  await weeks.getByRole('button', { name: '2 Jan' }).first().click()
+  await expect(weeks.getByRole('heading', { name: 'What the forecast knew on 4 Sep 2016' })).toBeVisible()
+  await expect(weeks.getByRole('row', { name: /^Buying the forecast/ })).toContainText('€10,520')
+
+  await page.getByRole('tab', { name: 'Resort Hotel' }).click()
+  await expect(weeks.locator('tbody tr').filter({ hasText: 'City Hotel' })).toHaveCount(0)
+})
+
+test('the demo shows booking pace and the replay without a key', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /Explore a saved demo plan/ }).click()
+  await page.getByRole('link', { name: 'Booking pace' }).click()
+  await expect(page.getByRole('table', { name: 'Booking pace by line' }).locator('tbody tr')).toHaveCount(40)
+  await page.getByRole('link', { name: '2017 replay' }).click()
+  await expect(page.getByText('€1.27M', { exact: true })).toBeVisible()
+})

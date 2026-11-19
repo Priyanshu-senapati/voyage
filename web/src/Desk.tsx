@@ -8,8 +8,11 @@ import { ReviewMode } from './ReviewMode'
 import { PlansPage } from './PlansPage'
 import { MarketsPage } from './MarketsPage'
 import { AuditPage } from './AuditPage'
+import { PacePage } from './PacePage'
+import { ReplayPage } from './ReplayPage'
 import { Segmented } from './ui'
 import { go, useRoute } from './route'
+import { capital } from './format'
 
 interface Props {
   session: Session
@@ -17,7 +20,6 @@ interface Props {
 }
 
 type Mode = 'plan' | 'review'
-const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function Desk({ session, onSignOut }: Props) {
   const desk = useDesk(session, onSignOut)
@@ -45,8 +47,12 @@ export function Desk({ session, onSignOut }: Props) {
         }}
       />
     )
+  } else if (route === 'pace') {
+    content = <PacePage api={desk.api} plans={desk.plans} openId={desk.saved?.id ?? null} />
   } else if (route === 'markets') {
     content = <MarketsPage api={desk.api} />
+  } else if (route === 'replay') {
+    content = <ReplayPage api={desk.api} />
   } else if (route === 'audit') {
     content = <AuditPage api={desk.api} me={me} />
   } else {

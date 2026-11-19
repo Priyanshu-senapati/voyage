@@ -1,6 +1,6 @@
 import type {
   AuditEvent, Decision, FrontierPoint, MarketItem, Me, PlanCreate, PlanLineOut, PlanOut, PlanPreview, PlanSummary,
-  PreviewRequest,
+  PositionOut, PreviewRequest, ReplayOut,
 } from '../types'
 
 // What-ifs the preview and the frontier accept (lane A's WhatIf); event_lift null means the planner's own guess
@@ -75,6 +75,9 @@ export function apiFor(key: string) {
         body: JSON.stringify({ decision }),
       }),
     exportCsv: (planId: number) => request<string>(key, `/v1/plans/${planId}/export.csv`),
+    position: (planId: number, asOf: string) =>
+      request<PositionOut>(key, `/v1/plans/${planId}/position?as_of=${encodeURIComponent(asOf)}`),
+    replay: () => request<ReplayOut>(key, '/v1/replay'),
   }
 }
 

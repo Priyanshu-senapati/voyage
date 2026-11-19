@@ -1867,3 +1867,347 @@ input[type='range']:active::-webkit-slider-thumb {
     max-width: none;
   }
 }
+
+/* ---------- shared cell parts ---------- */
+.table td .cell-sub {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.table td .cell-sub.show-sm {
+  display: none;
+}
+
+.chevron-open {
+  transform: rotate(90deg);
+  transition: transform 150ms var(--ease);
+}
+
+/* ---------- booking pace ---------- */
+.pace-when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.pace-when-label {
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.pace-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow: hidden;
+}
+
+.pace-filter {
+  display: grid;
+  gap: 2px;
+  padding: 14px 20px 16px;
+  border: 0;
+  border-left: 1px solid var(--border);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 150ms var(--ease);
+}
+
+.pace-filter:first-child {
+  border-left: 0;
+}
+
+.pace-filter:hover:not(:disabled) {
+  background: var(--panel-2);
+}
+
+.pace-filter[aria-pressed='true'] {
+  background: var(--accent-soft);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.pace-filter:disabled {
+  cursor: default;
+}
+
+.pace-filter:disabled .pace-filter-value {
+  color: var(--ink-3);
+}
+
+.pace-filter-label {
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.pace-filter-value {
+  margin-top: 4px;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.pace-filter-hint {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.pace-takeaway {
+  max-width: 90ch;
+  color: var(--ink-2);
+}
+
+.pace-takeaway strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.pace-table-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pace {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.pace-off {
+  font-weight: 600;
+}
+
+.pace-on {
+  color: var(--ink-2);
+}
+
+/* booked so far against the tick of what was expected by now */
+.bullet {
+  position: relative;
+  display: inline-block;
+  width: 110px;
+  height: 8px;
+  margin-right: 10px;
+  border-radius: 4px;
+  background: var(--track);
+  vertical-align: middle;
+}
+
+.bullet-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  max-width: 100%;
+  border-radius: 4px;
+  background: var(--chart-demand);
+}
+
+.bullet-mark {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--panel);
+}
+
+/* ---------- 2017 replay ---------- */
+.lead-plot {
+  max-width: 880px;
+}
+
+.curve-plot .baseline {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+.curve-plot .lead-area {
+  fill: var(--series-profit);
+  opacity: 0.08;
+}
+
+.detail-row td {
+  padding: 16px 16px 20px;
+  background: var(--panel-2);
+  white-space: normal;
+}
+
+.week-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 20px 40px;
+  max-width: 1040px;
+}
+
+.week-detail h3 {
+  margin-bottom: 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.drivers {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.drivers li {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 52px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.driver-label {
+  color: var(--ink-2);
+}
+
+/* a zero line in the middle: pushes up grow right, pushes down grow left */
+.driver-track {
+  position: relative;
+  height: 8px;
+  background: linear-gradient(var(--border-strong), var(--border-strong)) center / 1px 14px no-repeat;
+}
+
+.driver-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+}
+
+.driver-up {
+  left: 50%;
+  background: var(--chart-demand);
+}
+
+.driver-down {
+  right: 50%;
+  background: var(--series-worst);
+}
+
+.delta-note {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.mini-scroll {
+  overflow-x: auto;
+}
+
+/* the outcome table sits inside the week table: undo the outer table's cell rules (padding, sticky header) */
+.week-detail .outcome-table th,
+.week-detail .outcome-table td {
+  position: static;
+  padding: 6px 0 6px 14px;
+  border-bottom: 1px solid var(--border);
+  background: none;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.week-detail .outcome-table th:first-child {
+  padding-left: 0;
+}
+
+.week-detail .outcome-table thead th {
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.week-detail .outcome-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.driver-value {
+  font-weight: 600;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .pace-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pace-filter:nth-child(3) {
+    border-left: 0;
+  }
+
+  .pace-filter:nth-child(n + 3) {
+    border-top: 1px solid var(--border);
+  }
+
+  .week-detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .table td .cell-sub.show-sm {
+    display: block;
+  }
+
+  /* the arrow and number carry pace on phones; the word stays for screen readers */
+  .pace-word {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .replay-table > thead th {
+    white-space: normal;
+  }
+
+  .bullet.hide-sm {
+    display: none;
+  }
+
+  .pace-booked {
+    min-width: 0;
+  }
+
+  .drivers li {
+    grid-template-columns: 110px minmax(0, 1fr) 44px;
+  }
+
+  .pace-filter {
+    padding: 12px 16px 14px;
+  }
+}
+
+/* touch screens: controls get a finger-sized target without moving the layout */
+@media (pointer: coarse) {
+  .btn {
+    min-height: 44px;
+  }
+
+  .link-button {
+    padding: 12px 6px;
+    margin: -12px -6px;
+  }
+
+  .segmented button {
+    height: 40px;
+  }
+}

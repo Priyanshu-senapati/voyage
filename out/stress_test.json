@@ -622,5 +622,120 @@
       "profit_vs_raw_optimizer": -1.2383880299925318,
       "worlds_where_ours_earns_more_than_rebuy": 0.01
     }
-  ]
+  ],
+  "cancellations": {
+    "cancel_rate": 0.41,
+    "late_cancel_share": 0.115,
+    "season_rate_sd": 0.05,
+    "rows": [
+      {
+        "budget_lakh": 40,
+        "means": {
+          "ours_aware": {
+            "spend": 3914645.6284495937,
+            "mean_profit": 654474.2133626393,
+            "worst_5pct_profit": 222977.61214780493,
+            "unsold_rooms": 54.12078408614485,
+            "missed_rooms": 1373.1706724311264
+          },
+          "ours_told_0.30": {
+            "spend": 3923609.1914613773,
+            "mean_profit": 645855.8242477188,
+            "worst_5pct_profit": 195041.33306553692,
+            "unsold_rooms": 58.660658057364905,
+            "missed_rooms": 1375.9705464023466
+          },
+          "ours_told_0.50": {
+            "spend": 3905593.042588421,
+            "mean_profit": 648919.8839674458,
+            "worst_5pct_profit": 229895.59203230048,
+            "unsold_rooms": 51.25577759413819,
+            "missed_rooms": 1371.91566593912
+          },
+          "ours_unaware": {
+            "spend": 3940124.475956389,
+            "mean_profit": 561728.886047589,
+            "worst_5pct_profit": 37790.743024133735,
+            "unsold_rooms": 75.26634553450272,
+            "missed_rooms": 1390.486233879484
+          },
+          "rebuy_gross": {
+            "spend": 3875254.140597709,
+            "mean_profit": 551009.743510864,
+            "worst_5pct_profit": 156012.29618848965,
+            "unsold_rooms": 46.521114853172065,
+            "missed_rooms": 1375.0310031981537
+          },
+          "rebuy_kept": {
+            "spend": 3876673.62676724,
+            "mean_profit": 551171.1003875667,
+            "worst_5pct_profit": 155990.626135463,
+            "unsold_rooms": 46.54780137512582,
+            "missed_rooms": 1374.8076897201076
+          }
+        },
+        "worlds_where_aware_earns_more_than": {
+          "ours_told_0.30": 0.76,
+          "ours_told_0.50": 0.79,
+          "ours_unaware": 1.0,
+          "rebuy_gross": 1.0,
+          "rebuy_kept": 1.0
+        }
+      },
+      {
+        "budget_lakh": 200,
+        "means": {
+          "ours_aware": {
+            "spend": 7404432.090145162,
+            "mean_profit": 843301.5340133726,
+            "worst_5pct_profit": 32701.696180392704,
+            "unsold_rooms": 121.13274713825122,
+            "missed_rooms": 885.0626354832325
+          },
+          "ours_told_0.30": {
+            "spend": 9034116.11656624,
+            "mean_profit": 709099.7254366392,
+            "worst_5pct_profit": -345300.809383231,
+            "unsold_rooms": 187.78284565905415,
+            "missed_rooms": 691.7027340040357
+          },
+          "ours_told_0.50": {
+            "spend": 5961749.740105573,
+            "mean_profit": 806397.1977093624,
+            "worst_5pct_profit": 177750.9404400662,
+            "unsold_rooms": 82.69849956616287,
+            "missed_rooms": 1076.8083879111443
+          },
+          "ours_unaware": {
+            "spend": 13249905.95787426,
+            "mean_profit": -717472.5254462166,
+            "worst_5pct_profit": -2531401.845828843,
+            "unsold_rooms": 500.01731073111637,
+            "missed_rooms": 331.64719907609776
+          },
+          "rebuy_gross": {
+            "spend": 14832709.17675359,
+            "mean_profit": -1708684.3140408266,
+            "worst_5pct_profit": -3800016.6160494774,
+            "unsold_rooms": 670.57564893054,
+            "missed_rooms": 254.80553727552132
+          },
+          "rebuy_kept": {
+            "spend": 8675638.686726267,
+            "mean_profit": 771837.5357858037,
+            "worst_5pct_profit": -210261.06210681275,
+            "unsold_rooms": 163.42964565893666,
+            "missed_rooms": 728.5095340039181
+          }
+        },
+        "worlds_where_aware_earns_more_than": {
+          "ours_told_0.30": 0.99,
+          "ours_told_0.50": 0.87,
+          "ours_unaware": 1.0,
+          "rebuy_gross": 1.0,
+          "rebuy_kept": 0.97
+        }
+      }
+    ]
+  }
 }

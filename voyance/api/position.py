@@ -65,13 +65,17 @@ def _read(line, booked: float, as_of: date) -> PositionLine:
     pace = booked / expected if expected > 0 else 1.0
     # a typical curve can pass 100% (bookings that later cancel are on the books), so keep a little room left
     projected = booked + forecast * max(1.0 - share, MIN_STILL_TO_COME)
-    status = "short" if pace > 1 + PACE_BAND else "over" if pace < 1 - PACE_BAND else "on_pace"
     gap = projected * keep - rooms
+    ahead, behind = pace > 1 + PACE_BAND, pace < 1 - PACE_BAND
+    # short or over only when the rooms bought don't cover it: pace is on gross bookings, gap after cancellations
+    status = "short" if ahead and gap > 0 else "over" if behind and gap < 0 else "on_pace"
     after = f" ({projected * keep:.0f} after early cancellations)" if keep < 1 else ""
     reading = (f"{booked:.0f} booked against {expected:.0f} expected by now; projected {projected:.0f} "
                f"room-nights{after}")
     if status == "on_pace":
-        note = f"on pace: {reading} for {rooms} rooms"
+        drift = (f"running {abs(pace - 1):.0%} {'ahead of' if ahead else 'behind'} the forecast, but the rooms bought "
+                 "still fit: " if ahead or behind else "on pace: ")
+        note = f"{drift}{reading} for {rooms} rooms"
     else:
         note = (f"running {abs(pace - 1):.0%} {'ahead of' if pace > 1 else 'behind'} the forecast: {reading}, "
                 f"{abs(gap):.0f} {'more than' if gap > 0 else 'fewer than'} the {rooms} rooms "

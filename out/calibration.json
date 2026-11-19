@@ -28,6 +28,14 @@
         1.4
       ]
     },
+    "rate_vs_demand_same_week": {
+      "elasticity": 0.04562460327591145,
+      "weeks": 216,
+      "demand_range": [
+        0.6,
+        1.4
+      ]
+    },
     "december_booked_share": {
       "150": 0.218,
       "120": 0.3284,

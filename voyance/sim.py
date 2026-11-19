@@ -199,7 +199,9 @@ def run(seed: int = 7, budget: float = 12_000_000.0, risk_aversion: float = 0.3,
         n_scenarios: int = 200, n_test_seasons: int = 500,
         cancel_rate: float = 0.0) -> dict[str, dict[str, float]]:
     """Plan with each strategy, then score every plan on the same unseen seasons. With `cancel_rate`, that share
-    of bookings cancel (see stay_factors) and every strategy knows it."""
+    of bookings cancel (see stay_factors) and every strategy knows it: re-buying past bookings re-buys what
+    stayed. (Re-buying the rooms they held after early cancellations, the share the optimizers plan on, over-buys
+    and loses more: Voyance's edge from Rs 1 cr up rises from +8.5% to +24%. We report the stricter test.)"""
     keep, paid = stay_factors(cancel_rate)
     world = make_world(seed)
     world = replace(world, price=world.price * paid)  # what a booked room earns: late cancellations leave it empty

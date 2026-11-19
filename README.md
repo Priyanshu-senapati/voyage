@@ -14,7 +14,7 @@ Built for **TBO VoyageHack 4.0**, Problem 1: Inventory Optimization
 
 [**Live demo**](https://voyance-1029341879804.asia-south1.run.app) · [API docs](https://voyance-1029341879804.asia-south1.run.app/docs) · [Team plan](PLAN.md)
 
-`Python 3.11+` · `FastAPI` · `HiGHS (LP)` · `LightGBM + SHAP` · `React + TypeScript` · `211 tests`
+`Python 3.11+` · `FastAPI` · `HiGHS (LP)` · `LightGBM + SHAP` · `React + TypeScript` · `212 tests`
 
 </div>
 
@@ -109,7 +109,7 @@ figure it cites is checked against the plan.
 | **Action queue** | Buy now (due within 14 days), scheduled, watch, skip, with a reason each |
 | **Position Monitor** | After buying: each line's bookings against the real December pace, projected demand and the gap. Flags only |
 | **Replay** | Real 2017 weeks: what the forecast believed and why, what each buyer bought, what happened |
-| **Selling price** | Each line's recommended price: the usual rate moved the way real agent rates move with demand (10% more demand, about 7% higher) |
+| **Selling price** | Each line's recommended price, never below cost: the rate moved by how busy the week is for its hotel. On real bookings a week 10% busier than the hotel's typical week sold about 7% higher; a busier *year* for the same week barely moved agent rates (slope 0.05), so the price follows the week, not the year |
 | **Buyer briefs** | A local model on the GPU writes a plain-English brief; numbers it didn't get from the plan are rejected |
 | **Approvals and audit** | Four-eyes approval on every line, nobody approves their own plan, every action logged |
 
@@ -119,7 +119,7 @@ Needs Python 3.11+ (and Node 22+ for the dashboard).
 
 ```bash
 python -m pip install -e ".[test]"
-python -m pytest                              # 211 tests, about a minute
+python -m pytest                              # 212 tests, about a minute
 
 python scripts/seed_demo.py                   # demo companies and API keys (printed once)
 uvicorn voyance.api.app:create_app --factory  # API at http://127.0.0.1:8000/docs

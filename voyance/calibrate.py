@@ -138,9 +138,41 @@ def late_cancel_share(rows: Iterable[Row], days: int = LATE_CANCEL_DAYS) -> floa
 
 
 def rate_vs_demand(rows: Iterable[Row]) -> dict:
-    """How agent rates move with demand: the slope of log(rate) on log(room-nights), each week against its
-    hotel's usual (median) week, over the demand range we trust. 0.5 = demand 21% above usual, rates 10% above.
-    0 when no week's demand differs from the usual (nothing to measure)."""
+    """How agent rates differ between a hotel's busier and quieter weeks: the slope of log(rate) on
+    log(room-nights), each week against its hotel's typical (median) week, over the demand range we trust. Mostly
+    seasons: busy weeks carry higher rates. 0.5 = a week 21% busier than typical, rates 10% above. 0 when no week's
+    demand differs from the typical (nothing to measure)."""
+    weekly = _weekly_rates(rows)
+    x: list[float] = []
+    y: list[float] = []
+    for hotel in sorted({week[0] for week in weekly}):
+        demand, rate = (np.array(v) for v in zip(*[weekly[w] for w in weekly if w[0] == hotel]))
+        _add_logs(x, y, demand / np.median(demand), rate / np.median(rate))
+    return {"elasticity": _slope(x, y), "weeks": len(x), "demand_range": list(TRUSTED_DEMAND)}
+
+
+def rate_vs_demand_same_week(rows: Iterable[Row]) -> dict:
+    """The same slope for one week of the year across years: is a busier year for that week sold at higher rates?
+    Each year is first scaled by that hotel-year's typical week, so growth and inflation drop out."""
+    weekly = _weekly_rates(rows)
+    typical: dict[tuple[str, str], list[tuple[float, float]]] = defaultdict(list)
+    for (hotel, year, _), values in weekly.items():
+        typical[hotel, year].append(values)
+    scale = {key: np.median(np.array(v), axis=0) for key, v in typical.items()}
+    by_week: dict[tuple[str, str], list[tuple[float, float]]] = defaultdict(list)
+    for (hotel, year, week), (nights, rate) in weekly.items():
+        by_week[hotel, week].append((nights / scale[hotel, year][0], rate / scale[hotel, year][1]))
+    x: list[float] = []
+    y: list[float] = []
+    for pairs in by_week.values():
+        if len(pairs) > 1:
+            demand, rate = (np.array(v) for v in zip(*pairs))
+            _add_logs(x, y, demand / demand.mean(), rate / rate.mean())
+    return {"elasticity": _slope(x, y), "weeks": len(x), "demand_range": list(TRUSTED_DEMAND)}
+
+
+def _weekly_rates(rows: Iterable[Row]) -> dict[tuple[str, str, str], tuple[float, float]]:
+    """(room-nights, average rate) of kept agent stays per hotel, year and week of the year."""
     nights: dict[tuple[str, str, str], float] = defaultdict(float)
     revenue: dict[tuple[str, str, str], float] = defaultdict(float)
     for r in rows:
@@ -149,18 +181,18 @@ def rate_vs_demand(rows: Iterable[Row]) -> dict:
             week = r["hotel"], r["arrival_date_year"], r["arrival_date_week_number"]
             nights[week] += n
             revenue[week] += n * rate
-    x, y = [], []
-    for hotel in sorted({week[0] for week in nights}):
-        weeks = [week for week in nights if week[0] == hotel]
-        demand = np.array([nights[w] for w in weeks])
-        rate = np.array([revenue[w] / nights[w] for w in weeks])
-        demand, rate = demand / np.median(demand), rate / np.median(rate)
-        keep = (demand >= TRUSTED_DEMAND[0]) & (demand <= TRUSTED_DEMAND[1])
-        x += np.log(demand[keep]).tolist()
-        y += np.log(rate[keep]).tolist()
+    return {week: (n, revenue[week] / n) for week, n in nights.items()}
+
+
+def _add_logs(x: list[float], y: list[float], demand: np.ndarray, rate: np.ndarray) -> None:
+    keep = (demand >= TRUSTED_DEMAND[0]) & (demand <= TRUSTED_DEMAND[1])
+    x += np.log(demand[keep]).tolist()
+    y += np.log(rate[keep]).tolist()
+
+
+def _slope(x: list[float], y: list[float]) -> float:
     x_, y_ = np.array(x), np.array(y)
-    slope = float(x_ @ y_ / (x_ @ x_)) if (x_ != 0).any() else 0.0  # through the origin: usual demand, usual rate
-    return {"elasticity": slope, "weeks": int(x_.size), "demand_range": list(TRUSTED_DEMAND)}
+    return float(x_ @ y_ / (x_ @ x_)) if (x_ != 0).any() else 0.0  # through the origin: typical demand, rate
 
 
 def _arrival(row: Row) -> date:
@@ -185,4 +217,5 @@ def summary(rows: list[Row]) -> dict:
         "december_buy_ahead_days": december_buy_ahead_days(agent),
         "agent_late_cancel_share": late_cancel_share(agent),
         "rate_vs_demand": rate_vs_demand(agent),
+        "rate_vs_demand_same_week": rate_vs_demand_same_week(agent),
     }

@@ -9,7 +9,7 @@ import numpy as np
 from voyance.demand import scenarios
 from voyance.optimizer import cvar, profits, solve_relaxed, whole_rooms
 from voyance.sim import (AGENT_CANCEL_RATE, ASSUMED_EVENT_LIFT, DEMAND_CV, WORST_SHARE, World, hidden_demand_mean,
-                         stay_factors, unconstrained_mean)
+                         stay_factors)
 
 N_SCENARIOS = 200
 PLAN_SEED = 0  # fixed, so the same request always gives the same plan (auditable)
@@ -79,15 +79,17 @@ class PlanResult:
     caps_cost: float  # risk-adjusted profit the city / hotel caps give up (0 without caps)
 
 
-# real agent rates against demand, each vs the hotel's usual week (out/calibration.json, rate_vs_demand):
-# 10% more demand, about 7% higher rates; measured only between 0.6x and 1.4x a usual week
+# real agent rates between a hotel's busier and quieter weeks (out/calibration.json, rate_vs_demand): a week 10%
+# busier than the hotel's typical week sells about 7% higher; measured only between 0.6x and 1.4x. The same week
+# in a busier year barely moves (rate_vs_demand_same_week: 0.05), so the price follows the week, not the year
 RATE_ELASTICITY = 0.70
 RATE_DEMAND_RANGE = (0.6, 1.4)
 
 
-def selling_price(usual_rate: float, demand_vs_usual: float) -> float:
-    """Recommended price per room-night: the usual rate, moved the way real agent rates move with demand."""
-    return usual_rate * float(np.clip(demand_vs_usual, *RATE_DEMAND_RANGE)) ** RATE_ELASTICITY
+def selling_price(rate: float, week_vs_typical: float, floor: float = 0.0) -> float:
+    """Recommended price per room-night: the rate moved the way real agent rates differ between a hotel's busier
+    and quieter weeks, never below `floor` (the room's cost)."""
+    return max(floor, rate * float(np.clip(week_vs_typical, *RATE_DEMAND_RANGE)) ** RATE_ELASTICITY)
 
 
 def build_plan(world: World, budget: float, risk_aversion: float, cities: list[str] | None = None,
@@ -106,13 +108,13 @@ def build_plan(world: World, budget: float, risk_aversion: float, cities: list[s
     idx = _select(world, cities)
     lift = ASSUMED_EVENT_LIFT if event_lift is None else event_lift
     mean = hidden_demand_mean(world, lift)[idx] * (1 + demand_change)
-    usual = unconstrained_mean(world)[idx]  # a usual December per hotel-week, sold-outs counted back in
     keep, paid = stay_factors(AGENT_CANCEL_RATE if cancel_rate is None else cancel_rate)
     demand = scenarios(mean * keep, DEMAND_CV, N_SCENARIOS, np.random.default_rng(PLAN_SEED))
     cost, rate, cap = world.cost[idx] * (1 + cost_change), world.price[idx], world.cap[idx]
     price = rate * paid  # what a booked room earns on average: late cancellations leave it empty
     city_of = [world.city[i] for i in idx]
     hotel_of = [f"{world.city[i]} · {world.hotel[i]}" for i in idx]  # "Hotel A" is a different hotel per city
+    typical = {name: float(np.median(mean[[k for k, n in enumerate(hotel_of) if n == name]])) for name in hotel_of}
     groups, shares = [], []
     for names, share in ((city_of, max_city_share), (hotel_of, max_hotel_share)):
         if share is not None and share < 1:  # a cap of the whole budget can never bind
@@ -154,8 +156,10 @@ def build_plan(world: World, budget: float, risk_aversion: float, cities: list[s
         why["sell_out_chance"] = float((demand[:, j] >= buy[j]).mean())  # every room bought sells
         why["why_not_more"] = _why_not_more(limited_by, demand[:, j], buy[j], cost[j], price[j], hurdle,
                                             float(solution.extra_room_value[j]), cap_reason, risk_aversion)
-        why["demand_vs_usual"] = float(mean[j] / usual[j]) if usual[j] > 0 else 1.0
-        why["selling_price"] = selling_price(float(rate[j]), why["demand_vs_usual"])
+        week_vs_typical = float(mean[j] / typical[hotel_of[j]]) if typical[hotel_of[j]] > 0 else 1.0
+        why["week_vs_typical"] = week_vs_typical
+        why["selling_price"] = selling_price(float(rate[j]), week_vs_typical, floor=float(cost[j]))
+        why["price_change"] = why["selling_price"] / float(rate[j]) - 1
         why["stay_share"] = keep  # demand the plan counts on, after early cancellations
         lines.append(PlanLine(world.city[i], world.week[i], world.hotel[i], int(buy[j]), float(cost[j]),
                               float(rate[j]), float(sold[j]), float(line_profit[j]), _reason(why), why,
@@ -268,8 +272,7 @@ def _reason(why: dict) -> str:
     if why["event_week"]:
         parts.append("event week this year")
     parts.append(f"{why['margin']:.0%} margin")
-    if "selling_price" in why:
-        change = selling_price(1.0, why["demand_vs_usual"]) - 1
-        parts.append(f"sell at ₹{why['selling_price']:,.0f} ({change:+.0%}): demand "
-                     f"{why['demand_vs_usual']:.1f}x a usual December")
+    if "price_change" in why:
+        parts.append(f"sell at ₹{why['selling_price']:,.0f} ({why['price_change']:+.0%}): this week's demand is "
+                     f"{why['week_vs_typical']:.1f}x the hotel's typical December week")
     return "; ".join(parts)

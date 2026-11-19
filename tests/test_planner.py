@@ -222,22 +222,26 @@ def test_every_line_says_why_not_more_and_how_likely_all_its_rooms_sell():
     assert all("would sell" in line.why["why_not_more"] for line in roomy.lines if line.limited_by == "demand")
 
 
-def test_selling_price_follows_demand_the_way_real_agent_rates_do():
+def test_selling_price_follows_how_busy_the_week_is_the_way_real_agent_rates_do():
     assert selling_price(8000, 1.0) == 8000
     prices = [selling_price(8000, r) for r in (0.3, 0.6, 0.9, 1.0, 1.2, 1.4, 3.0)]
-    assert prices == sorted(prices)  # more demand than usual never lowers the price
+    assert prices == sorted(prices)  # a busier week never lowers the price
     assert prices[0] == prices[1] and prices[-2] == prices[-1]  # no guessing beyond the measured range
     assert selling_price(8000, 1.1) == pytest.approx(8000 * 1.1 ** RATE_ELASTICITY)
+    assert selling_price(8000, 0.6, floor=7000) == 7000  # never below the room's cost
 
 
 def test_every_line_recommends_a_selling_price_and_says_why():
     plan = build_plan(WORLD, 2e7, 0.3)
     for line in plan.lines:
-        assert line.why["selling_price"] == pytest.approx(selling_price(line.unit_price, line.why["demand_vs_usual"]))
+        assert line.why["selling_price"] == pytest.approx(
+            selling_price(line.unit_price, line.why["week_vs_typical"], floor=line.unit_cost))
         assert f"sell at ₹{line.why['selling_price']:,.0f}" in line.reason
     markup = {flag: np.mean([line.why["selling_price"] / line.unit_price for line in plan.lines
                              if line.why["event_week"] == flag]) for flag in (True, False)}
-    assert markup[True] > 1 > markup[False] * 0.999  # event weeks price up; others at or below the usual rate
+    assert markup[True] > 1 and markup[True] > markup[False]  # event weeks are busier: they price up
+    slump = build_plan(WORLD, 2e7, 0.3, demand_change=-0.4)  # every week quieter: still never below cost
+    assert all(line.why["selling_price"] >= line.unit_cost for line in slump.lines)
 
 
 def test_plans_count_only_on_the_bookings_that_stay():

@@ -5,7 +5,7 @@ import pytest
 
 from voyance import calibrate
 from voyance.calibrate import (december_buy_ahead_days, december_shape, fetch_verified, late_cancel_share,
-                               rate_vs_demand, room_nights, summary, year_to_year_cv)
+                               rate_vs_demand, rate_vs_demand_same_week, room_nights, summary, year_to_year_cv)
 
 NEVER_FETCHED = "https://example.invalid/hotels.csv"  # the file already exists, so this must not be used
 
@@ -179,6 +179,16 @@ def test_rate_vs_demand_measures_how_rates_rise_with_demand():
     rows += [booking(week=30, canceled=True) | {"adr": "999"}, booking(week=31) | {"adr": "0"}]  # ignored
     fit = rate_vs_demand(rows)
     assert fit["elasticity"] == pytest.approx(0.5) and fit["weeks"] == 16
+
+
+def test_same_week_slope_sees_rates_that_follow_the_season_not_the_year():
+    rows = []
+    for year, demands in ((2015, (8, 10, 12, 10)), (2016, (10, 10, 12, 8))):
+        for week, (demand, season) in enumerate(zip(demands, (8, 10, 12, 10)), start=10):
+            rate = 100 * (season / 10) ** 0.5  # the week's seasonal rate, whatever that year's demand
+            rows += [booking(year=year, month="March", week=week) | {"adr": str(rate)}] * demand
+    assert rate_vs_demand_same_week(rows)["elasticity"] == pytest.approx(0.0, abs=1e-12)
+    assert rate_vs_demand(rows)["elasticity"] > 0.3  # across the hotel's weeks, the season shows
 
 
 def test_rate_vs_demand_ignores_weeks_far_outside_the_usual():

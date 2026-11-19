@@ -52,6 +52,8 @@ class WhatIf(BaseModel):
     cost_change: float = Field(0.0, ge=-0.3, le=0.5, description="0.1 = supplier rates 10% dearer")
     event_lift: float | None = Field(None, ge=1.0, le=3.0, description="Demand multiple in this season's event "
                                      "weeks; leave out for the planner's own guess (1.5)")
+    cancel_rate: float | None = Field(None, ge=0, lt=1, description="Share of agent bookings that cancel; leave "
+                                      "out for the rate measured on real agent bookings (41%). Saved plans use it")
 
 
 WHAT_IF_FIELDS = frozenset(WhatIf.model_fields)
@@ -86,6 +88,8 @@ class LineWhy(BaseModel):
                                           "hotel-week, sold-out searches counted back in")
     selling_price: float | None = Field(None, description="Recommended price per room-night: unit_price moved "
                                         "the way real agent rates move with demand (profits stay at unit_price)")
+    stay_share: float | None = Field(None, description="Share of expected demand the plan counts on after early "
+                                     "cancellations (late ones are already in expected_sold)")
 
 
 class PreviewLine(BaseModel):

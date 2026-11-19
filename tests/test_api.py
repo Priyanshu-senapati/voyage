@@ -438,7 +438,7 @@ def test_saved_lines_keep_their_why(api):
     fetched = client.get(f"/v1/plans/{created['id']}", headers=auth(keys["buyer"])).json()
     assert fetched["lines"][0]["why"] == created["lines"][0]["why"]
     assert {"expected_demand", "booked_last_december", "bookings_past_decembers", "soldout_searches_past",
-            "event_week", "margin", "sell_out_chance", "why_not_more", "demand_vs_usual", "selling_price"} == created["lines"][0]["why"].keys()
+            "event_week", "margin", "sell_out_chance", "why_not_more", "demand_vs_usual", "selling_price", "stay_share"} == created["lines"][0]["why"].keys()
 
 
 def test_lines_carry_a_buy_by_date_and_their_own_worst_case(api):
@@ -450,6 +450,17 @@ def test_lines_carry_a_buy_by_date_and_their_own_worst_case(api):
     assert (fetched["buy_by"], fetched["worst_case_profit"]) == (line["buy_by"], line["worst_case_profit"])
     header = client.get(f"/v1/plans/{created['id']}/export.csv", headers=auth(keys["buyer"])).text.splitlines()[0]
     assert {"buy_by", "worst_case_profit", "selling_price"} <= set(header.split(","))
+
+
+def test_previews_can_try_another_cancellation_rate_but_saved_plans_use_the_measured_one(api):
+    client, keys = api
+    body = {"budget_inr": 4_000_000, "risk_aversion": 0.3}
+    base = client.post("/v1/plans/preview", json=body, headers=auth(keys["buyer"])).json()
+    more = client.post("/v1/plans/preview", json=body | {"cancel_rate": 0.6}, headers=auth(keys["buyer"])).json()
+    assert more["cancel_rate"] == 0.6 and more["expected_profit"] < base["expected_profit"]
+    assert client.post("/v1/plans", json=body | {"cancel_rate": 0.6}, headers=auth(keys["buyer"])).status_code == 422
+    too_high = client.post("/v1/plans/preview", json=body | {"cancel_rate": 1.0}, headers=auth(keys["buyer"]))
+    assert too_high.status_code == 422
 
 
 def frontier(client, key, query: str):

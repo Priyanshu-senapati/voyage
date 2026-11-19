@@ -1887,26 +1887,26 @@ input[type='range']:active::-webkit-slider-thumb {
 }
 
 /* ---------- booking pace ---------- */
-.pace-when {
+.toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 14px;
 }
 
-.pace-when-label {
+.toolbar-label {
   color: var(--ink-2);
   font-size: 13px;
   font-weight: 500;
 }
 
-.pace-summary {
+.status-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   overflow: hidden;
 }
 
-.pace-filter {
+.status-filter {
   display: grid;
   gap: 2px;
   padding: 14px 20px 16px;
@@ -1918,34 +1918,34 @@ input[type='range']:active::-webkit-slider-thumb {
   transition: background 150ms var(--ease);
 }
 
-.pace-filter:first-child {
+.status-filter:first-child {
   border-left: 0;
 }
 
-.pace-filter:hover:not(:disabled) {
+.status-filter:hover:not(:disabled) {
   background: var(--panel-2);
 }
 
-.pace-filter[aria-pressed='true'] {
+.status-filter[aria-pressed='true'] {
   background: var(--accent-soft);
   box-shadow: inset 0 -2px 0 var(--accent);
 }
 
-.pace-filter:disabled {
+.status-filter:disabled {
   cursor: default;
 }
 
-.pace-filter:disabled .pace-filter-value {
+.status-filter:disabled .status-filter-value {
   color: var(--ink-3);
 }
 
-.pace-filter-label {
+.status-filter-label {
   color: var(--ink-2);
   font-size: 13px;
   font-weight: 500;
 }
 
-.pace-filter-value {
+.status-filter-value {
   margin-top: 4px;
   font-size: 26px;
   font-weight: 600;
@@ -1953,22 +1953,22 @@ input[type='range']:active::-webkit-slider-thumb {
   line-height: 1.15;
 }
 
-.pace-filter-hint {
+.status-filter-hint {
   color: var(--ink-3);
   font-size: 12.5px;
 }
 
-.pace-takeaway {
+.takeaway {
   max-width: 90ch;
   color: var(--ink-2);
 }
 
-.pace-takeaway strong {
+.takeaway strong {
   color: var(--ink);
   font-weight: 600;
 }
 
-.pace-table-head {
+.panel-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1976,21 +1976,6 @@ input[type='range']:active::-webkit-slider-thumb {
   gap: 10px 16px;
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
-}
-
-.pace {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  white-space: nowrap;
-}
-
-.pace-off {
-  font-weight: 600;
-}
-
-.pace-on {
-  color: var(--ink-2);
 }
 
 /* booked so far against the tick of what was expected by now */
@@ -2143,15 +2128,15 @@ input[type='range']:active::-webkit-slider-thumb {
 }
 
 @media (max-width: 900px) {
-  .pace-summary {
+  .status-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .pace-filter:nth-child(3) {
+  .status-filter:nth-child(3) {
     border-left: 0;
   }
 
-  .pace-filter:nth-child(n + 3) {
+  .status-filter:nth-child(n + 3) {
     border-top: 1px solid var(--border);
   }
 
@@ -2165,14 +2150,12 @@ input[type='range']:active::-webkit-slider-thumb {
     display: block;
   }
 
-  /* the arrow and number carry pace on phones; the word stays for screen readers */
-  .pace-word {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+  .table td .cell-sub {
+    white-space: normal;
+  }
+
+  .contrib-table th:first-child {
+    white-space: normal;
   }
 
   .replay-table > thead th {
@@ -2191,7 +2174,7 @@ input[type='range']:active::-webkit-slider-thumb {
     grid-template-columns: 110px minmax(0, 1fr) 44px;
   }
 
-  .pace-filter {
+  .status-filter {
     padding: 12px 16px 14px;
   }
 }
@@ -2209,5 +2192,610 @@ input[type='range']:active::-webkit-slider-thumb {
 
   .segmented button {
     height: 40px;
+  }
+}
+
+/* ---------- shared page parts: toolbars, filters, details ---------- */
+.panel-bar-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.search {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--ink-3);
+}
+
+.search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.search input {
+  width: 180px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+}
+
+.status-filter-label i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: 1px;
+}
+
+.dot-warn {
+  background: var(--warn);
+}
+
+.dot-success {
+  background: var(--success);
+}
+
+.dot-danger {
+  background: var(--danger);
+}
+
+.dot-neutral {
+  background: var(--ink-3);
+}
+
+.sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sort-button:hover {
+  color: var(--ink);
+}
+
+th[aria-sort] .sort-button {
+  color: var(--ink);
+}
+
+.table td.empty {
+  padding: 28px 16px;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+.line-detail {
+  display: grid;
+  gap: 10px;
+  max-width: 980px;
+}
+
+.line-detail h3 {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.line-note {
+  max-width: 80ch;
+  color: var(--ink-2);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px 24px;
+  margin: 0;
+}
+
+.detail-grid dt {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.detail-grid dd {
+  margin: 2px 0 0;
+  font-weight: 500;
+}
+
+.reason-col {
+  min-width: 220px;
+}
+
+.table td.reason-col {
+  max-width: 340px;
+  white-space: normal;
+}
+
+.reason-text {
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.callout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  padding: 14px 18px;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+
+.callout p {
+  max-width: 80ch;
+  color: var(--ink-2);
+}
+
+.callout strong {
+  color: var(--ink);
+}
+
+.callout-danger {
+  border-color: var(--danger-line);
+  background: var(--danger-soft);
+}
+
+.why-panel,
+.method-panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px 22px 20px;
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 40px;
+}
+
+.why-grid h3 {
+  margin-bottom: 8px;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.why-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.why-list li {
+  display: grid;
+  gap: 2px;
+}
+
+
+.why-steps {
+  display: grid;
+  gap: 10px;
+  max-width: 96ch;
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ink-2);
+}
+
+.why-steps strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.method-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.method-list > div {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.method-list dt {
+  color: var(--ink-3);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.method-list dd {
+  max-width: 90ch;
+  margin: 0;
+  color: var(--ink-2);
+}
+
+/* ---------- exposure ---------- */
+.kpi-meter {
+  margin-top: 10px !important;
+}
+
+.meter {
+  position: relative;
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--track);
+}
+
+.meter-row {
+  display: inline-block;
+  width: 120px;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+.meter-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  max-width: 100%;
+  border-radius: 4px;
+  background: var(--chart-demand);
+}
+
+.meter-cap {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--danger);
+  box-shadow: 0 0 0 1px var(--panel);
+}
+
+.contrib-table th,
+.contrib-table td {
+  padding-left: 14px;
+  white-space: nowrap;
+}
+
+.contrib-table th:first-child {
+  padding-left: 0;
+  text-align: left;
+}
+
+.week-detail .contrib-table th,
+.line-detail .contrib-table th,
+.line-detail .contrib-table td {
+  position: static;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  background: none;
+  font-size: 13px;
+}
+
+.select-sm {
+  height: 32px;
+  font-size: 13px;
+}
+
+.cap-field {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ---------- replay race ---------- */
+.race-hero {
+  display: grid;
+  gap: 14px;
+  padding: 22px 26px;
+  background: linear-gradient(180deg, var(--accent-soft), var(--panel) 70%);
+}
+
+.race-headline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 56px;
+}
+
+.race-stat {
+  display: grid;
+  gap: 2px;
+}
+
+.race-number {
+  color: var(--ink);
+  font-size: 44px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.race-label {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.race-sub,
+.race-scope {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.strategy-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.strategy-card {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 20px 22px;
+}
+
+.strategy-card h2 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.strategy-featured {
+  border-color: var(--accent-line);
+  box-shadow: 0 0 0 1px var(--accent-line), var(--shadow-sm);
+}
+
+.strategy-profit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.strategy-profit-label {
+  width: 100%;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.strategy-profit-value {
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.strategy-rows {
+  display: grid;
+  margin: 0;
+}
+
+.strategy-rows > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.strategy-rows dt {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-2);
+}
+
+.strategy-rows dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.strategy-delta {
+  display: inline-block;
+  min-width: 84px;
+  margin-left: 10px;
+  text-align: right;
+}
+
+.race-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.chart-card {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 20px 22px;
+}
+
+.chart-card h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  list-style: none;
+}
+
+.chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.key-block {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.key-rebuy,
+.key-unsold {
+  background: var(--chart-booked);
+}
+
+.key-voyance,
+.key-served {
+  background: var(--series-profit);
+}
+
+.key-away {
+  background: var(--series-worst);
+}
+
+.key.key-actual {
+  background: var(--ink);
+}
+
+.key.key-voyance {
+  background: var(--series-profit);
+}
+
+.key.key-rebuy {
+  background: var(--chart-booked);
+}
+
+.hbars {
+  display: grid;
+  gap: 14px;
+}
+
+.hbar-group {
+  display: grid;
+  gap: 5px;
+}
+
+.hbar-title {
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.hbar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hbar {
+  display: block;
+  height: 12px;
+  min-width: 2px;
+  border-radius: 0 4px 4px 0;
+}
+
+.hbar-rebuy {
+  background: var(--chart-booked);
+}
+
+.hbar-voyance {
+  background: var(--series-profit);
+}
+
+.hbar-value {
+  flex: none;
+  font-size: 13px;
+}
+
+.stack {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--track);
+}
+
+.stack-sm {
+  width: 200px;
+  height: 10px;
+  background: transparent;
+}
+
+.stack > span {
+  display: block;
+  height: 100%;
+}
+
+.stack-served {
+  background: var(--series-profit);
+}
+
+.stack-unsold {
+  background: var(--chart-booked);
+}
+
+.stack-away {
+  background: var(--series-worst);
+}
+
+.row-featured td {
+  background: var(--accent-soft);
+}
+
+.curve-plot .series-actual {
+  stroke: var(--ink);
+}
+
+.curve-plot .series-rebuy {
+  stroke: var(--chart-booked);
+  stroke-dasharray: 5 4;
+}
+
+@media (max-width: 1100px) {
+  .race-charts,
+  .strategy-cards,
+  .why-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .race-number {
+    font-size: 36px;
+  }
+
+  .race-hero {
+    padding: 18px;
+  }
+
+  .method-list > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .search input {
+    width: 130px;
+  }
+
+  .strategy-delta {
+    min-width: 0;
   }
 }

@@ -1,11 +1,13 @@
 import { useState, type ReactNode } from 'react'
-import { Building2, FileText, Gauge, History, Info, LogOut, Menu, ScrollText, Target, X } from 'lucide-react'
+import { Building2, FileText, Gauge, History, Info, ListChecks, LogOut, Menu, ScrollText, ShieldCheck, Target, X } from 'lucide-react'
 import { ROUTES, type Route } from './route'
 
 const ICONS: Record<Route, typeof Target> = {
   desk: Target,
   plans: FileText,
-  pace: Gauge,
+  queue: ListChecks,
+  position: Gauge,
+  exposure: ShieldCheck,
   markets: Building2,
   replay: History,
   audit: ScrollText,

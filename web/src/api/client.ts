@@ -1,10 +1,13 @@
 import type {
   AuditEvent, Decision, FrontierPoint, MarketItem, Me, PlanCreate, PlanLineOut, PlanOut, PlanPreview, PlanSummary,
-  PositionOut, PreviewRequest, ReplayOut,
+  PositionOut, PreviewRequest, QueueOut, ReplayOut,
 } from '../types'
 
 // What-ifs the preview and the frontier accept (lane A's WhatIf); event_lift null means the planner's own guess
 export type WhatIfParams = Pick<PreviewRequest, 'demand_change' | 'cost_change' | 'event_lift'>
+
+// The exposure caps a plan is made with (share of the whole budget; null = no cap)
+export type CapParams = Pick<PreviewRequest, 'max_city_share' | 'max_hotel_share'>
 
 // Same origin by default: Vite proxies /v1 to the API in dev and preview.
 const BASE = import.meta.env.VITE_API_URL ?? ''
@@ -58,8 +61,10 @@ export function apiFor(key: string) {
     audit: () => request<AuditEvent[]>(key, '/v1/audit?limit=200'),
     preview: (body: PreviewRequest, signal?: AbortSignal) =>
       request<PlanPreview>(key, '/v1/plans/preview', { method: 'POST', body: JSON.stringify(body), signal }),
-    frontier: (budget: number, whatIf?: WhatIfParams) => {
+    frontier: (budget: number, whatIf?: WhatIfParams, caps?: CapParams) => {
       const query = new URLSearchParams({ budget_inr: String(budget) })
+      if (caps?.max_city_share != null) query.set('max_city_share', String(caps.max_city_share))
+      if (caps?.max_hotel_share != null) query.set('max_hotel_share', String(caps.max_hotel_share))
       if (whatIf?.demand_change) query.set('demand_change', String(whatIf.demand_change))
       if (whatIf?.cost_change) query.set('cost_change', String(whatIf.cost_change))
       if (whatIf?.event_lift != null) query.set('event_lift', String(whatIf.event_lift))
@@ -77,6 +82,8 @@ export function apiFor(key: string) {
     exportCsv: (planId: number) => request<string>(key, `/v1/plans/${planId}/export.csv`),
     position: (planId: number, asOf: string) =>
       request<PositionOut>(key, `/v1/plans/${planId}/position?as_of=${encodeURIComponent(asOf)}`),
+    queue: (planId: number, asOf?: string) =>
+      request<QueueOut>(key, `/v1/plans/${planId}/queue${asOf ? `?as_of=${encodeURIComponent(asOf)}` : ''}`),
     replay: () => request<ReplayOut>(key, '/v1/replay'),
   }
 }

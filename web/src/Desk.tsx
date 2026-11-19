@@ -8,7 +8,9 @@ import { ReviewMode } from './ReviewMode'
 import { PlansPage } from './PlansPage'
 import { MarketsPage } from './MarketsPage'
 import { AuditPage } from './AuditPage'
-import { PacePage } from './PacePage'
+import { PositionPage } from './PositionPage'
+import { QueuePage } from './QueuePage'
+import { ExposurePage } from './ExposurePage'
 import { ReplayPage } from './ReplayPage'
 import { Segmented } from './ui'
 import { go, useRoute } from './route'
@@ -25,6 +27,7 @@ export function Desk({ session, onSignOut }: Props) {
   const desk = useDesk(session, onSignOut)
   const route = useRoute()
   const [chosen, setChosen] = useState<Mode | null>(null)
+  const [focusId, setFocusId] = useState<number | null>(null)
   const { me } = desk
   // buyers start by planning; approvers and admins start with what waits for them
   const mode: Mode = chosen ?? (me?.role === 'buyer' ? 'plan' : 'review')
@@ -33,6 +36,15 @@ export function Desk({ session, onSignOut }: Props) {
   const viewer = me
     ? { name: capital(me.name), detail: `${capital(me.role)} · ${me.tenant}${desk.live ? '' : ' (demo)'}` }
     : { name: '…', detail: 'Signing in' }
+
+  // the plan the queue, position and exposure pages look at: the one picked there, else the open one, else the newest
+  const known = (id: number | null | undefined) => (id != null && desk.plans.some((p) => p.id === id) ? id : null)
+  const scope = {
+    api: desk.api,
+    plans: desk.plans,
+    planId: known(focusId) ?? known(desk.saved?.id) ?? desk.plans[0]?.id ?? null,
+    onPlan: setFocusId,
+  }
 
   let content
   if (route === 'plans') {
@@ -47,8 +59,12 @@ export function Desk({ session, onSignOut }: Props) {
         }}
       />
     )
-  } else if (route === 'pace') {
-    content = <PacePage api={desk.api} plans={desk.plans} openId={desk.saved?.id ?? null} />
+  } else if (route === 'queue') {
+    content = <QueuePage {...scope} />
+  } else if (route === 'position') {
+    content = <PositionPage {...scope} />
+  } else if (route === 'exposure') {
+    content = <ExposurePage {...scope} />
   } else if (route === 'markets') {
     content = <MarketsPage api={desk.api} />
   } else if (route === 'replay') {

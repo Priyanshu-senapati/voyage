@@ -27,7 +27,7 @@ export function DecisionBadge({ decision }: { decision: Decision }) {
 const PLAN_STATUS: Record<PlanSummary['status'], { tone: Tone; label: string }> = {
   empty: { tone: 'neutral', label: 'No lines' },
   pending: { tone: 'neutral', label: 'Waiting for approval' },
-  mixed: { tone: 'accent', label: 'In review' },
+  mixed: { tone: 'accent', label: 'Partly approved' },
   approved: { tone: 'success', label: 'Approved' },
   rejected: { tone: 'danger', label: 'Rejected' },
 }

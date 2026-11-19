@@ -59,10 +59,10 @@ export function PlanMode({ desk }: { desk: Desk }) {
           <div className="panel">
             <RiskCurve
               api={desk.api}
-              budget={desk.draft.budget}
+              draft={desk.draft}
               risk={desk.draft.risk}
               whatIf={desk.whatIf}
-              onPick={(risk) => desk.setDraft({ budget: desk.draft.budget, risk })}
+              onPick={(risk) => desk.setDraft({ ...desk.draft, risk })}
             />
           </div>
         )}
@@ -92,7 +92,7 @@ function Settings({ desk }: { desk: Desk }) {
   else if (desk.previewing) help = 'Re-planning…'
   else if (active) help = "What-ifs explore a different December. Saved plans use the planner's own forecast."
   else if (desk.preview) help = 'Saves this plan and sends every line for approval.'
-  else if (saved) help = `This is plan #${saved.id}. Change the budget or risk to plan again.`
+  else if (saved) help = `This is plan #${saved.id}. Change the settings to plan again.`
   else help = ''
 
   return (
@@ -108,6 +108,7 @@ function Settings({ desk }: { desk: Desk }) {
       {!expanded && (
         <p className="settings-summary">
           {inr(draft.budget)} budget · {riskWord(draft.risk)} risk ({draft.risk})
+          {(draft.cityCap !== null || draft.hotelCap !== null) && ' · caps on'}
           {active && ' · what-if on'}
         </p>
       )}
@@ -136,6 +137,37 @@ function Settings({ desk }: { desk: Desk }) {
         ends={['Chase profit', 'Protect bad seasons']}
         onChange={(risk) => desk.setDraft({ ...draft, risk })}
       />
+
+      <div className="settings-section">
+        <h2 className="panel-title">
+          Exposure caps
+          <InfoTip label="exposure caps">
+            The most of the whole budget the plan may put in one city, or with one hotel. The optimizer keeps to them.
+            The Exposure page shows each cap's headroom and what it costs.
+          </InfoTip>
+        </h2>
+        <CapSelect
+          label="Most in one city"
+          value={draft.cityCap}
+          options={CITY_CAPS}
+          disabled={!usable}
+          onChange={(cityCap) => desk.setDraft({ ...draft, cityCap })}
+        />
+        <CapSelect
+          label="Most with one hotel"
+          value={draft.hotelCap}
+          options={HOTEL_CAPS}
+          disabled={!usable}
+          onChange={(hotelCap) => desk.setDraft({ ...draft, hotelCap })}
+        />
+        {(draft.cityCap !== null || draft.hotelCap !== null) && desk.planView && !desk.previewing && (
+          <p className="fine">
+            {desk.planView.caps_cost > 0
+              ? `These caps give up about ${inr(desk.planView.caps_cost)} of risk-adjusted profit.`
+              : "These caps don't hold the plan back at this budget."}
+          </p>
+        )}
+      </div>
 
       <div className="settings-section">
         <div className="settings-head">
@@ -220,6 +252,43 @@ interface SliderProps {
   disabled: boolean
   ends: [string, string]
   onChange: (value: number) => void
+}
+
+// Shares of the whole budget; with 5 cities and 10 hotels an even split is 20% and 10%
+const CITY_CAPS = [0.5, 0.4, 0.3, 0.25, 0.2]
+const HOTEL_CAPS = [0.25, 0.2, 0.15, 0.12, 0.1]
+
+interface CapSelectProps {
+  label: string
+  value: number | null
+  options: number[]
+  disabled: boolean
+  onChange: (value: number | null) => void
+}
+
+function CapSelect({ label, value, options, disabled, onChange }: CapSelectProps) {
+  const id = useId()
+  return (
+    <div className="field-row cap-field">
+      <label htmlFor={id} className="field-name">
+        {label}
+      </label>
+      <select
+        id={id}
+        className="select select-sm"
+        value={value ?? ''}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
+      >
+        <option value="">No cap</option>
+        {options.map((share) => (
+          <option key={share} value={share}>
+            {Math.round(share * 100)}% of budget
+          </option>
+        ))}
+      </select>
+    </div>
+  )
 }
 
 function Slider({ label, info, output, min, max, step, value, disabled, ends, onChange }: SliderProps) {

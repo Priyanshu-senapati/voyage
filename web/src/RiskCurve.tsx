@@ -2,12 +2,14 @@ import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { ApiError, type Api } from './api/client'
 import demoFrontier from './demo/frontier-2cr.json'
 import type { FrontierPoint } from './types'
+import { whatIfActive, whatIfParams, type WhatIf } from './useDesk'
 import { inr } from './format'
 
 interface Props {
   api: Api | null
   budget: number
   risk: number
+  whatIf: WhatIf
   onPick: (risk: number) => void
 }
 
@@ -17,26 +19,27 @@ const DEMO_BUDGET = 2e7
 const FETCH_DELAY_MS = 500 // the frontier is slow (4-7 s) and limited to 10 a minute: wait for the budget to settle
 
 // One fetch per budget; cached for the session
-function useFrontier(api: Api | null, budget: number): Curve {
-  const cache = useRef(new Map<number, FrontierPoint[]>())
+function useFrontier(api: Api | null, budget: number, whatIf: WhatIf): Curve {
+  const cache = useRef(new Map<string, FrontierPoint[]>())
+  const key = `${budget}|${whatIf.demand}|${whatIf.cost}|${whatIf.event}`
   const [curve, setCurve] = useState<Curve>({ status: 'loading' })
 
   useEffect(() => {
     let current = true
     const timer = setTimeout(async () => {
-      const cached = cache.current.get(budget)
+      const cached = cache.current.get(key)
       if (cached) return setCurve({ status: 'ready', points: cached })
       if (!api) {
         return setCurve(
-          budget === DEMO_BUDGET
+          budget === DEMO_BUDGET && !whatIfActive(whatIf)
             ? { status: 'ready', points: demoFrontier }
             : { status: 'error', message: 'The demo has the curve for ₹2 cr only. Sign in to try other budgets.' },
         )
       }
       setCurve({ status: 'loading' })
       try {
-        const points = await api.frontier(budget)
-        cache.current.set(budget, points)
+        const points = await api.frontier(budget, whatIfParams(whatIf))
+        cache.current.set(key, points)
         if (current) setCurve({ status: 'ready', points })
       } catch (error) {
         if (!current) return
@@ -53,25 +56,35 @@ function useFrontier(api: Api | null, budget: number): Curve {
       current = false
       clearTimeout(timer)
     }
-  }, [api, budget])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `key` covers budget and the what-if
+  }, [api, key])
 
   return curve
 }
 
-const W = 404
-const H = 214
-const M = { top: 22, right: 62, bottom: 26, left: 44 }
+const M = { top: 26, right: 64, bottom: 28, left: 48 }
 const lakh = (v: number) => v / 1e5
 
-export function RiskCurve({ api, budget, risk, onPick }: Props) {
-  const curve = useFrontier(api, budget)
+export function RiskCurve({ api, budget, risk, whatIf, onPick }: Props) {
+  const curve = useFrontier(api, budget, whatIf)
   const [hover, setHover] = useState<number | null>(null)
+  // draw at the plot's real width, so labels stay at UI size from phone to desktop
+  const plotRef = useRef<HTMLDivElement>(null)
+  const [W, setW] = useState(640)
+  useEffect(() => {
+    const el = plotRef.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => setW(Math.max(300, Math.round(entry.contentRect.width))))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [curve.status])
+  const H = Math.round(Math.min(300, Math.max(220, W * 0.42)))
 
   if (curve.status === 'loading') {
     return (
       <div className="curve curve-loading" aria-busy="true">
-        <h3>Risk curve at {inr(budget)}</h3>
-        <p className="curve-note">Working out 11 risk settings. This takes a few seconds.</p>
+        <h3>How risk trades profit for safety at {inr(budget)}{whatIfActive(whatIf) ? ', with the what-if' : ''}</h3>
+        <p className="curve-note">Re-planning at 11 risk settings. This takes a few seconds.</p>
         <span className="curve-skeleton" />
       </div>
     )
@@ -79,7 +92,7 @@ export function RiskCurve({ api, budget, risk, onPick }: Props) {
   if (curve.status === 'error') {
     return (
       <div className="curve">
-        <h3>Risk curve at {inr(budget)}</h3>
+        <h3>How risk trades profit for safety at {inr(budget)}{whatIfActive(whatIf) ? ', with the what-if' : ''}</h3>
         <p className="curve-note">{curve.message}</p>
       </div>
     )
@@ -113,7 +126,7 @@ export function RiskCurve({ api, budget, risk, onPick }: Props) {
 
   return (
     <div className="curve">
-      <h3>Risk curve at {inr(budget)}</h3>
+      <h3>How risk trades profit for safety at {inr(budget)}{whatIfActive(whatIf) ? ', with the what-if' : ''}</h3>
       <p className="curve-takeaway">
         {here.risk_aversion === 0 ? (
           <>
@@ -123,8 +136,8 @@ export function RiskCurve({ api, budget, risk, onPick }: Props) {
           </>
         ) : (
           <>
-            Risk {here.risk_aversion} gives up <strong>{inr(gave)}</strong> of expected profit and protects{' '}
-            <strong>{inr(kept)}</strong> more in the worst 5% of seasons, compared with risk 0.
+            At risk {here.risk_aversion}, you give up <strong>{inr(gave)}</strong> of expected profit to make{' '}
+            <strong>{inr(kept)}</strong> more in a bad season, compared with risk 0.
           </>
         )}
       </p>
@@ -134,11 +147,11 @@ export function RiskCurve({ api, budget, risk, onPick }: Props) {
           <i className="key key-profit" /> Expected profit
         </li>
         <li>
-          <i className="key key-worst" /> Worst 5% of seasons
+          <i className="key key-worst" /> Bad-season profit (worst 5%)
         </li>
       </ul>
 
-      <div className="curve-plot">
+      <div className="curve-plot" ref={plotRef}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
           role="img"
@@ -204,7 +217,7 @@ export function RiskCurve({ api, budget, risk, onPick }: Props) {
               <i className="key key-profit" /> {inr(shown.expected_profit)} expected
             </span>
             <span>
-              <i className="key key-worst" /> {inr(shown.worst_case_profit)} worst 5%
+              <i className="key key-worst" /> {inr(shown.worst_case_profit)} in a bad season
             </span>
             <span className="tip-muted">spends {inr(shown.spend)} · click to use</span>
           </div>
@@ -218,7 +231,7 @@ export function RiskCurve({ api, budget, risk, onPick }: Props) {
             <tr>
               <th scope="col">Risk</th>
               <th scope="col">Expected profit</th>
-              <th scope="col">Worst 5%</th>
+              <th scope="col">Bad season</th>
               <th scope="col">Spend</th>
             </tr>
           </thead>

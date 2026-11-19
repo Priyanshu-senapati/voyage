@@ -10,15 +10,17 @@ export type LoadState = 'loading' | 'ready' | 'error'
 // caps are shares of the whole budget the optimizer may put in one city / with one hotel; null = no cap
 export type Draft = { budget: number; risk: number; cityCap: number | null; hotelCap: number | null }
 // demand and cost are fractions (0.2 = +20%); event is the event-week demand multiple, null = the planner's guess
-export type WhatIf = { demand: number; cost: number; event: number | null }
+export type WhatIf = { demand: number; cost: number; event: number | null; cancel: number | null }
 
 export const DEFAULT_DRAFT: Draft = { budget: 2e7, risk: 0.3, cityCap: null, hotelCap: null }
-export const NO_WHAT_IF: WhatIf = { demand: 0, cost: 0, event: null }
+export const NO_WHAT_IF: WhatIf = { demand: 0, cost: 0, event: null, cancel: null }
 export const PLANNER_EVENT_GUESS = 1.5 // mirrors voyance.sim.ASSUMED_EVENT_LIFT: the planner's own event-week lift
+export const PLANNER_CANCEL = 0.41 // the cancellation rate the planner measured on real agent bookings
 const DEMO_ME: Me = { name: 'ravi', role: 'approver', tenant: 'TBO Demo' }
 const PREVIEW_DELAY_MS = 300 // lane A asks for a pause after the slider stops
 
-export const whatIfActive = (w: WhatIf) => w.demand !== 0 || w.cost !== 0 || w.event !== null
+export const whatIfActive = (w: WhatIf) =>
+  w.demand !== 0 || w.cost !== 0 || w.event !== null || w.cancel !== null
 // Snaps to the sliders' steps so dragging back to a default really is the default (no float noise, no -0)
 export function normalizeWhatIf(w: WhatIf): WhatIf {
   const snap = (v: number, step: number, digits: number) => {
@@ -26,16 +28,20 @@ export function normalizeWhatIf(w: WhatIf): WhatIf {
     return Math.abs(r) < 1e-9 ? 0 : r
   }
   const event = w.event === null ? null : snap(w.event, 0.1, 1)
+  const cancel = w.cancel === null ? null : Number((Math.round(w.cancel / 0.01) * 0.01).toFixed(2))
   return {
     demand: snap(w.demand, 0.05, 2),
     cost: snap(w.cost, 0.05, 2),
     event: event !== null && Math.abs(event - PLANNER_EVENT_GUESS) < 1e-9 ? null : event,
+    // dragging back to the planner's own rate clears it, like the event slider
+    cancel: cancel !== null && Math.abs(cancel - PLANNER_CANCEL) < 1e-9 ? null : cancel,
   }
 }
 export const whatIfParams = (w: WhatIf): WhatIfParams => ({
   demand_change: w.demand,
   cost_change: w.cost,
   event_lift: w.event,
+  cancel_rate: w.cancel,
 })
 
 function savedPlan(raw: PlanOut): Plan {

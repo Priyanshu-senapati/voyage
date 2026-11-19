@@ -11,19 +11,22 @@ import { AuditPage } from './AuditPage'
 import { PositionPage } from './PositionPage'
 import { QueuePage } from './QueuePage'
 import { ExposurePage } from './ExposurePage'
+import { ReportPage } from './ReportPage'
 import { ReplayPage } from './ReplayPage'
 import { Segmented } from './ui'
 import { go, useRoute } from './route'
 import { capital } from './format'
+import { demoPeople } from './demoKeys'
 
 interface Props {
   session: Session
   onSignOut: (reason?: string) => void
+  onStart: (session: Session) => void
 }
 
 type Mode = 'plan' | 'review'
 
-export function Desk({ session, onSignOut }: Props) {
+export function Desk({ session, onSignOut, onStart }: Props) {
   const desk = useDesk(session, onSignOut)
   const route = useRoute()
   const [chosen, setChosen] = useState<Mode | null>(null)
@@ -36,6 +39,9 @@ export function Desk({ session, onSignOut }: Props) {
   const viewer = me
     ? { name: capital(me.name), detail: `${capital(me.role)} · ${me.tenant}${desk.live ? '' : ' (demo)'}` }
     : { name: '…', detail: 'Signing in' }
+
+  // in-app role switch for the hosted demo: sign in live as another demo person without going back to the front door
+  const people = demoPeople()
 
   // the plan the queue, position and exposure pages look at: the one picked there, else the open one, else the newest
   const known = (id: number | null | undefined) => (id != null && desk.plans.some((p) => p.id === id) ? id : null)
@@ -65,6 +71,8 @@ export function Desk({ session, onSignOut }: Props) {
     content = <PositionPage {...scope} />
   } else if (route === 'exposure') {
     content = <ExposurePage {...scope} />
+  } else if (route === 'report') {
+    content = <ReportPage {...scope} />
   } else if (route === 'markets') {
     content = <MarketsPage api={desk.api} />
   } else if (route === 'replay') {
@@ -124,7 +132,14 @@ export function Desk({ session, onSignOut }: Props) {
 
   return (
     <>
-      <Shell active={route} viewer={viewer} onSignOut={() => onSignOut()}>
+      <Shell
+        active={route}
+        viewer={viewer}
+        onSignOut={() => onSignOut()}
+        people={people}
+        currentName={me?.name}
+        onSwitch={(key) => onStart({ mode: 'live', key })}
+      >
         {content}
       </Shell>
       {desk.notice && <Toast notice={desk.notice} onDismiss={desk.dismissNotice} />}

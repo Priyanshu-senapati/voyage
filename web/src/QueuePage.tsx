@@ -350,9 +350,15 @@ function ItemDetail({ item, line, passed, hurdle }: { item: QueueItem; line?: Pl
           <div>
             <dt>Why not more rooms?</dt>
             <dd>
-              {LIMITED[line.limited_by]}
-              {line.limited_by === 'budget' && hurdle > 0 && ` Every rupee must earn ${percent(hurdle)} risk-adjusted.`}
-              {line.limited_by === 'hotel' && line.extra_room_value > 0 && ` One more room would add about ${inr(line.extra_room_value)}.`}
+              {line.why.why_not_more ? (
+                capital(line.why.why_not_more)
+              ) : (
+                <>
+                  {LIMITED[line.limited_by]}
+                  {line.limited_by === 'budget' && hurdle > 0 && ` Every rupee must earn ${percent(hurdle)} risk-adjusted.`}
+                  {line.limited_by === 'hotel' && line.extra_room_value > 0 && ` One more room would add about ${inr(line.extra_room_value)}.`}
+                </>
+              )}
             </dd>
           </div>
           <div>

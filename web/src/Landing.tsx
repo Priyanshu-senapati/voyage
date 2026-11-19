@@ -76,6 +76,16 @@ export function Landing({ error, onStart }: Props) {
           </div>
         </section>
 
+        <section className="lp-showcase">
+          <figure className="lp-shot reveal" style={{ animationDelay: '300ms' }}>
+            <img
+              src="/product-shot.png"
+              alt="The Voyance Buy Desk: a plan's spend, expected and bad-season profit, and every hotel-week to buy with its recommended selling price."
+              loading="lazy"
+            />
+          </figure>
+        </section>
+
         <section className="lp-proof" id="proof" aria-labelledby="proof-title">
           <div className="lp-proof-head">
             <h2 id="proof-title">Measured, not claimed</h2>

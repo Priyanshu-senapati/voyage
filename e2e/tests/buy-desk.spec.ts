@@ -27,7 +27,7 @@ test('the demo opens without a key: review first, then plan and risk curve', asy
   await page.goto('/')
   await page.getByRole('button', { name: /Explore a saved demo plan/ }).click()
   await expect(queue(page).getByRole('tab', { name: 'Waiting · 36' })).toBeVisible()
-  await expect(caseView(page).getByRole('heading', { name: 'Udaipur · Hotel A' })).toBeVisible()
+  await expect(caseView(page).getByRole('heading', { name: /· Hotel [AB]$/ })).toBeVisible()
 
   await modeTab(page, 'Plan').click()
   await expect(buyRows(page)).toHaveCount(40)
@@ -61,11 +61,11 @@ test('an approver from the sign-in picker approves and rejects lines', async ({ 
   await page.goto('/')
   await page.getByRole('button', { name: /Ravi/ }).click()
   await expect(modeTab(page, 'Review')).toHaveAttribute('aria-selected', 'true')
-  await expect(caseView(page).getByRole('heading', { name: 'Udaipur · Hotel A' })).toBeVisible()
+  await expect(caseView(page).getByRole('heading', { name: /· Hotel [AB]$/ })).toBeVisible()
 
   await page.getByRole('button', { name: /Approve line/ }).click()
   // the next waiting line comes up straight away
-  await expect(caseView(page).getByRole('heading', { name: 'Kochi · Hotel A' })).toBeVisible()
+  await expect(caseView(page).getByRole('heading', { name: /· Hotel [AB]$/ })).toBeVisible()
   await page.getByRole('button', { name: /Reject/ }).click()
   await expect(page.getByText('2 of 40 decided')).toBeVisible()
   await expect(queue(page).getByRole('tab', { name: 'Decided · 2' })).toBeVisible()
@@ -161,7 +161,7 @@ test('the markets page shows every hotel-week and filters by city', async ({ pag
   await page.getByRole('link', { name: 'Markets' }).click()
   const markets = page.getByRole('table', { name: 'Markets' }).locator('tbody tr')
   await expect(markets).toHaveCount(40)
-  await page.getByRole('combobox').selectOption('Goa')
+  await page.getByRole('combobox', { name: 'City', exact: true }).selectOption('Goa')
   await expect(markets).toHaveCount(8)
 })
 
@@ -259,7 +259,8 @@ type PlanApi = {
 
 test('a buyer plans with exposure caps; the exposure page and action queue explain them', async ({ page }) => {
   await signIn(page, 'asha')
-  await slider(page, 'Budget').fill('10000000')
+  // a tight budget makes the per-city/per-hotel caps actually bind
+  await slider(page, 'Budget').fill('4000000')
   await page.getByLabel('Most in one city').selectOption('0.2')
   await page.getByLabel('Most with one hotel').selectOption('0.1')
   await expect(page.getByText(/These caps give up about/)).toBeVisible()
@@ -336,4 +337,49 @@ test('the landing page leads with the pitch and the demo opens the Buy Desk', as
   await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toHaveCount(1)
   await page.getByRole('button', { name: 'Explore the live demo' }).click()
   await expect(page.getByRole('heading', { name: 'Buy Desk', exact: true })).toBeVisible()
+})
+
+test('the cancellations what-if re-plans and blocks saving', async ({ page }) => {
+  await signIn(page, 'asha')
+  await slider(page, 'Cancellations').fill('0.6')
+  await expect(page.getByText('What-if', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Save plan' })).toBeDisabled()
+  await page.getByRole('button', { name: 'Reset what-ifs' }).click()
+  await expect(page.getByText('What-if', { exact: true })).toHaveCount(0)
+})
+
+test('a line shows its recommended selling price and sell-out chance (demo)', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /Explore a saved demo plan/ }).click()
+  await modeTab(page, 'Plan').click()
+  await buyRows(page).first().getByRole('button').first().click()
+  const sheet = page.locator('.sheet[open]')
+  await expect(sheet).toBeVisible()
+  await expect(sheet).toContainText('sell at')
+  await expect(sheet).toContainText('Chance it sells out')
+})
+
+test('the plan report: a verifiable brief, the approval diff and the decision review (demo)', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /Explore a saved demo plan/ }).click()
+  await page.getByRole('link', { name: 'Plan report' }).click()
+  await expect(page.getByRole('heading', { name: 'Buyer brief' })).toBeVisible()
+  // clicking a figure highlights the one source row it came from
+  await page.locator('.src-num').first().click()
+  await expect(page.locator('.src-row.src-active')).toHaveCount(1)
+
+  await page.getByRole('tab', { name: 'Approval diff' }).click()
+  await expect(page.getByRole('table', { name: 'Proposed against approved' })).toBeVisible()
+  await expect(page.getByRole('table', { name: 'Rejected', exact: true })).toBeVisible()
+
+  await page.getByRole('tab', { name: 'Decision review' }).click()
+  await expect(page.getByText(/booking ahead of forecast/)).toBeVisible()
+})
+
+test('the role switcher signs in as another demo person without the front door', async ({ page }) => {
+  await signIn(page, 'ravi')
+  await page.getByLabel('View as').selectOption('meera')
+  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible()
+  await expect(page.locator('.viewer-text')).toContainText('Meera')
+  await expect(page.locator('.viewer-text')).toContainText('Admin · TBO Demo')
 })

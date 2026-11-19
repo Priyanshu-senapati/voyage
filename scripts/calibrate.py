@@ -16,11 +16,15 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+import pandas as pd  # noqa: E402
+
 from voyance.calibrate import DATASET_SHA256, DATASET_URL, fetch_verified, summary  # noqa: E402
+from voyance.forecast import agent_bookings, booked_share_by_lead, booking_curves  # noqa: E402
 from voyance.sim import DEMAND_CV, WEEK_FACTOR  # noqa: E402
 
 RAW = ROOT / "data" / "raw" / "hotels.csv"
 OUT = ROOT / "out" / "calibration.json"
+PACE_LEADS = (150, 120, 90, 60, 45, 30, 21, 14, 7, 0)  # days before the week starts
 
 
 def main() -> None:
@@ -28,8 +32,13 @@ def main() -> None:
     data = fetch_verified(RAW, DATASET_URL, DATASET_SHA256)
     rows = list(csv.DictReader(io.StringIO(data.decode("utf-8"), newline="")))
     sim_shape = np.asarray(WEEK_FACTOR, dtype=float)
+    real = summary(rows)
+    curves = booking_curves(agent_bookings(pd.read_csv(io.BytesIO(data))), leads=PACE_LEADS)
+    real["december_booked_share"] = {str(lead): round(share, 4)
+                                     for lead, share in sorted(booked_share_by_lead(curves, month=12).items(),
+                                                               reverse=True)}
     report = {
-        "real_agent_bookings": summary(rows),
+        "real_agent_bookings": real,
         "simulator": {"december_shape": (sim_shape / sim_shape.mean()).round(3).tolist(), "demand_cv": DEMAND_CV},
     }
     OUT.parent.mkdir(exist_ok=True)

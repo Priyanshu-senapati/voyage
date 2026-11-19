@@ -66,6 +66,13 @@ def booking_curves(bookings: pd.DataFrame, leads: tuple[int, ...] = LEADS) -> pd
     return pd.concat(parts).reset_index()[columns]
 
 
+def booked_share_by_lead(curves: pd.DataFrame, month: int) -> dict[int, float]:
+    """Share of a month's final room-nights already on the books at each lead (its weeks taken together)."""
+    in_month = curves[curves["week"].dt.month == month]
+    totals = in_month.groupby("lead")[["on_books", "final"]].sum()
+    return {int(lead): float(row.on_books / row.final) for lead, row in totals.iterrows()}
+
+
 def with_history(curves: pd.DataFrame) -> pd.DataFrame:
     """Adds the season, last year (same hotel, 52 weeks earlier) and the pace of the week 4 weeks earlier."""
     last_year = (curves.assign(week=curves["week"] + pd.Timedelta(weeks=52))[[*KEYS, "on_books", "final"]]

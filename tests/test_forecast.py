@@ -51,6 +51,12 @@ def test_booking_curve_carries_the_weeks_room_rate_weighted_by_nights():
     assert curves[curves.week == WEEK].rate.item() == pytest.approx((3 * 100 + 200) / 4)
 
 
+def test_booked_share_by_lead_is_the_share_of_a_months_bookings_in_by_then():
+    curves = pd.DataFrame([curve("A", "2016-12-05", 30, 30, 100), curve("B", "2016-12-12", 30, 50, 100),
+                           curve("A", "2016-12-05", 7, 90, 100), curve("A", "2016-11-07", 30, 99, 100)])
+    assert forecast.booked_share_by_lead(curves, month=12) == {7: 0.9, 30: 0.4}
+
+
 def test_scenarios_from_a_range_keep_its_quantiles():
     s = scenarios_from_range(np.array([10.0, 0.0]), np.array([20.0, 5.0]), np.array([40.0, 30.0]), n=1000)
     assert s.shape == (1000, 2) and (s >= 0).all()

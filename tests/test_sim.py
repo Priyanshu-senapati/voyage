@@ -1,12 +1,14 @@
 import json
 from dataclasses import replace
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import numpy as np
 
-from voyance.sim import (BUY_AHEAD_DAYS, SEASON_YEAR, WEEKS, hidden_demand_mean, make_world, repeat_past_bookings,
-                         run)
+import pytest
+
+from voyance.sim import (BOOKED_SHARE, BUY_AHEAD_DAYS, SEASON_YEAR, WEEKS, booked_share, hidden_demand_mean,
+                         make_world, on_books, repeat_past_bookings, run)
 
 FAST = {"n_scenarios": 60, "n_test_seasons": 100}
 
@@ -17,6 +19,31 @@ def test_each_hotel_week_knows_its_first_night_and_how_far_ahead_to_buy():
         assert first.item() == date(SEASON_YEAR, 12, int(week.split("-")[0]))
         assert ahead == BUY_AHEAD_DAYS[WEEKS.index(week)]
     assert BUY_AHEAD_DAYS.argmax() == WEEKS.index("22-28 Dec")  # Christmas is booked earliest
+
+
+def test_booked_share_follows_the_real_december_pace():
+    calibration = json.loads((Path(__file__).parent.parent / "out" / "calibration.json").read_text("utf-8"))
+    real = {int(lead): share for lead, share in calibration["real_agent_bookings"]["december_booked_share"].items()}
+    assert {lead: round(share, 2) for lead, share in BOOKED_SHARE.items()} == {k: round(v, 2) for k, v in real.items()}
+    assert booked_share(60) == pytest.approx(BOOKED_SHARE[60]) and booked_share(400) == 0
+    assert booked_share(75) == pytest.approx((BOOKED_SHARE[60] + BOOKED_SHARE[90]) / 2)
+
+
+def test_on_the_books_grows_toward_this_seasons_demand_and_each_hotel_week_has_its_own_pace():
+    world = make_world(seed=3)
+    first = world.first_night.min().item()
+    early, late = (on_books(world, first - timedelta(days=d)) for d in (120, 7))
+    assert (early <= late).all() and (late <= world.season_demand).all()
+    # the same typical share, but early and late bookers spread around it (as real hotel-weeks do)
+    pace = early / (world.season_demand * booked_share(120))
+    assert pace.std() > 0.2
+
+
+def test_this_seasons_demand_draws_no_numbers_the_proof_uses():
+    # season_demand comes from its own random stream: the simulated history and plans are unchanged
+    world = make_world(seed=7)
+    assert world.season_demand.shape == world.true_mean.shape and (world.season_demand >= 0).all()
+    assert replace(world, season_demand=world.season_demand * 0).cost.tolist() == make_world(seed=7).cost.tolist()
 
 
 def test_buy_ahead_days_match_the_real_booking_data():

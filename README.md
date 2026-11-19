@@ -29,6 +29,8 @@ python -m pip install -e ".[test]"
 python -m pytest                   # 185 tests, about 60 s
 python scripts/proof_chart.py      # about 3.5 min; writes out/proof_chart.png and out/proof_results.csv
 python scripts/calibrate.py        # downloads 16 MB once; writes out/calibration.json
+python scripts/proof_study.py 500  # the simulation on 500 worlds across every core, with 95% intervals
+VOYANCE_API_KEY=vy_... python scripts/brief.py 1  # GPU env (PyTorch CUDA + transformers): a buyer brief by a local model, every number checked
 python scripts/forecast_backtest.py  # forecast + buying decisions vs re-buying last year on real 2017 bookings
 ```
 
@@ -51,6 +53,7 @@ Send the key in the `X-API-Key` header. Demo users: **asha** (buyer), **ravi** (
 | `GET /v1/frontier` | anyone | Expected profit and worst case at risk 0, 0.1 … 1 for one budget, optionally in a what-if (10 a minute) |
 | `GET /v1/plans`, `GET /v1/plans/{id}` | anyone | Your company's plans. Each has its hurdle rate (what a rupee must earn to get in), what limits each line (hotel, budget or demand), every hotel-week passed with why, and its exposure per city and hotel. Optional caps (`max_city_share`, `max_hotel_share`, on plans, previews and the frontier) keep any one city or hotel to a share of the budget, and the plan says what they cost |
 | `GET /v1/plans/{id}/queue?as_of=` | anyone | What to do on a day: buy now (due within 14 days), scheduled buys, watch (ask a hotel for more rooms, close calls), skip |
+| `GET /v1/plans/{id}/position?as_of=` | anyone | Position Monitor: each saved line's bookings so far against the forecast's December pace, projected demand and the gap to the rooms bought (short / on pace / over). Flags only: on real 2017 bookings, acting on pace automatically lost 4-8% |
 | `GET /v1/replay` | anyone | Real 2017 bookings replayed week by week: what the forecast believed (and why) on the day of the decision, what Voyance and re-buying last year bought, what really happened, running profits |
 | `PATCH /v1/plans/{id}/lines/{line}` | approver, admin | Approve or reject a line; never your own plan |
 | `GET /v1/plans/{id}/export.csv` | anyone | Plan as a spreadsheet |

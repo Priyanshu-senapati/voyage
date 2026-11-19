@@ -1,7 +1,14 @@
-import pytest
+from dataclasses import replace
 
-from voyance.api.planner import build_plan
-from voyance.sim import make_world
+import numpy as np
+import pytest
+from scipy.optimize import linprog
+
+from voyance import optimizer
+from voyance.api import planner
+from voyance.api.planner import N_SCENARIOS, PLAN_SEED, build_plan
+from voyance.demand import scenarios
+from voyance.sim import DEMAND_CV, WORST_SHARE, hidden_demand_mean, make_world
 
 WORLD = make_world(seed=7)
 
@@ -78,6 +85,127 @@ def test_what_if_event_strength_changes_only_this_seasons_event_weeks():
         line = next(line for line in strong.lines if (line.city, line.week, line.hotel) == key)
         ratio = _demand(strong)[key] / _demand(weak)[key]
         assert ratio == pytest.approx(2.5 if line.why["event_week"] else 1.0)
+
+
+def test_the_round_1_deck_sample_plan_is_unchanged():
+    # the deck shows this plan as real API output: Rs 1.22 cr spend, Rs 24.74L expected, Rs 20.04L worst 5%
+    plan = build_plan(WORLD, budget=2e7, risk_aversion=0.3)
+    assert (round(plan.spend), round(plan.expected_profit), round(plan.worst_case_profit)) == pytest.approx(
+        (12_160_458, 2_473_960, 2_003_528), abs=1)
+
+
+def test_hurdle_rate_is_what_a_rupee_earns_at_the_margin_when_money_runs_out():
+    tight, roomy = build_plan(WORLD, 3e6, 0.3), build_plan(WORLD, 1e10, 0.3)
+    assert tight.hurdle_rate > 0 and roomy.hurdle_rate == pytest.approx(0, abs=1e-9)
+    assert {line.limited_by for line in tight.lines} <= {"hotel", "budget", "demand"}
+    assert "budget" in {line.limited_by for line in tight.lines}
+    assert "budget" not in {line.limited_by for line in roomy.lines}
+
+
+def test_only_hotel_limited_lines_carry_an_extra_room_value():
+    scarce = replace(WORLD, cap=np.minimum(WORLD.cap, 5.0))  # hotels that sell us only 5 rooms a week
+    plan = build_plan(scarce, 1e10, 0.0)
+    limited = [line for line in plan.lines if line.limited_by == "hotel"]
+    assert limited and all(line.rooms == 5 and line.extra_room_value > 0 for line in limited)
+    assert all(line.extra_room_value == 0 for line in plan.lines if line.limited_by != "hotel")
+
+
+def test_the_cost_of_a_skipped_hotel_week_matches_forcing_one_room_in():
+    # brute force: re-solve with one room forced in; the reported cost must match, even where the LP's own
+    # shadow price is degenerate (zero)
+    budget, risk = 4e6, 0.3
+    plan = build_plan(WORLD, budget, risk)
+    demand = scenarios(hidden_demand_mean(WORLD), DEMAND_CV, N_SCENARIOS, np.random.default_rng(PLAN_SEED))
+    c, a_ub, b_ub, lower, upper = optimizer._model(WORLD.cost, WORLD.price, WORLD.cap, demand, np.zeros(40),
+                                                   budget, risk, WORST_SHARE)
+    base = -linprog(c, A_ub=a_ub, b_ub=b_ub, bounds=np.column_stack([lower, upper]), method="highs").fun
+    for skipped in plan.passed[:6]:
+        i = WORLD.labels.index(f"{skipped.city} {skipped.week} {skipped.hotel}")
+        forced = lower.copy()
+        forced[i] = 1
+        loss = base + linprog(c, A_ub=a_ub, b_ub=b_ub, bounds=np.column_stack([forced, upper]), method="highs").fun
+        # the reported cost is the rate at the margin; a whole forced room moves ~₹4-8k and costs a bit more
+        assert skipped.forced_room_cost == pytest.approx(loss, rel=0.05, abs=5.0)
+        assert skipped.earns_elsewhere == pytest.approx(plan.hurdle_rate * skipped.unit_cost)
+
+
+def test_every_hotel_week_not_bought_is_passed_with_its_cost_and_a_reason():
+    plan = build_plan(WORLD, 3e6, 0.3)
+    bought = {(line.city, line.week, line.hotel) for line in plan.lines}
+    passed = {(p.city, p.week, p.hotel) for p in plan.passed}
+    assert bought.isdisjoint(passed) and len(bought | passed) == len(WORLD.labels)
+    costs = [p.forced_room_cost for p in plan.passed]
+    assert costs == sorted(costs) and all(c >= 0 for c in costs)  # closest calls first
+    assert all(p.reason for p in plan.passed)
+
+
+def test_a_hotel_week_that_loses_money_on_its_own_says_so():
+    plan = build_plan(WORLD, 4e6, 0.3, demand_change=-0.5, cost_change=0.3)  # thin demand, dear rooms
+    losers = [p for p in plan.passed if p.earns_here <= 0]
+    assert losers
+    for p in losers:
+        assert p.reason.startswith("a room here would lose about ₹") and "₹-" not in p.reason
+
+
+def test_lines_know_the_first_night_of_their_week():
+    line = build_plan(WORLD, 4e6, 0.3).lines[0]
+    i = WORLD.labels.index(f"{line.city} {line.week} {line.hotel}")
+    assert line.first_night == WORLD.first_night[i].item() and line.buy_by < line.first_night
+
+
+def _spend_by(plan, key):
+    spend = {}
+    for line in plan.lines:
+        spend[key(line)] = spend.get(key(line), 0.0) + line.rooms * line.unit_cost
+    return spend
+
+
+def test_without_caps_the_plan_shows_its_exposure_and_costs_nothing():
+    plan = build_plan(WORLD, 4e6, 0.3)
+    assert plan.caps_cost == 0
+    cities = {e.name: e for e in plan.exposure if e.kind == "city"}
+    assert set(cities) == set(WORLD.city) and all(e.cap is None and not e.at_cap for e in cities.values())
+    for city, spend in _spend_by(plan, lambda line: line.city).items():
+        assert cities[city].spend == pytest.approx(spend) and cities[city].share_of_budget == pytest.approx(spend / 4e6)
+
+
+def test_a_city_cap_holds_its_spend_and_says_what_it_costs():
+    free = build_plan(WORLD, 4e6, 0.3)
+    biggest = max(_spend_by(free, lambda line: line.city).values()) / 4e6
+    capped = build_plan(WORLD, 4e6, 0.3, max_city_share=biggest * 0.7)
+    assert max(_spend_by(capped, lambda line: line.city).values()) <= biggest * 0.7 * 4e6 + 1
+    assert capped.caps_cost > 0 and capped.expected_profit < free.expected_profit
+    at_cap = {e.name for e in capped.exposure if e.kind == "city" and e.at_cap}
+    assert at_cap and all(line.limited_by == "cap" for line in capped.lines if line.city in at_cap)
+
+
+def test_a_cap_below_one_rooms_cost_empties_the_plan_and_costs_what_it_forgoes():
+    free = build_plan(WORLD, 4e6, 0.3)
+    starved = build_plan(WORLD, 4e6, 0.3, max_hotel_share=0.0005)  # Rs 2,000 a hotel; rooms cost 3,500+
+    assert not starved.lines and starved.caps_cost > 0.5 * free.expected_profit
+    assert all(p.reason.startswith("its hotel is at the cap") or p.earns_here <= 0 for p in starved.passed)
+
+
+def test_caps_cost_an_extra_solve_only_when_they_can_bind_and_are_priced(monkeypatch):
+    calls = []
+    real = planner.solve_relaxed
+    monkeypatch.setattr(planner, "solve_relaxed", lambda *a, **k: calls.append(1) or real(*a, **k))
+    build_plan(WORLD, 4e6, 0.3, max_city_share=1.0)
+    build_plan(WORLD, 4e6, 0.3, max_city_share=0.25, price_caps=False)
+    assert len(calls) == 2
+    build_plan(WORLD, 4e6, 0.3, max_city_share=0.25)
+    assert len(calls) == 4
+
+
+def test_a_hotel_cap_holds_each_hotels_spend():
+    capped = build_plan(WORLD, 4e6, 0.3, max_hotel_share=0.08)
+    assert max(_spend_by(capped, lambda line: (line.city, line.hotel)).values()) <= 0.08 * 4e6 + 1
+    hotels = [e for e in capped.exposure if e.kind == "hotel"]
+    assert len(hotels) == 10 and all(e.cap == 0.08 for e in hotels) and any(e.at_cap for e in hotels)
+
+
+def test_a_cap_that_does_not_bind_changes_nothing():
+    assert build_plan(WORLD, 4e6, 0.3, max_city_share=1.0).lines == build_plan(WORLD, 4e6, 0.3).lines
 
 
 def test_reasons_mention_sold_out_searches_and_event_weeks():

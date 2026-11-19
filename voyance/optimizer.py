@@ -9,12 +9,51 @@ scenarios, linearised the Rockafellar-Uryasev way, so the whole thing is one lin
 program solved by HiGHS (bundled with scipy).
 """
 
+import queue
+import threading
+from collections.abc import Sequence
+from concurrent.futures import Future
 from dataclasses import dataclass
 
 import numpy as np
 from numpy.typing import ArrayLike
 from scipy import sparse
 from scipy.optimize import linprog
+
+class _SolverThread:
+    """Runs every HiGHS solve, one at a time, on one long-lived daemon thread.
+
+    HiGHS through scipy crashes the process when a thread that ran a solve exits (Windows, scipy 1.17: 2 of 2
+    runs of 300 one-at-a-time short-lived solver threads segfaulted; the same threads without the solve never
+    did). Web servers run requests on worker threads that come and go, so solves never run on the caller's
+    thread. As a daemon this thread is never joined: the OS ends it at exit without the clean-up that crashes.
+    """
+
+    # shortcut: one thread solves everything, one plan at a time; use separate processes to solve in parallel.
+    def __init__(self) -> None:
+        self._jobs: queue.SimpleQueue = queue.SimpleQueue()
+        self._start = threading.Lock()
+        self._thread: threading.Thread | None = None
+
+    def run(self, solve, *args, **kwargs):
+        with self._start:
+            if self._thread is None:
+                self._thread = threading.Thread(target=self._serve, name="highs-solver", daemon=True)
+                self._thread.start()
+        result: Future = Future()
+        self._jobs.put((result, solve, args, kwargs))
+        return result.result()
+
+    def _serve(self) -> None:
+        while True:
+            result, solve, args, kwargs = self._jobs.get()
+            try:
+                result.set_result(solve(*args, **kwargs))
+            except BaseException as exc:  # handed back to the caller, who raises it
+                result.set_exception(exc)
+
+
+_SOLVER = _SolverThread()
 
 
 @dataclass(frozen=True)
@@ -31,6 +70,8 @@ class Solution:
     budget_value: float           # what one more rupee of budget would add; 0 when money isn't the limit
     forced_room_cost: np.ndarray  # per item bought none: what forcing one room in would cost the plan
     extra_room_value: np.ndarray  # per item at its hotel cap: what one more room of allotment would add
+    # no per-group cap values: when caps add up to the budget the duals split arbitrarily between them;
+    # the planner prices caps by solving once without them instead
 
 
 def profits(buy: ArrayLike, cost: ArrayLike, price: ArrayLike, demand: ArrayLike,
@@ -58,11 +99,15 @@ def cvar(profit: ArrayLike, alpha: float) -> float:
 
 
 def optimize(cost: ArrayLike, price: ArrayLike, cap: ArrayLike, demand: ArrayLike, budget: float,
-             risk_aversion: float = 0.0, alpha: float = 0.05,
-             salvage: ArrayLike | None = None) -> np.ndarray:
-    """Whole rooms to buy per item. demand has one row per scenario, one column per item."""
-    relaxed = plan_relaxed(cost, price, cap, demand, budget, risk_aversion, alpha, salvage)
-    return whole_rooms(relaxed, cost, cap, budget)
+             risk_aversion: float = 0.0, alpha: float = 0.05, salvage: ArrayLike | None = None,
+             groups: Sequence[ArrayLike] = (), group_share: float | ArrayLike = 1.0) -> np.ndarray:
+    """Whole rooms to buy per item. demand has one row per scenario, one column per item.
+
+    groups: item indices per group (e.g. per city); each may spend at most group_share of the budget.
+    """
+    relaxed = solve_relaxed(cost, price, cap, demand, budget, risk_aversion, alpha, salvage, groups,
+                            group_share).buy
+    return whole_rooms(relaxed, cost, cap, budget)  # rounding down only lowers each group's spend
 
 
 def whole_rooms(relaxed: ArrayLike, cost: ArrayLike, cap: ArrayLike, budget: float) -> np.ndarray:
@@ -86,15 +131,27 @@ def plan_relaxed(cost: ArrayLike, price: ArrayLike, cap: ArrayLike, demand: Arra
 
 def solve_relaxed(cost: ArrayLike, price: ArrayLike, cap: ArrayLike, demand: ArrayLike,
                   budget: float, risk_aversion: float = 0.0, alpha: float = 0.05,
-                  salvage: ArrayLike | None = None) -> Solution:
+                  salvage: ArrayLike | None = None, groups: Sequence[ArrayLike] = (),
+                  group_share: float | ArrayLike = 1.0) -> Solution:
     """Optimal fractional plan with its shadow prices: what money, a forced room or more allotment is worth."""
     cost, price, cap = (np.asarray(a, dtype=float) for a in (cost, price, cap))
     demand = np.atleast_2d(np.asarray(demand, dtype=float))
     salvage = np.zeros(cost.size) if salvage is None else np.asarray(salvage, dtype=float)
     _validate(cost, price, cap, demand, salvage, budget, risk_aversion, alpha)
+    groups = [np.asarray(g, dtype=int) for g in groups]
+    shares = np.asarray(group_share, dtype=float)
+    shares = np.full(len(groups), float(shares)) if shares.ndim == 0 else shares
+    if (shares.shape != (len(groups),) or not np.isfinite(shares).all() or ((shares <= 0) | (shares > 1)).any()
+            or any(((g < 0) | (g >= cost.size)).any() or np.unique(g).size != g.size for g in groups)):
+        raise ValueError("each group needs distinct item indices and a share of the budget in (0, 1]")
 
     c, a_ub, b_ub, lower, upper = _model(cost, price, cap, demand, salvage, budget, risk_aversion, alpha)
-    res = linprog(c, A_ub=a_ub, b_ub=b_ub, bounds=np.column_stack([lower, upper]), method="highs")
+    if groups:  # appended last, so the rows before keep their places
+        rows = np.repeat(np.arange(len(groups)), [g.size for g in groups])
+        cols = np.concatenate(groups)
+        caps = sparse.csr_matrix((cost[cols], (rows, cols)), shape=(len(groups), a_ub.shape[1]))
+        a_ub, b_ub = sparse.vstack([a_ub, caps]).tocsr(), np.concatenate([b_ub, shares * budget])
+    res = _SOLVER.run(linprog, c, A_ub=a_ub, b_ub=b_ub, bounds=np.column_stack([lower, upper]), method="highs")
     if res.status != 0:
         raise RuntimeError(f"optimizer found no plan: {res.message}")
     n, budget_row = cost.size, demand.size  # rows: one sales cap per scenario and item, then the budget

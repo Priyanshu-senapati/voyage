@@ -7,6 +7,8 @@ from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 City = Annotated[str, Field(min_length=1, max_length=50)]
 Decision = Literal["pending", "approved", "rejected"]
+LimitedBy = Literal["hotel", "cap", "budget", "demand"]
+QueueAction = Literal["buy_now", "scheduled", "watch", "skip"]
 PlanStatus = Literal["empty", "pending", "approved", "rejected", "mixed"]
 Role = Literal["buyer", "approver", "admin"]
 
@@ -25,6 +27,14 @@ class PlanScope(BaseModel):
     budget_inr: float = Field(gt=0, le=1e10, description="Maximum spend in INR (up to ₹1,000 crore)")
     cities: list[City] | None = Field(None, min_length=1, max_length=50,
                                       description="Limit to these cities; leave out for all")
+    max_city_share: float | None = Field(None, gt=0, le=1, description="At most this share of the whole budget "
+                                         "in any one city, e.g. 0.35, also when `cities` narrows the plan; "
+                                         "leave out for no cap")
+    max_hotel_share: float | None = Field(None, gt=0, le=1, description="At most this share of the whole budget "
+                                          "with any one hotel (supplier); leave out for no cap")
+
+
+CAP_FIELDS = frozenset({"max_city_share", "max_hotel_share"})
 
 
 class PlanCreate(PlanScope):
@@ -87,6 +97,11 @@ class PreviewLine(BaseModel):
     why: LineWhy
     worst_case_profit: float = Field(description="This line alone, averaged over its worst 5% of scenarios")
     buy_by: date = Field(description="Commit by this date: 90% of that week's agent bookings come later")
+    first_night: date
+    limited_by: LimitedBy = Field(description="What stopped it buying more: the hotel's allotment, a city or "
+                                  "hotel cap, the budget (the next room earns less than the hurdle rate) or demand")
+    extra_room_value: float = Field(description="Risk-adjusted rupees one more room of allotment would add; "
+                                    "0 unless limited by the hotel")
 
     @computed_field
     @property
@@ -109,10 +124,42 @@ class PlanTotals(BaseModel):
     spend: float
     expected_profit: float
     worst_case_profit: float
+    hurdle_rate: float = Field(description="Risk-adjusted rupees one more rupee of budget would earn: the return "
+                               "every purchase must beat. 0 when money isn't the limit")
+    max_city_share: float | None = None
+    max_hotel_share: float | None = None
+    caps_cost: float = Field(description="Risk-adjusted profit the city and hotel caps give up (0 without caps)")
+
+
+class ExposureOut(BaseModel):
+    kind: Literal["city", "hotel"]
+    name: str = Field(description='A city, or "City · Hotel" for a hotel')
+    spend: float
+    share_of_budget: float
+    cap: float | None
+    at_cap: bool = Field(description="The optimizer's plan fills the cap; whole rooms can round a little below it")
+
+
+class PassedOut(BaseModel):
+    """A hotel-week the plan buys none of, and why."""
+
+    city: str
+    week: str
+    hotel: str
+    unit_cost: float
+    unit_price: float
+    expected_demand: float
+    earns_here: float = Field(description="What one whole room here makes: price x its expected sales - cost")
+    earns_elsewhere: float = Field(description="What the same money makes in the rest of the plan")
+    forced_room_cost: float = Field(description="About what the plan would lose, risk-adjusted, with one whole "
+                                    "room forced in")
+    reason: str
 
 
 class PlanPreview(PlanTotals, WhatIf):
     lines: list[PreviewLine]
+    passed: list[PassedOut]
+    exposure: list[ExposureOut]
 
 
 class PlanSummary(PlanTotals):
@@ -124,6 +171,29 @@ class PlanSummary(PlanTotals):
 
 class PlanOut(PlanSummary):
     lines: list[PlanLineOut]
+    passed: list[PassedOut]
+    exposure: list[ExposureOut]
+
+
+class QueueItem(BaseModel):
+    action: QueueAction
+    city: str
+    week: str
+    hotel: str
+    line_id: int | None = Field(None, description="The plan line, for buys and hotel-limited lines")
+    rooms: int | None = None
+    buy_by: date | None = None
+    decision: Decision | None = None
+    reason: str
+
+
+class QueueOut(BaseModel):
+    """What to do about a plan on a given day: buy now, scheduled buys, things to watch, and skips."""
+
+    plan_id: int
+    as_of: date
+    hurdle_rate: float
+    items: list[QueueItem]
 
 
 class FrontierPoint(BaseModel):

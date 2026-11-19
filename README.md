@@ -22,9 +22,11 @@ Built for **TBO VoyageHack 4.0**, Problem 1: Inventory Optimization
 > comes from the simulation or from **real hotel bookings**, and the real-data results are walk-forward: each
 > decision uses only what was known on its day.
 
-![The Buy Desk, as designed](web/mockup/buy-desk.png)
+![The live Buy Desk: Goa in Christmas week, from the buy list to an approved line](docs/demo-goa-christmas.gif)
 
-*A design mock-up of the Buy Desk; the [live demo](https://voyance-1029341879804.asia-south1.run.app) is the working product.*
+*The live Buy Desk, one story: Goa in Christmas week. 1,776 searches hit "sold out" in past Decembers, so it
+buys 85 rooms by 5 Aug, and a second person approves the line. Simulated data.*
+
 
 ## The problem, and what's new
 

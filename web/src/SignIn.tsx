@@ -61,19 +61,18 @@ export function SignIn({ error, onStart }: Props) {
   }
 
   return (
-    <div className="signin">
-      <main className="signin-card">
+    <div className="signin-card">
         <div className="signin-brand">
           <BrandMark size={36} />
           <div>
-            <h1>Sign in to Voyance</h1>
+            <h2>Sign in to Voyance</h2>
             <p>The Buy Desk for pre-buying hotel rooms.</p>
           </div>
         </div>
 
         {people.length > 0 && (
           <section className="signin-section" aria-labelledby="demo-people">
-            <h2 id="demo-people">Try it as</h2>
+            <h3 id="demo-people">Try it as</h3>
             <ul className="people">
               {people.map((p) => (
                 <li key={p.name}>
@@ -101,7 +100,7 @@ export function SignIn({ error, onStart }: Props) {
         )}
 
         <form className="signin-section" onSubmit={submit} noValidate>
-          <h2>{people.length > 0 ? 'Or use your API key' : 'Use your API key'}</h2>
+          <h3>{people.length > 0 ? 'Or use your API key' : 'Use your API key'}</h3>
           <label htmlFor="api-key" className="sr-only">
             API key
           </label>
@@ -135,7 +134,6 @@ export function SignIn({ error, onStart }: Props) {
         <button type="button" className="link-button signin-demo" onClick={() => onStart({ mode: 'demo' })}>
           Explore a saved demo plan without signing in
         </button>
-      </main>
     </div>
   )
 }

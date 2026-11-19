@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, computed_field
 City = Annotated[str, Field(min_length=1, max_length=50)]
 Decision = Literal["pending", "approved", "rejected"]
 LimitedBy = Literal["hotel", "cap", "budget", "demand"]
-QueueAction = Literal["buy_now", "scheduled", "watch", "skip"]
+QueueAction = Literal["buy_now", "scheduled", "awaiting_approval", "watch", "skip"]
 PlanStatus = Literal["empty", "pending", "approved", "rejected", "mixed"]
 Role = Literal["buyer", "approver", "admin"]
 
@@ -260,7 +260,8 @@ class QueueItem(BaseModel):
 
 
 class QueueOut(BaseModel):
-    """What to do about a plan on a given day: buy now, scheduled buys, things to watch, and skips."""
+    """What to do about a plan on a given day: approved buys (now or scheduled), lines awaiting approval,
+    things to watch, and skips. Only approved lines are ever buys."""
 
     plan_id: int
     as_of: date

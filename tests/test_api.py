@@ -244,7 +244,7 @@ def test_api_contract_gives_the_dashboard_fixed_value_lists(api):
     assert schemas["MeOut"]["properties"]["role"]["enum"] == ["buyer", "approver", "admin"]
     assert "sell_through" in schemas["PreviewLine"]["required"]  # a computed field the dashboard reads
     assert schemas["PreviewLine"]["properties"]["limited_by"]["enum"] == ["hotel", "cap", "budget", "demand"]
-    assert schemas["QueueItem"]["properties"]["action"]["enum"] == ["buy_now", "scheduled", "watch", "skip"]
+    assert schemas["QueueItem"]["properties"]["action"]["enum"] == ["buy_now", "scheduled", "awaiting_approval", "watch", "skip"]
 
 
 def test_me_says_who_is_calling(api):
@@ -377,16 +377,23 @@ def test_queue_says_what_to_buy_now_what_can_wait_and_what_to_watch_or_skip(api)
     client, keys = api
     plan = new_plan(client, keys["buyer"]).json()
     as_of = date(2027, 8, 10)
-    rejected = plan["lines"][-1]
+    fresh = queue(client, keys["buyer"], plan["id"], as_of.isoformat()).json()["items"]
+    assert not [item for item in fresh if item["action"] in ("buy_now", "scheduled")]  # nothing approved yet
+    *approved, pending, rejected = plan["lines"]
+    for line in approved:
+        assert decide(client, keys["approver"], plan, line["id"], "approved").status_code == 200
     decide(client, keys["approver"], plan, rejected["id"], "rejected")
     body = queue(client, keys["buyer"], plan["id"], as_of.isoformat()).json()
     assert body["as_of"] == as_of.isoformat() and body["hurdle_rate"] == pytest.approx(plan["hurdle_rate"])
     items = body["items"]
-    order = {"buy_now": 0, "scheduled": 1, "watch": 2, "skip": 3}
+    order = {"buy_now": 0, "scheduled": 1, "awaiting_approval": 2, "watch": 3, "skip": 4}
     assert [order[item["action"]] for item in items] == sorted(order[item["action"]] for item in items)
 
     buys = [item for item in items if item["action"] in ("buy_now", "scheduled")]
-    assert sorted(item["line_id"] for item in buys) == sorted(line["id"] for line in plan["lines"][:-1])
+    assert sorted(item["line_id"] for item in buys) == sorted(line["id"] for line in approved)
+    (waiting,) = [item for item in items if item["action"] == "awaiting_approval"]
+    assert waiting["line_id"] == pending["id"] and waiting["decision"] == "pending"
+    assert waiting["reason"].startswith(f"awaiting approval, then buy {pending['rooms']} rooms")
     for item in buys:
         urgent = date.fromisoformat(item["buy_by"]) <= as_of + timedelta(days=14)
         assert (item["action"] == "buy_now") == urgent and item["reason"].startswith(f"buy {item['rooms']} rooms")

@@ -232,9 +232,10 @@ def replay() -> dict:
 
 
 def action_queue(plan: Plan, as_of: date) -> QueueOut:
-    """What to do about a saved plan on `as_of`: buys due within URGENT_DAYS first, then later buys by date,
-    then things to watch (hotels to ask for more rooms, close calls) and skips. Rejected lines are left out."""
-    buys, watch, skip = [], [], []
+    """What to do about a saved plan on `as_of`: approved buys due within URGENT_DAYS first, then later approved
+    buys by date, then lines awaiting approval, things to watch (hotels to ask for more rooms, close calls) and
+    skips. Approval is the gate: a line is never a buy until it is approved. Rejected lines are left out."""
+    buys, awaiting, watch, skip = [], [], [], []
     for line in plan.lines:
         if line.decision == "rejected":
             continue
@@ -244,9 +245,13 @@ def action_queue(plan: Plan, as_of: date) -> QueueOut:
             skip.append(QueueItem(action="skip", rooms=line.rooms, buy_by=line.buy_by, decision=line.decision,
                                   reason=f"too late: the week began on {line.first_night:%d %b %Y}", **place))
             continue
-        buys.append(QueueItem(action="buy_now" if days <= URGENT_DAYS else "scheduled", rooms=line.rooms,
-                              buy_by=line.buy_by, decision=line.decision, reason=_when(line.rooms, line.buy_by, days),
-                              **place))
+        when = _when(line.rooms, line.buy_by, days)
+        if line.decision == "approved":
+            buys.append(QueueItem(action="buy_now" if days <= URGENT_DAYS else "scheduled", rooms=line.rooms,
+                                  buy_by=line.buy_by, decision=line.decision, reason=when, **place))
+        else:
+            awaiting.append(QueueItem(action="awaiting_approval", rooms=line.rooms, buy_by=line.buy_by,
+                                      decision=line.decision, reason=f"awaiting approval, then {when}", **place))
         if line.limited_by == "hotel" and line.extra_room_value > 0:
             watch.append(QueueItem(action="watch", reason=f"ask the hotel for more rooms: each extra room is worth "
                                    f"about ₹{line.extra_room_value:,.0f}", **place))
@@ -258,7 +263,9 @@ def action_queue(plan: Plan, as_of: date) -> QueueOut:
         else:
             skip.append(QueueItem(action="skip", reason=passed["reason"], **place))
     buys.sort(key=lambda item: (item.action != "buy_now", item.buy_by))
-    return QueueOut(plan_id=plan.id, as_of=as_of, hurdle_rate=plan.hurdle_rate, items=[*buys, *watch, *skip])
+    awaiting.sort(key=lambda item: item.buy_by)
+    return QueueOut(plan_id=plan.id, as_of=as_of, hurdle_rate=plan.hurdle_rate,
+                    items=[*buys, *awaiting, *watch, *skip])
 
 
 def _when(rooms: int, buy_by: date, days: int) -> str:

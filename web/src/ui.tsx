@@ -27,7 +27,7 @@ export function DecisionBadge({ decision }: { decision: Decision }) {
 const PLAN_STATUS: Record<PlanSummary['status'], { tone: Tone; label: string }> = {
   empty: { tone: 'neutral', label: 'No lines' },
   pending: { tone: 'neutral', label: 'Waiting for approval' },
-  mixed: { tone: 'accent', label: 'In review' },
+  mixed: { tone: 'accent', label: 'Partly approved' },
   approved: { tone: 'success', label: 'Approved' },
   rejected: { tone: 'danger', label: 'Rejected' },
 }
@@ -87,8 +87,15 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
   )
 }
 
-// The change against the plan without the what-if; `better` says which direction is good news
-export function Delta({ value, format, better = 'up' }: { value: number; format: (v: number) => string; better?: 'up' | 'down' | 'none' }) {
+interface DeltaProps {
+  value: number
+  format: (v: number) => string
+  better?: 'up' | 'down' | 'none'
+  against?: string
+}
+
+// A change against something (by default the plan without the what-if); `better` says which direction is good news
+export function Delta({ value, format, better = 'up', against = 'the plan without the what-if' }: DeltaProps) {
   if (Math.abs(value) < 1e-9) return <span className="delta delta-flat">no change</span>
   const up = value > 0
   const good = better === 'none' ? null : (better === 'up') === up
@@ -98,7 +105,7 @@ export function Delta({ value, format, better = 'up' }: { value: number; format:
       <Icon size={13} strokeWidth={2.5} aria-hidden="true" />
       {up ? '+' : '−'}
       {format(Math.abs(value))}
-      <span className="sr-only"> against the plan without the what-if</span>
+      <span className="sr-only"> against {against}</span>
     </span>
   )
 }

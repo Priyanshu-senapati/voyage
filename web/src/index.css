@@ -93,6 +93,12 @@ p {
   margin: 0;
 }
 
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

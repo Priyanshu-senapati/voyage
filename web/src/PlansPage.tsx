@@ -1,6 +1,6 @@
 import { ChevronRight } from 'lucide-react'
 import type { PlanSummary } from './types'
-import { inr } from './format'
+import { capital, inr } from './format'
 import { PlanStatusBadge } from './ui'
 
 interface Props {
@@ -13,7 +13,6 @@ const when = (iso: string) =>
   new Date(iso).toLocaleString('en-IN', {
     day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Kolkata',
   })
-const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function PlansPage({ plans, openId, onOpen }: Props) {
   return (

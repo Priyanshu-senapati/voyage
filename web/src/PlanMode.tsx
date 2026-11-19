@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { ChevronRight, X } from 'lucide-react'
 import type { useDesk } from './useDesk'
-import { draftOf, whatIfActive } from './useDesk'
+import { PLANNER_EVENT_GUESS, draftOf, whatIfActive } from './useDesk'
 import type { Plan, PlanLine } from './types'
 import { count, inr, riskWord, sum, weekLabel } from './format'
 import { Badge, Delta, InfoTip, Segmented } from './ui'
@@ -90,7 +90,7 @@ function Settings({ desk }: { desk: Desk }) {
   if (!desk.live) help = "This demo can't re-plan. Sign in to try budgets and what-ifs."
   else if (desk.creating) help = 'Saving…'
   else if (desk.previewing) help = 'Re-planning…'
-  else if (active) help = 'What-ifs are for exploring. Reset them to save a plan.'
+  else if (active) help = "What-ifs explore a different December. Saved plans use the planner's own forecast."
   else if (desk.preview) help = 'Saves this plan and sends every line for approval.'
   else if (saved) help = `This is plan #${saved.id}. Change the budget or risk to plan again.`
   else help = ''
@@ -181,7 +181,7 @@ function Settings({ desk }: { desk: Desk }) {
           min={1}
           max={3}
           step={0.1}
-          value={whatIf.event ?? 1.5}
+          value={whatIf.event ?? PLANNER_EVENT_GUESS}
           disabled={!usable}
           ends={['No boost', '3× demand']}
           onChange={(event) => desk.setWhatIf({ ...whatIf, event })}
@@ -194,6 +194,11 @@ function Settings({ desk }: { desk: Desk }) {
         <button type="button" className="btn btn-primary btn-block" disabled={!canSave} onClick={desk.savePlan}>
           Save plan
         </button>
+        {active && usable && (
+          <button type="button" className="btn btn-ghost btn-block" onClick={desk.resetWhatIf}>
+            Reset what-ifs
+          </button>
+        )}
         {saved && desk.changed && usable && (
           <button type="button" className="btn btn-ghost btn-block" onClick={desk.resetChanges}>
             Back to plan #{saved.id}

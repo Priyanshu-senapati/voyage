@@ -13,10 +13,24 @@ export type WhatIf = { demand: number; cost: number; event: number | null }
 
 export const DEFAULT_DRAFT: Draft = { budget: 2e7, risk: 0.3 }
 export const NO_WHAT_IF: WhatIf = { demand: 0, cost: 0, event: null }
+export const PLANNER_EVENT_GUESS = 1.5 // mirrors voyance.sim.ASSUMED_EVENT_LIFT: the planner's own event-week lift
 const DEMO_ME: Me = { name: 'ravi', role: 'approver', tenant: 'TBO Demo' }
 const PREVIEW_DELAY_MS = 300 // lane A asks for a pause after the slider stops
 
 export const whatIfActive = (w: WhatIf) => w.demand !== 0 || w.cost !== 0 || w.event !== null
+// Snaps to the sliders' steps so dragging back to a default really is the default (no float noise, no -0)
+export function normalizeWhatIf(w: WhatIf): WhatIf {
+  const snap = (v: number, step: number, digits: number) => {
+    const r = Number((Math.round(v / step) * step).toFixed(digits))
+    return Math.abs(r) < 1e-9 ? 0 : r
+  }
+  const event = w.event === null ? null : snap(w.event, 0.1, 1)
+  return {
+    demand: snap(w.demand, 0.05, 2),
+    cost: snap(w.cost, 0.05, 2),
+    event: event !== null && Math.abs(event - PLANNER_EVENT_GUESS) < 1e-9 ? null : event,
+  }
+}
 export const whatIfParams = (w: WhatIf): WhatIfParams => ({
   demand_change: w.demand,
   cost_change: w.cost,
@@ -180,8 +194,9 @@ export function useDesk(session: Session, onSignOut: (reason?: string) => void) 
   }
 
   function setWhatIf(next: WhatIf) {
-    setWhatIfState(next)
-    runPreview(draft, next, saved)
+    const w = normalizeWhatIf(next)
+    setWhatIfState(w)
+    runPreview(draft, w, saved)
   }
 
   async function openPlan(id: number) {

@@ -14,7 +14,7 @@ Built for **TBO VoyageHack 4.0**, Problem 1: Inventory Optimization
 
 [**Live demo**](https://voyance-1029341879804.asia-south1.run.app) · [API docs](https://voyance-1029341879804.asia-south1.run.app/docs) · [Team plan](PLAN.md)
 
-`Python 3.11+` · `FastAPI` · `HiGHS (LP)` · `LightGBM + SHAP` · `React + TypeScript` · `243 tests`
+`Python 3.11+` · `FastAPI` · `HiGHS (LP)` · `LightGBM + SHAP` · `React + TypeScript` · `246 tests`
 
 </div>
 
@@ -74,8 +74,15 @@ it chooses where to add and protects the bad season (+20% at ₹2 cr, spending �
 ₹1.48 cr). Around ₹1.2 cr neither lever bites: that is about what re-buying last year costs anyway, so trimming
 its list evenly is nearly optimal.
 
-**Hidden demand is tested in simulation only:** the public dataset has no sold-out searches. The stress test
-(`scripts/stress_test.py`, `out/stress_test.json`) breaks the planner's assumptions on purpose. Half the
+**Hidden demand on real demand** (semi-real, `scripts/censoring_test.py`, `out/censoring_test.json`): the public
+dataset has no sold-out searches, so we kept the real demand and censored it. With last year's allotment set at
+each hotel's typical week, 41 of 68 real hotel-weeks sold out and bookings missed 11% of demand; sold-out searches
+were drawn from the demand that didn't fit. Counting them back in recovers last year's demand to within 0.1%, and
+sized the planner's way it earns **+12% to +14%** more than the same sizing on bookings (+9% to +16% with the
+look-to-book ratio 30% off or half the searches duplicated). With an allotment 20% bigger, only 2% of demand was
+hidden and the gain is +1-2%. Re-buying a whole estimate is the wrong rule at these margins: it over-buys, even
+knowing last year's demand exactly. In the full simulation, the stress test (`scripts/stress_test.py`,
+`out/stress_test.json`) breaks the planner's assumptions on purpose. Half the
 searches missing or noisy logs leave Voyance ahead; **over-counting hurts**: with 50% duplicate searches (agents
 retrying), a look-to-book ratio 30% too low or no event lift, it over-buys and does 7-10% worse than re-buying
 at ₹2 cr. So searches must be de-duplicated before use (see How TBO's data plugs in).
@@ -134,7 +141,7 @@ Needs Python 3.11+ (and Node 22+ for the dashboard).
 
 ```bash
 python -m pip install -e ".[test]"
-python -m pytest                              # 243 tests, about a minute
+python -m pytest                              # 246 tests, about a minute
 
 python scripts/seed_demo.py                   # demo companies and API keys (printed once)
 uvicorn voyance.api.app:create_app --factory  # API at http://127.0.0.1:8000/docs
@@ -155,6 +162,7 @@ can't see TBO Demo's plans. For fixed keys across re-seeds, set `VOYANCE_DEMO_KE
 | `python scripts/proof_chart.py` | The Round 1 chart, 20 simulated worlds (`out/proof_chart.png`, `out/proof_results.csv`) |
 | `python scripts/proof_study.py 500` | The same on 500 worlds across every CPU core, with 95% intervals (`out/proof_study.json`); add `0.41` for the run with cancellations |
 | `python scripts/calibrate.py` | The simulator against the real bookings; downloads 16 MB once (`out/calibration.json`) |
+| `python scripts/censoring_test.py` | Hidden demand on real demand: an allotment hides last year's peaks, synthetic sold-out searches bring them back (`out/censoring_test.json`) |
 | `python scripts/forecast_backtest.py` | Forecast and buying decisions on real 2017 bookings, and the replay (`out/*_backtest.json`) |
 | `VOYANCE_API_KEY=vy_… python scripts/brief.py 1` | A buyer brief from a local model on the GPU (PyTorch with CUDA and `transformers`); without them, or with `--template`, a fixed-form brief from the same checked facts |
 

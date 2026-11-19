@@ -9,6 +9,44 @@ This page lists every figure on the slides and in the video, with its source and
   `web/scripts/capture.mjs` and cropped (`deck/README.md`). It shows one simulated December.
   `docs/sample_plan_round1.json` keeps the same plan as raw API output.
 
+## 0. The brief, and how Voyance covers it
+
+**The brief.** TBO VoyageHack 4.0, Problem 1, "Inventory Optimization for TBO.com" (as published to
+participants; no judging rubric was given):
+> How can data-driven intelligence help TBO.com maximize availability by making smarter travel
+> inventory procurement decisions? Build an intelligent system that analyzes historical bookings,
+> demand trends, sold outs, look to book, seasonality and external signals to identify inventory to
+> target to maximize expected profit. The solution should optimize budget allocation across hotels,
+> flights, destinations, and travel periods, while accounting for demand fluctuations, pricing
+> changes, cancellations, and unsold inventory risks. […] Expected outcome: a decision-support
+> platform […] helping TBO.com buy the right inventory, at the right time, within the right budget,
+> to maximize risk-adjusted profits. System will be provided with maximum input budget.
+
+**Coverage, line by line** (✓ built · ~ partly · ✗ not yet), as of 19 Nov:
+
+| The brief asks for | Status | Where |
+|---|---|---|
+| Historical bookings, demand trends, seasonality | ✓ | Booking-curve forecast, low / likely / high (`voyance/forecast.py`); December seasonality checked on real bookings (section 3) |
+| **Sold outs, look to book** | ✓ | **Hidden demand**: sold-out searches × look-to-book, counted back into demand (`voyance/demand.py`) |
+| External signals | ~ | Event weeks lift demand in the planner, but they're simulated flags today. A sourced 5-city calendar is in `data/events/` |
+| Budget across hotels, destinations, travel periods | ✓ | One budget across 5 cities × 4 December weeks × hotels (`voyance/optimizer.py`) |
+| … and **flights** | ✗ | Seat blocks fit the same optimizer (cost, price, capacity, demand); Round 2 |
+| Demand fluctuations | ✓ | 200 demand scenarios per plan; the worst 5% is in the objective |
+| Pricing changes | ~ | What-ifs for supplier rates and demand (API previews); no price-path model yet |
+| Cancellations | ✗ | Not in the plan yet; the real data's 41% agent cancellation rate is measured (section 3) |
+| Unsold-inventory risk | ✓ | Worst-5% (CVaR) objective, release value for unsold rooms (`salvage`), unsold rooms reported |
+| Predict demand | ✓ | Above; the forecast is tested walk-forward on real bookings (section 4) |
+| Identify opportunities (inventory, destination, travel time) | ✓ | Ranked buy list with a reason per line; Markets page |
+| … favourable procurement prices | ✗ | "Buy now vs wait" on supplier rates; Round 2 |
+| Optimize investments within a maximum budget | ✓ | Never exceeds the budget (tested) |
+| Recommend purchase timing, quantities | ✓ | A buy-by date per line, from real booking curves; rooms per line |
+| … and **selling prices** | ✗ | Each line shows the selling rate it assumes, not a recommendation; price tiers next |
+| Manage risk | ✓ | Risk setting, worst case per line and per plan, budget cap, sign-off |
+| Maximize availability (bookable inventory) | ✓ | Real data: 35–46% fewer room-nights turned away while buying only 4–6% more rooms (section 4) |
+| Decision-support platform | ✓ | Live Buy Desk, API with roles, approvals, audit (section 7) |
+
+What the coverage is worth in rupees, and who pays: [`docs/business_case.md`](business_case.md).
+
 ## 1. TBO's scale (from TBO's own press releases)
 
 | Figure | Value | Period | Source |

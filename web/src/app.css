@@ -1716,6 +1716,10 @@ input[type='range']:active::-webkit-slider-thumb {
     align-items: stretch;
   }
 
+  .page-head-row .segmented {
+    align-self: flex-start;
+  }
+
   .hide-sm {
     display: none;
   }

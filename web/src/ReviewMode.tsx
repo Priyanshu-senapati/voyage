@@ -94,7 +94,13 @@ export function ReviewMode({ desk, onMakePlan }: { desk: Desk; onMakePlan: () =>
                     type="button"
                     className="queue-item"
                     aria-current={line.id === selected?.id ? 'true' : undefined}
-                    onClick={() => setSelectedId(line.id)}
+                    onClick={() => {
+                      setSelectedId(line.id)
+                      // stacked layout: bring the case into view instead of leaving it below the queue
+                      if (window.matchMedia('(max-width: 1180px)').matches) {
+                        requestAnimationFrame(() => document.getElementById('case-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+                      }
+                    }}
                   >
                     <span className="queue-rank">{line.rank}</span>
                     <span className="queue-main">
@@ -116,7 +122,7 @@ export function ReviewMode({ desk, onMakePlan }: { desk: Desk; onMakePlan: () =>
           )}
         </section>
 
-        <section className="panel case-panel" aria-label="Selected line">
+        <section className="panel case-panel" id="case-panel" aria-label="Selected line">
           {selected && rule ? (
             <>
               <LineCase line={selected} unsaved={false} />

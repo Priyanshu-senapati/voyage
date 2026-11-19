@@ -1,0 +1,104 @@
+{
+  "note": "Real output of voyance.api.planner.build_plan on the demo data (simulated, DemoDataSource seed 7). Budget 2 crore, risk 0.3. For the Buy Desk mockup and the video.",
+  "request": {
+    "budget_inr": 20000000,
+    "risk_aversion": 0.3,
+    "cities": "all 5"
+  },
+  "summary": {
+    "lines": 40,
+    "spend_inr": 12160458,
+    "expected_profit_inr": 2473960,
+    "worst_5pct_profit_inr": 2003528
+  },
+  "top_lines": [
+    {
+      "rank": 1,
+      "city": "Udaipur",
+      "week": "15-21 Dec",
+      "hotel": "Hotel A",
+      "rooms": 82,
+      "unit_cost_inr": 6828,
+      "unit_price_inr": 9166,
+      "expected_profit_inr": 166169,
+      "reason": "expected demand 118 room-nights vs 55 booked last December; 2,395 sold-out searches in past Decembers; event week this year; 26% margin"
+    },
+    {
+      "rank": 2,
+      "city": "Kochi",
+      "week": "22-28 Dec",
+      "hotel": "Hotel A",
+      "rooms": 121,
+      "unit_cost_inr": 6633,
+      "unit_price_inr": 8069,
+      "expected_profit_inr": 153907,
+      "reason": "expected demand 196 room-nights vs 107 booked last December; 859 sold-out searches in past Decembers; event week this year; 18% margin"
+    },
+    {
+      "rank": 3,
+      "city": "Manali",
+      "week": "22-28 Dec",
+      "hotel": "Hotel A",
+      "rooms": 80,
+      "unit_cost_inr": 7195,
+      "unit_price_inr": 9324,
+      "expected_profit_inr": 147164,
+      "reason": "expected demand 120 room-nights vs 81 booked last December; 5,685 sold-out searches in past Decembers; 23% margin"
+    },
+    {
+      "rank": 4,
+      "city": "Goa",
+      "week": "1-7 Dec",
+      "hotel": "Hotel B",
+      "rooms": 50,
+      "unit_cost_inr": 8342,
+      "unit_price_inr": 11123,
+      "expected_profit_inr": 120970,
+      "reason": "expected demand 75 room-nights vs 56 booked last December; 1,844 sold-out searches in past Decembers; 25% margin"
+    },
+    {
+      "rank": 5,
+      "city": "Manali",
+      "week": "22-28 Dec",
+      "hotel": "Hotel B",
+      "rooms": 77,
+      "unit_cost_inr": 5152,
+      "unit_price_inr": 6848,
+      "expected_profit_inr": 109164,
+      "reason": "expected demand 112 room-nights vs 74 booked last December; 6,964 sold-out searches in past Decembers; 25% margin"
+    },
+    {
+      "rank": 6,
+      "city": "Kochi",
+      "week": "15-21 Dec",
+      "hotel": "Hotel A",
+      "rooms": 47,
+      "unit_cost_inr": 8697,
+      "unit_price_inr": 11362,
+      "expected_profit_inr": 104230,
+      "reason": "expected demand 68 room-nights vs 62 booked last December; 919 sold-out searches in past Decembers; 23% margin"
+    },
+    {
+      "rank": 7,
+      "city": "Goa",
+      "week": "15-21 Dec",
+      "hotel": "Hotel A",
+      "rooms": 52,
+      "unit_cost_inr": 7018,
+      "unit_price_inr": 9288,
+      "expected_profit_inr": 103426,
+      "reason": "expected demand 75 room-nights vs 50 booked last December; 1,516 sold-out searches in past Decembers; 24% margin"
+    },
+    {
+      "rank": 8,
+      "city": "Goa",
+      "week": "22-28 Dec",
+      "hotel": "Hotel B",
+      "rooms": 85,
+      "unit_cost_inr": 6476,
+      "unit_price_inr": 7814,
+      "expected_profit_inr": 100004,
+      "reason": "expected demand 139 room-nights vs 109 booked last December; 1,776 sold-out searches in past Decembers; 17% margin"
+    }
+  ]
+}

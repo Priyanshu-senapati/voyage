@@ -25,22 +25,25 @@ cover and small wherever hidden demand is explained.
 - **Calibri throughout:** bold for headings, regular for body. It's on the safe list and matches
   the chart's clean sans.
 - **Sizes:**
-  - Titles 28–30pt. Round 1 has two dense slides, so titles stay one line.
+  - Titles 30pt, one line, no subtitle.
   - Section labels 11pt bold caps, spaced.
-  - Body 13–14pt, captions 10–11pt.
-  - Big numbers 32pt.
+  - Body 14–15pt, captions 10.5–13pt.
+  - Big numbers 34–36pt.
+- **Clean:** four zones per slide at most, one idea each. Detail goes in the speaker notes or `docs/numbers.md`.
 
 ## Motif
-The ghost bar, plus numbered circles in `2A78D6` for lists and pipeline stages.
-No colour bars, stripes or title underlines.
+The ghost bar, plus numbered circles in `2A78D6` for short lists.
+Pipeline stages: grey cards when built, a dashed outline when they're Round 2.
+No colour bars, stripes or title underlines. A hairline may split a slide's top and bottom halves.
 
 ## Slide map (Round 1)
 | # | Message | Layout | Visual |
 |---|---|---|---|
-| 0 | Voyance sees hotel demand before it sells out | Dark cover, text left, ghost-bar chart right | Large ghost-bar December chart |
-| 1 | Sold-out dates hide demand; Voyance buys ahead for it, and it pays | Three zones: problem + what's new / proof chart + stats / mockup + money model | Ghost-bar mini, proof chart, mockup |
-| 2 | Built for TBO's scale, with a buyer approving every buy | Pipeline diagram across the top, three cards below | 5-stage pipeline with "built" vs "Round 2" badges |
-| 3 | Thank you | Dark close | Ghost bar small, repo link |
+| 1 | Voyance sees hotel demand before it sells out | Dark cover, text left, ghost-bar chart right | Large ghost-bar December chart |
+| 2 | Sold-out dates hide the demand TBO buys for | Top: problem statement + what goes wrong / ghost bar. Bottom: why we chose it / real-world impact | Ghost bar with labels, 2 big numbers |
+| 3 | Voyance turns hidden demand into an approved buy list | Top: demo GIF / 3 impact numbers. Bottom: 5-step "How it works" pipeline (the architecture) | Live Buy Desk GIF, pipeline |
+| 4 | Thank you | Dark close | Ghost bar small; links to the demo, the code and `docs/numbers.md` |
 
 ## Motion
-None for Round 1. The PPT is judged as a file, and the video carries the narrative.
+One looping GIF on slide 3: the live Buy Desk, so the slide needn't describe it in words. PowerPoint plays it in
+the slideshow; the PDF shows its first frame, which has its own caption. Nothing else moves.

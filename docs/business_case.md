@@ -121,7 +121,7 @@ Buying ahead adds inventory risk, so Voyance caps it at every step:
   demand across a network like this.
 - **Voyance turns that data into a buy list:** hidden demand from sold-outs and look-to-book, the
   brief's own words. It's sized for risk, timed by buy-by dates, and explained line by line.
-- **The working product exists today:** a live demo, an API with approvals and audit, 179 automated
+- **The working product exists today:** a live demo, an API with approvals and audit, 246 automated
   tests, and a real-data test.
 
 ## Sources

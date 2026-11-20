@@ -1,9 +1,9 @@
 """The Round 1 simulation, run on many more worlds across every CPU core, with 95% intervals.
 
 Run from the project root:  python scripts/proof_study.py [worlds]     (default 500; ~5 min on 24 cores)
-Writes out/proof_study.json. It leaves out/proof_results.csv (20 worlds, which the Round 1 deck is built from)
-untouched. Each strategy is scored on the same worlds, so the comparison is paired: the interval comes from
-resampling worlds.
+Writes out/proof_study.json, which the Round 1 deck (deck/build_round1.js) reads. It leaves
+out/proof_results.csv (the older 20-world table) untouched. Each strategy is scored on the same worlds, so the
+comparison is paired: the interval comes from resampling worlds.
 """
 
 import json

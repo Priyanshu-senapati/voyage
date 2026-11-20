@@ -16,9 +16,14 @@ deploy/cloudrun.sh                        # builds in Cloud Build and deploys; p
 ```
 
 - Runs one instance at most, because the demo database and the rate limits live in its memory.
-- Sized for the free tier: 512 MiB, CPU billed only while a request runs, no startup boost, scale to zero, and only
-  the newest image kept. `asia-south1` (Mumbai) is a Tier 1 region. Only committed files are uploaded.
-- Scales to zero when idle. The first visit after that takes a few seconds and starts from fresh demo data.
+- Sized small: 512 MiB, CPU billed only while a request runs, no startup boost, and only the newest image kept.
+  `asia-south1` (Mumbai) is a Tier 1 region. Only committed files are uploaded.
+- **Kept warm for judging** (`MIN_INSTANCES=1`, the default): the instance never shuts down, so there's no cold
+  start and the demo data lives until the next deploy. Visitors share it, so their approvals stay visible to
+  the next visitor until then. It costs roughly $10 a month outside the free tier.
+- **Free mode** (`MIN_INSTANCES=0 deploy/cloudrun.sh`): scales to zero when idle. The first visit after that
+  takes a few seconds and starts from fresh demo data.
+- Redeploying to the same project, `SERVICE` and `REGION` keeps the same URL.
 - The demo keys stay the same across redeploys. Set `VOYANCE_DEMO_KEY_ASHA` (and `_RAVI`, `_MEERA`, `_ZED`)
   before running the script to rotate them.
 - `REGION` (default `asia-south1`) and `SERVICE` (default `voyance`) change where it goes.

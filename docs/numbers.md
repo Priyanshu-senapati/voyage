@@ -1,13 +1,25 @@
 # Numbers behind the Round 1 deck and video
 
 This page lists every figure on the slides and in the video, with its source and period.
-- **Simulated results** come from `out/proof_results.csv`, which `scripts/proof_chart.py` writes.
-  The deck's build script (`deck/build_round1.js`) reads that file directly.
+- **Simulated results** come from `out/proof_study.json`, which `scripts/proof_study.py` writes
+  (`out/proof_results.csv` keeps the older 20-world table in section 2). The deck's build script
+  (`deck/build_round1.js`) reads `proof_study.json` directly.
 - **The real-data results** come from `out/decision_backtest.json` and `out/calibration.json`, which
   lane A's `scripts/forecast_backtest.py` and `scripts/calibrate.py` write. The build script reads both.
-- **The Buy Desk screenshot** is the live demo (section 7), captured on 19 Nov with
-  `web/scripts/capture.mjs` and cropped (`deck/README.md`). It shows one simulated December.
-  `docs/sample_plan_round1.json` keeps the same plan as raw API output.
+- **The demo GIF on slide 3** (`docs/demo-goa-christmas.gif`) is the live demo (section 7), captured on
+  19 Nov with `deck/teaser/capture.mjs`. It shows one simulated December: Goa, Christmas week,
+  1,776 sold-out searches, buy 85 rooms by 5 Aug.
+
+**The slides, 20 Nov.**
+- **Slide 2:** the problem statement, why we chose it (section 1), and what solving it is worth:
+  - ₹4.5–6.3 cr a year per 1% of hotel sales bought ahead ([`business_case.md`](business_case.md), section 3);
+  - 35–46% fewer room-nights turned away (section 4).
+- **Slide 3:** the demo GIF, then three numbers:
+  - +7–13% profit on real bookings (section 4);
+  - +24% at ₹40L (section 2, from `proof_study.json`);
+  - +20% better worst case at ₹2 cr on ₹16L less spend (section 2).
+
+  Under them, the 5-step pipeline (section 6), plus 246 tests and 0.2 s per plan.
 
 ## 0. The brief, and how Voyance covers it
 
@@ -60,8 +72,9 @@ What the coverage is worth in rupees, and who pays: [`docs/business_case.md`](bu
 | Monthly transacting buyers | **34,529, +13% YoY** (32,751 in Q4 FY26) | Q2 FY27 | [TBO press release, 2 Nov 2026][q2fy27] |
 | Revenue from operations | ₹2,677.5 cr | FY26 | Secondary source ([Whalesbook][wb]); not on a slide |
 
-On the slide: *"Hotels + ancillaries are 67% of TBO's GTV (₹7,889 cr of ₹11,695 cr, Q2 FY27), up 39%
-year on year, twice air's 18%."*
+On slide 2 ("Why we chose it"): *"Hotels drive TBO's growth: 67% of its GTV, up 39% a year (Q2 FY27)"* and
+*"Only TBO can do it: it sees every sold-out search from 34,529 buyers"*. The full figures (₹7,889 cr of
+₹11,695 cr, twice air's 18%) are in the speaker notes.
 
 ## 2. Simulated results (not TBO data)
 
@@ -101,6 +114,15 @@ year on year, twice air's 18%."*
 | Missed room-nights (demand with no room) | 1,275 | 1,085 | 1,785 | 859 |
 
 ### On the slides
+**The 20 Nov deck** reads `out/proof_study.json`: 500 worlds, re-run after the cancellation and pickup merges.
+The README's "Results at a glance" quotes the same file.
+- **+24%** expected profit vs re-buying at ₹40L (+24.0%, 95% interval +23.7% to +24.4%).
+- **+20%** better worst 5% at ₹2 cr (+20.4%, interval +19.0% to +21.7%), spending ₹16L less
+  (₹1.32 cr vs ₹1.48 cr).
+
+The build stops if either interval touches zero. The bullets below are the 19 Nov figures from the 20-world
+`proof_results.csv`, kept for the record.
+
 - **+24%** expected profit vs re-buying past bookings, at a tight ₹40L budget (₹11.4L vs ₹9.2L).
   Most of that comes from optimizing the mix at all: the same optimizer on raw bookings already
   earns +21% there. What hidden demand + events add on their own is the +12% below.
@@ -146,7 +168,7 @@ Lane A compared the simulator with a public dataset of real hotel bookings
 | Agent bookings later cancelled | 41% | n/a |
 | Median days ahead that agent bookings are made | 59 | n/a |
 
-In slide 2's speaker notes: the simulator matches the real Christmas-week peak (1.45× vs our 1.47×).
+In slide 3's speaker notes: the simulator matches the real Christmas-week peak (1.45× vs our 1.47×).
 
 **What it shows:**
 - The Christmas-week peak matches the real data. That's 1 of the 4 weeks: early December doesn't match (below).
@@ -194,10 +216,13 @@ what was known on the day it was made (`python scripts/forecast_backtest.py` wri
 - **Forecast accuracy:** at 90–150 days ahead it missed 2017's demand by 9.5–10.7% (WAPE), vs 15.5%
   for re-buying last year. Its low–high range held the actual 72–79% of the time.
 
-On the slide (2): *"+7–13%. Real data: our forecast (not yet in plans) vs re-buying last year.
-Jan–Aug 2017 bookings, 2 hotels in Portugal, buying 90–150 days ahead at 15–30% margins: ahead every
-time, 13–18% fewer unsold rooms."* The build script computes these from the JSON, and refuses to build if any 95% interval
-touches zero.
+On the slides:
+- **Slide 3:** *"+7–13% profit vs re-buying last year. Real 2017 hotel bookings, buying by our forecast;
+  every 95% interval above zero."*
+- **Slide 2:** *"35–46% fewer room-nights turned away, on dates that sell out, in real 2017 bookings."*
+
+The speaker notes say the gain is the forecast's, not yet the planner's. The build script computes these
+figures from the JSON, and refuses to build if any 95% interval touches zero.
 
 **Say so if asked:**
 - **The real-data win is the forecast's, not the optimizer's.** The optimizer at risk 0.3 beats
@@ -237,7 +262,7 @@ touches zero.
 
 | Claim | Evidence |
 |---|---|
-| 179 automated tests | `python -m pytest -q`: 179 passed in 45.3 s. Run on `pitch/round1` after merging main at 88bc694 |
+| 246 automated tests | `python -m pytest -q`: 246 passed in 48.3 s, 20 Nov, on `pitch/readme-gif` at 47a1adf (main plus the README GIF). Was 179 on 19 Nov before the cancellation, pickup and planner merges |
 | 0.2 s for one buy plan over 40 hotel-weeks | `voyance.api.planner.build_plan` on the demo data, risk 0.3, best of 5 after a warm-up, at the same merge: 0.14 s at ₹40L, 0.19 s at ₹60L, 0.21 s at ₹1.2 cr, 0.21 s at ₹2 cr |
 | Built today | **Engine:**<br>- Hidden demand (`voyance/demand.py`)<br>- Expected profit vs worst-5% optimizer, HiGHS (`voyance/optimizer.py`)<br>- Plan lines with reasons, a buy-by date and a worst case each, plus city and hotel caps (`voyance/api/planner.py`)<br>- Demand forecast, LightGBM low / likely / high with SHAP reasons (`voyance/forecast.py`)<br>- Real-data tests (`voyance/calibrate.py`, `voyance/backtest.py`)<br>**Buy Desk API** (`voyance/api/`): API keys, buyer / approver / admin roles, approvals, audit log, tenant isolation, rate limits, CSV export, what-if previews, risk frontier, an action queue, SQLite through SQLAlchemy.<br>**Dashboard** (`web/`, React + TypeScript): Buy Desk plan and review, Plans, Markets, Audit log, what-ifs.<br>**Hosted demo** (`Dockerfile`, `deploy/`) |
 | Not built yet | The forecast feeding the plans, bulk approve, webhooks, price tiers |
@@ -247,7 +272,10 @@ touches zero.
 
 https://voyance-1029341879804.asia-south1.run.app (Google Cloud Run, Mumbai; on slide 4).
 - **Data:** demo data only.
-- **Resets:** the database is wiped and re-seeded on every deploy.
+- **Resets:** the database is wiped and re-seeded on every deploy. Since 20 Nov one instance is kept
+  warm (`MIN_INSTANCES=1` in `deploy/cloudrun.sh`), so it no longer resets after idle spells.
+- **The "Explore the live demo" story** (the GIF's) runs in the visitor's browser from a saved plan, so
+  it shows the same Goa line whatever the server holds.
 - **Demo keys are public:** the "sign in as" keys are shown to every visitor, so anyone can approve
   plans in the demo company.
 

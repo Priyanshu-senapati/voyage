@@ -4,12 +4,15 @@
 #   gcloud auth login && gcloud config set project <your-project>    # once
 #   deploy/cloudrun.sh                                                # from the repo root
 #
-# Settings (environment): REGION (default asia-south1), SERVICE (default voyance), and the demo keys
-# VOYANCE_DEMO_KEY_ASHA, _RAVI, _MEERA, _ZED. Missing keys are kept from the running service, else made up.
-# The demo keys are public by design (the sign-in page offers them), so never put real data in this service.
+# Settings (environment): REGION (default asia-south1), SERVICE (default voyance), MIN_INSTANCES (default 1),
+# and the demo keys VOYANCE_DEMO_KEY_ASHA, _RAVI, _MEERA, _ZED. Missing keys are kept from the running service,
+# else made up. The demo keys are public by design (the sign-in page offers them), so never put real data here.
 #
-# Sized to stay inside Cloud Run's free tier: 512 MiB, CPU billed only while a request runs, no startup boost,
-# scale to zero, one instance. asia-south1 is a Tier 1 region. Older images are deleted after each deploy.
+# Sized small: 512 MiB, CPU billed only while a request runs, no startup boost, one instance at most.
+# MIN_INSTANCES=1 (the default, for judging) keeps that instance warm: no cold start, and the demo data lives
+# until the next deploy instead of resetting after every idle spell. That costs roughly $10 a month outside the
+# free tier. MIN_INSTANCES=0 scales to zero and stays free. asia-south1 is a Tier 1 region. Older images are
+# deleted after each deploy.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -24,6 +27,7 @@ git archive HEAD | tar -x -C "$SRC"
 
 REGION="${REGION:-asia-south1}"
 SERVICE="${SERVICE:-voyance}"
+MIN_INSTANCES="${MIN_INSTANCES:-1}"
 PROJECT="$(gcloud config get-value project 2>/dev/null)"
 [ -n "$PROJECT" ] || { echo "No gcloud project set: run gcloud config set project <id>" >&2; exit 1; }
 
@@ -61,7 +65,7 @@ gcloud run deploy "$SERVICE" \
   --memory 512Mi \
   --cpu-throttling \
   --no-cpu-boost \
-  --min-instances 0 \
+  --min-instances "$MIN_INSTANCES" \
   --max-instances 1 \
   --timeout 120 \
   --set-env-vars "$envs" \

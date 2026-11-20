@@ -4,19 +4,25 @@ Pitch decks for TBO VoyageHack 4.0. Lane C owns this folder.
 
 | File | What it is |
 |---|---|
-| `voyance_round1.pptx` | Round 1 deck: cover, 2 slides, thank-you. This is the file we submit |
-| `voyance_round1.pdf` | The same deck as a PDF, for anyone without PowerPoint |
+| `voyance_round1.pptx` | Round 1 deck: cover, problem, solution, thank-you. This is the file we submit |
+| `voyance_round1.pdf` | The same deck as a PDF, for anyone without PowerPoint (the GIF shows as its first frame) |
 | `build_round1.js` | Builds the .pptx. Edit wording and layout here, never by hand in PowerPoint |
 | `render.ps1` | Uses PowerPoint to export the PDF and one PNG per slide into `renders/`, for checking |
-| `teaser/` | Scripts that make the repo README's looping GIF of the live demo (`docs/demo-goa-christmas.gif`) |
-| `brief.md` | The visual rules: palette, type, the "ghost bar" motif. Round 2 reuses them |
+| `teaser/` | Scripts that make the looping GIF of the live demo (`docs/demo-goa-christmas.gif`), used on slide 3 and in the repo README |
+| `brief.md` | The visual rules: palette, type, the "ghost bar" motif, the slide map. Round 2 reuses them |
+
+**Keep the two content slides clean.** Slide 2 is the problem: the statement, why we chose it, and what it's
+worth. Slide 3 is the solution: the GIF, three impact numbers, and how it works. Each slide has four zones at
+most. A new fact replaces an old one, and detail goes in the speaker notes or `docs/numbers.md`, which slide 4 links.
 
 Every number on a slide is listed, with its source, in [`docs/numbers.md`](../docs/numbers.md).
 The build script reads its numbers from lane A's output files, so a re-run can't leave the slides behind:
-- **the impact chart and stats** from `out/proof_results.csv`;
-- **the real-data strip** from `out/decision_backtest.json` (the build stops if any 95% interval
-  touches zero);
-- **the real-bookings check** in the notes from `out/calibration.json`.
+- **the simulated numbers** (+24% at ₹40L; +20% better bad season at ₹2 cr) come from `out/proof_study.json`;
+- **the real-data numbers** (+7–13% profit; 35–46% fewer room-nights turned away) come from
+  `out/decision_backtest.json`;
+- **the real-bookings check** in the notes comes from `out/calibration.json`.
+
+The build stops if any of those 95% intervals touches zero.
 
 ## Rebuild
 
@@ -27,26 +33,13 @@ node build_round1.js             # writes voyance_round1.pptx
 powershell -ExecutionPolicy Bypass -File render.ps1   # Windows + PowerPoint: PDF + renders/slide-N.png
 ```
 
-## The Buy Desk screenshot (`assets/buy_desk_mockup.png`)
-This is the live demo, captured on 19 Nov with lane B's script in its demo session (one simulated
-December), then cropped to the plan header, the buy list and the line detail.
-
-To re-capture after a dashboard change:
-
-```bash
-cd web && npm ci
-CAPTURE_URL=https://voyance-1029341879804.asia-south1.run.app/ node scripts/capture.mjs <out-dir>
-python -c "from PIL import Image; Image.open('<out-dir>/buy-desk.png').crop((520, 190, 2510, 1190)).save('../deck/assets/buy_desk_mockup.png')"
-```
-
-If the crop size changes, update `MOCKUP_RATIO` in `build_round1.js`. Keep the caption true: the
-screen shows one simulated December, so its totals (₹24.7L expected) aren't the 20-market averages
-on the chart. Without the PNG, the build draws a sketch from `docs/sample_plan_round1.json` instead.
-
-## Demo GIF for the repo README (`docs/demo-goa-christmas.gif`)
-The repo's README opens on a 13 s loop of the live Buy Desk telling one story: Goa, Christmas week
-(22–28 Dec, Hotel B): 1,776 sold-out searches, buy 85 rooms by 5 Aug, then a second person approves the line.
-It's not in the deck: the team keeps video and animation out of the slides.
+## Demo GIF (`docs/demo-goa-christmas.gif`)
+A 13 s loop of the live Buy Desk telling one story: Goa, Christmas week (22–28 Dec, Hotel B). 1,776 sold-out
+searches, buy 85 rooms by 5 Aug, then a second person approves the line. It is slide 3's picture, replacing
+the old screenshot and the dashboard bullets. The repo README opens on it too.
+- PowerPoint plays it in the slideshow. The PDF and the renders show its first frame.
+- The build reads it from `docs/` (one copy) and stops if it's missing.
+- If you re-make it with different numbers, update `STORY` in `build_round1.js`.
 
 To regenerate it (needs the installed Chrome and Python with Pillow):
 
